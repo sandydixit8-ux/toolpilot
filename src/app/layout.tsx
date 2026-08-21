@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CookieConsent } from "@/components/ui/cookie-consent";
+import { Providers } from "@/components/providers";
 import { OrganizationSchema, WebsiteSchema } from "@/components/seo/structured-data";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/constants";
 import "./globals.css";
@@ -53,10 +54,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <WebsiteSchema />
       </head>
       <body className="min-h-screen bg-background antialiased">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <CookieConsent />
+        <Providers>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <CookieConsent />
+        </Providers>
       </body>
     </html>
   );
