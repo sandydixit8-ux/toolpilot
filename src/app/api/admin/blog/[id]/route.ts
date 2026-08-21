@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-auth";
+import { blogPostSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Props) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireAdmin();
+  if (authResult.error) return authResult.error;
 
   const { id } = await params;
   const post = await prisma.blogPost.findUnique({
@@ -20,20 +21,28 @@ export async function GET(_request: Request, { params }: Props) {
 }
 
 export async function PUT(request: Request, { params }: Props) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireAdmin();
+  if (authResult.error) return authResult.error;
 
   try {
     const { id } = await params;
     const body = await request.json();
-    const { title, slug, content, excerpt, author, categoryId, seoTitle, seoDescription, status } = body;
+    const parsed = blogPostSchema.safeParse(body);
 
-    if (!title || !slug || !content || !seoTitle || !seoDescription) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
 
-    const existing = await prisma.blogPost.findUnique({ where: { slug } });
-    if (existing && existing.id !== id) {
+    const { title, slug, content, excerpt, author, categoryId, seoTitle, seoDescription, status } = parsed.data;
+
+    const existingPost = await prisma.blogPost.findUnique({ where: { id } });
+    if (!existingPost) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    const existingSlug = await prisma.blogPost.findUnique({ where: { slug } });
+    if (existingSlug && existingSlug.id !== id) {
       return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
     }
 
@@ -54,20 +63,28 @@ export async function PUT(request: Request, { params }: Props) {
     });
 
     return NextResponse.json(post);
-  } catch {
+  } catch (error: unknown) {
+    console.error("[Admin Blog PUT]", error);
+    if (error && typeof error === "object" && "code" in error && error.code === "P2025") {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
   }
 }
 
 export async function DELETE(_request: Request, { params }: Props) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireAdmin();
+  if (authResult.error) return authResult.error;
 
   try {
     const { id } = await params;
     await prisma.blogPost.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error: unknown) {
+    console.error("[Admin Blog DELETE]", error);
+    if (error && typeof error === "object" && "code" in error && error.code === "P2025") {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
   }
 }

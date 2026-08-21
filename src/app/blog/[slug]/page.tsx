@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { renderBlogContent } from "@/lib/blog-renderer";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: post.seoDescription,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: { title: post.seoTitle, description: post.seoDescription, type: "article" },
+    robots: { index: true, follow: true },
   };
 }
 
@@ -37,6 +39,8 @@ export default async function BlogPostPage({ params }: Props) {
   });
 
   if (!post || post.status !== "PUBLISHED") notFound();
+
+  const renderedContent = renderBlogContent(post.content);
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
@@ -59,34 +63,10 @@ export default async function BlogPostPage({ params }: Props) {
           </>
         )}
       </div>
-      <div className="prose dark:prose-invert mt-8 max-w-none">
-        {post.content.split("\n\n").map((paragraph, i) => {
-          if (paragraph.startsWith("## ")) {
-            return <h2 key={i}>{paragraph.replace("## ", "")}</h2>;
-          }
-          if (paragraph.startsWith("- ")) {
-            const items = paragraph.split("\n").filter(l => l.startsWith("- "));
-            return (
-              <ul key={i}>
-                {items.map((item, j) => (
-                  <li key={j} dangerouslySetInnerHTML={{ __html: item.replace(/^- /, "").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />
-                ))}
-              </ul>
-            );
-          }
-          if (paragraph.match(/^\d\./)) {
-            const items = paragraph.split("\n").filter(l => l.match(/^\d/));
-            return (
-              <ol key={i}>
-                {items.map((item, j) => (
-                  <li key={j} dangerouslySetInnerHTML={{ __html: item.replace(/^\d+\.\s*/, "").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />
-                ))}
-              </ol>
-            );
-          }
-          return <p key={i} dangerouslySetInnerHTML={{ __html: paragraph.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br/>") }} />;
-        })}
-      </div>
+      <div
+        className="prose dark:prose-invert mt-8 max-w-none"
+        dangerouslySetInnerHTML={{ __html: renderedContent }}
+      />
       <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-800">
         <Link href="/blog" className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">
           ← Back to Blog

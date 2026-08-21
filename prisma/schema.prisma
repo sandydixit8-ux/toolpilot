@@ -135,6 +135,10 @@ model ToolUsage {
   tool      Tool?    @relation(fields: [toolSlug], references: [slug])
   metadata  String?
   createdAt DateTime @default(now())
+
+  @@index([toolSlug])
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model CalculationHistory {
@@ -146,6 +150,10 @@ model CalculationHistory {
   input     String
   output    String
   createdAt DateTime @default(now())
+
+  @@index([toolSlug])
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model BlogPost {
@@ -165,6 +173,11 @@ model BlogPost {
   publishedAt    DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@index([createdAt])
 }
 
 model BlogCategory {
@@ -195,6 +208,10 @@ model Lead {
   consent     Boolean  @default(false)
   status      String   @default("NEW")
   createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model AdConfiguration {
@@ -244,6 +261,8 @@ model ContactSubmission {
   subject   String
   message   String
   createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model NewsletterSubscriber {
@@ -264,4 +283,8 @@ model FileProcessingJob {
   error       String?
   createdAt   DateTime  @default(now())
   completedAt DateTime?
+
+  @@index([status])
+  @@index([toolSlug])
+  @@index([createdAt])
 }

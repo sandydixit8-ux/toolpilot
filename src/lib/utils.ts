@@ -43,7 +43,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-export function parseJsonArrayField(value: string | null | undefined): string[] {
+export function parseJsonArrayField(value: string | string[] | null | undefined): string[] {
   if (Array.isArray(value)) return value;
   if (typeof value === "string") {
     try {

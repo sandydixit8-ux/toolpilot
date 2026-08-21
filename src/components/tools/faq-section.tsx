@@ -29,7 +29,12 @@ export function FAQSection({ faqs, title = 'Frequently Asked Questions' }: FAQSe
 
   return (
     <section>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema).replace(/</g, "\\u003c").replace(/>/g, "\\u003e"),
+        }}
+      />
       <h2 className="section-title">{title}</h2>
       <div className="mt-6 space-y-3">
         {faqs.map((faq, index) => (

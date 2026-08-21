@@ -106,8 +106,8 @@ async function main() {
   console.log(`Seeded ${blogPosts.length} blog posts`);
 
   const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-  if (adminEmail) {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (adminEmail && adminPassword) {
     const hashedPassword = await hash(adminPassword, 12);
     await prisma.user.upsert({
       where: { email: adminEmail },
@@ -115,6 +115,8 @@ async function main() {
       create: { email: adminEmail, role: "SUPER_ADMIN", name: "Admin", password: hashedPassword },
     });
     console.log(`Created admin user: ${adminEmail}`);
+  } else {
+    console.warn("ADMIN_EMAIL or ADMIN_PASSWORD not set — skipping admin user creation");
   }
 
   console.log("Seeding complete!");

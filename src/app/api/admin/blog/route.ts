@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-auth";
+import { blogPostSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireAdmin();
+  if (authResult.error) return authResult.error;
 
   const posts = await prisma.blogPost.findMany({
     orderBy: { createdAt: "desc" },
@@ -16,16 +17,21 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireAdmin();
+  if (authResult.error) return authResult.error;
 
   try {
     const body = await request.json();
-    const { title, slug, content, excerpt, author, categoryId, seoTitle, seoDescription, status } = body;
+    const parsed = blogPostSchema.safeParse(body);
 
-    if (!title || !slug || !content || !seoTitle || !seoDescription) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+
+    const { title, slug, content, excerpt, author, categoryId, seoTitle, seoDescription, status } = parsed.data;
 
     const existing = await prisma.blogPost.findUnique({ where: { slug } });
     if (existing) {
@@ -48,7 +54,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(post, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("[Admin Blog POST]", error);
     return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
   }
 }

@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cat = categories.find((c) => c.slug === slug);
   if (cat) {
     return {
-      title: `${cat.name} – Free Online ${cat.name} | ToolPilot`,
+      title: cat.name,
       description: cat.description,
     };
   }
@@ -33,12 +33,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!tool) return {};
   const url = `${getSiteUrl()}/tools/${tool.slug}`;
   return {
-    title: tool.seoTitle,
+    title: tool.name,
     description: tool.seoDescription,
     keywords: tool.keywords,
     alternates: { canonical: url },
-    openGraph: { title: tool.seoTitle, description: tool.seoDescription, url, type: "website" },
-    twitter: { card: "summary_large_image", title: tool.seoTitle, description: tool.seoDescription },
+    openGraph: { title: tool.name, description: tool.seoDescription, url, type: "website" },
+    twitter: { card: "summary_large_image", title: tool.name, description: tool.seoDescription },
   };
 }
 

@@ -25,7 +25,12 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema).replace(/</g, "\\u003c").replace(/>/g, "\\u003e"),
+        }}
+      />
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-4">
         {allItems.map((item, i) => (
           <span key={i} className="flex items-center gap-1">
