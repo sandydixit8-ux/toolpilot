@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("USER")
+  accounts      Account[]
+  sessions      Session[]
+  favorites     FavoriteTool[]
+  history       ToolUsage[]
+  calculations  CalculationHistory[]
+  leads         Lead[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model ToolCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  order       Int      @default(0)
+  tools       Tool[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Tool {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String
+  longDescription String?
+  instructions    String   @default("[]")
+  categoryId      String
+  category        ToolCategory @relation(fields: [categoryId], references: [id])
+  processingType  String   @default("BROWSER")
+  status          String   @default("DRAFT")
+  featured        Boolean  @default(false)
+  popular         Boolean  @default(false)
+  order           Int      @default(0)
+  icon            String?
+  seoTitle        String
+  seoDescription  String
+  keywords        String   @default("[]")
+  faqs            FAQ[]
+  relatedTools    RelatedTool[] @relation("ToolRelatedTo")
+  relatedFrom     RelatedTool[] @relation("RelatedToTool")
+  usages          ToolUsage[]
+  calculations    CalculationHistory[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  publishedAt     DateTime?
+}
+
+model RelatedTool {
+  id          String @id @default(cuid())
+  tool        Tool   @relation("ToolRelatedTo", fields: [toolId], references: [id], onDelete: Cascade)
+  toolId      String
+  relatedTo   Tool   @relation("RelatedToTool", fields: [relatedToId], references: [id], onDelete: Cascade)
+  relatedToId String
+  order       Int    @default(0)
+  @@unique([toolId, relatedToId])
+}
+
+model FAQ {
+  id         String     @id @default(cuid())
+  question   String
+  answer     String
+  tool       Tool?      @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  toolId     String?
+  blogPost   BlogPost?  @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  blogPostId String?
+  order      Int        @default(0)
+}
+
+model FavoriteTool {
+  id        String   @id @default(cuid())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  toolSlug  String
+  createdAt DateTime @default(now())
+  @@unique([userId, toolSlug])
+}
+
+model ToolUsage {
+  id        String   @id @default(cuid())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  toolSlug  String
+  tool      Tool?    @relation(fields: [toolSlug], references: [slug])
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+model CalculationHistory {
+  id        String   @id @default(cuid())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  toolSlug  String
+  tool      Tool?    @relation(fields: [toolSlug], references: [slug])
+  input     String
+  output    String
+  createdAt DateTime @default(now())
+}
+
+model BlogPost {
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  content        String
+  excerpt        String?
+  featuredImage  String?
+  author         String   @default("ToolPilot Team")
+  categoryId     String?
+  category       BlogCategory? @relation(fields: [categoryId], references: [id])
+  faqs           FAQ[]
+  seoTitle       String
+  seoDescription String
+  status         String   @default("DRAFT")
+  publishedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model BlogCategory {
+  id    String     @id @default(cuid())
+  name  String     @unique
+  slug  String     @unique
+  posts BlogPost[]
+}
+
+model BlogTag {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  city        String?
+  projectType String?
+  budget      String?
+  message     String?
+  toolSlug    String?
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?
+  consent     Boolean  @default(false)
+  status      String   @default("NEW")
+  createdAt   DateTime @default(now())
+}
+
+model AdConfiguration {
+  id        String   @id @default(cuid())
+  slotId    String
+  provider  String   @default("adsense")
+  position  String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Affiliate {
+  id          String   @id @default(cuid())
+  productName String
+  description String
+  url         String
+  imageUrl    String?
+  ctaText     String   @default("Learn More")
+  enabled     Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  confirmed Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model FileProcessingJob {
+  id          String    @id @default(cuid())
+  status      String    @default("PENDING")
+  inputFiles  String    @default("[]")
+  outputFiles String    @default("[]")
+  toolSlug    String
+  userId      String?
+  metadata    String?
+  error       String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+}
