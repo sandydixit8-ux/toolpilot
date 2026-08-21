@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
@@ -34,8 +33,9 @@ providers.push(
 );
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  secret: process.env.AUTH_SECRET,
   providers,
+  session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
