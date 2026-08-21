@@ -3,6 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Blog – Tips, Guides & Tutorials | ToolPilot",
   description: "Read tips, guides, and tutorials for using ToolPilot's free online tools. Learn how to boost your productivity with PDF, image, and career tools.",
