@@ -54,6 +54,9 @@ export function Header() {
 
   return (
     <>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-sm focus:text-white">
+        Skip to content
+      </a>
       <header
         className={cn(
           "sticky top-0 z-50 w-full border-b transition-colors",
@@ -99,6 +102,9 @@ export function Header() {
               size="icon"
               className="lg:hidden h-9 w-9"
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav"
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -106,7 +112,7 @@ export function Header() {
         </div>
 
         {mobileOpen && (
-          <div className="lg:hidden border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+          <div id="mobile-nav" className="lg:hidden border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
             <nav className="flex flex-col p-4 gap-1">
               {navItems.map((item) => (
                 <Link

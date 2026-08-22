@@ -43,8 +43,8 @@ export default function ContactPage() {
 
       {status === "success" ? (
         <Card>
-          <CardContent className="p-8 text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+          <CardContent className="p-8 text-center" aria-live="polite">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" aria-hidden="true" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Message Sent!</h2>
             <p className="mt-2 text-gray-500 dark:text-gray-400">Thank you for contacting us. We will get back to you soon.</p>
           </CardContent>
@@ -71,9 +71,9 @@ export default function ContactPage() {
                 <Label htmlFor="message">Message</Label>
                 <Textarea id="message" rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
               <Button type="submit" disabled={status === "submitting"} className="w-full">
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="h-4 w-4 mr-2" aria-hidden="true" />
                 {status === "submitting" ? "Sending..." : "Send Message"}
               </Button>
             </form>
