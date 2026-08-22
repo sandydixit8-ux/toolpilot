@@ -137,6 +137,9 @@ export function Footer() {
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">
             &copy; {new Date().getFullYear()} ToolPilot. All rights reserved.
           </p>
+          <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-2">
+            Technology Partner: <span className="font-medium text-gray-500 dark:text-gray-500">Ridhyansh Tech Infra Private Limited</span>
+          </p>
         </div>
       </div>
     </footer>
