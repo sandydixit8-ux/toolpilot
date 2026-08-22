@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { requireAdminPage } from "@/lib/admin-page-auth";
 
 export const metadata: Metadata = {
   title: "Contact Submissions | Admin",
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminContactsPage() {
+  await requireAdminPage();
   const submissions = await prisma.contactSubmission.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,

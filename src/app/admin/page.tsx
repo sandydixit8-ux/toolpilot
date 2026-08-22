@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { requireAdminPage } from "@/lib/admin-page-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Users, Wrench, BarChart3, Newspaper } from "lucide-react";
 
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboard() {
+  await requireAdminPage();
   const [contacts, subscribers, posts, tools, recentContacts] = await Promise.all([
     prisma.contactSubmission.count(),
     prisma.newsletterSubscriber.count(),

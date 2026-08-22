@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { requireAdminPage } from "@/lib/admin-page-auth";
 
 export const metadata: Metadata = {
   title: "Newsletter Subscribers | Admin",
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSubscribersPage() {
+  await requireAdminPage();
   const subscribers = await prisma.newsletterSubscriber.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,

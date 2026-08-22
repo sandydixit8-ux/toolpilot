@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="icon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <rect width="400" height="400" rx="80" fill="url(#bg)"/>
+  
+  <!-- Wrench/Tool icon -->
+  <g transform="translate(100, 60)" fill="url(#icon)">
+    <!-- Wrench head -->
+    <path d="M100 20 C60 20 30 50 30 90 C30 110 38 128 52 140 L148 240 C162 252 170 270 170 290 L170 310 C170 320 178 328 188 328 L212 328 C222 328 230 320 230 310 L230 290 C230 270 222 252 208 240 L112 140 C98 128 90 110 90 90 C90 50 120 20 100 20 Z" opacity="0.3"/>
+    
+    <!-- Main wrench -->
+    <path d="M100 40 C70 40 45 65 45 95 C45 112 52 127 63 138 L157 232 C168 243 175 258 175 275 L175 290 C175 296 180 300 186 300 L214 300 C220 300 225 296 225 290 L225 275 C225 258 218 243 207 232 L113 138 C102 127 95 112 95 95 C95 65 120 40 100 40 Z" fill="white"/>
+    
+    <!-- Wrench opening -->
+    <circle cx="100" cy="85" r="22" fill="#2563eb"/>
+    <path d="M78 85 L63 65 M122 85 L137 65" stroke="#2563eb" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  
+  <!-- TP letters -->
+  <text x="200" y="370" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="bold" fill="white" letter-spacing="4">TOOLPILOT</text>
+</svg>

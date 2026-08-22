@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BlogEditor } from "@/components/admin/blog-editor";
+import { requireAdminPage } from "@/lib/admin-page-auth";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function EditBlogPostPage({ params }: Props) {
+  await requireAdminPage();
   const { id } = await params;
   const post = await prisma.blogPost.findUnique({ where: { id } });
   if (!post) notFound();
