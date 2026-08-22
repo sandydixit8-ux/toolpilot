@@ -41,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="google-site-verification" content="CHGKvmIRZlXJSkPkvB5QOpUwnUcDx4imJBzxu3M-_ZY" />
         {ADS_ENABLED && ADSENSE_ID && (
           <Script
             async
