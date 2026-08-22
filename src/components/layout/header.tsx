@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Search, Menu, X } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { Search, Menu, X, LogIn, Shield, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { searchTools } from "@/config/tools";
@@ -19,6 +20,7 @@ const navItems = [
 ];
 
 export function Header() {
+  const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -97,6 +99,26 @@ export function Header() {
               </kbd>
             </Button>
             <ThemeToggle />
+            {session ? (
+              <div className="hidden sm:flex items-center gap-1">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/admin" className="flex items-center gap-1.5">
+                    <Shield className="h-4 w-4" />
+                    <span className="text-xs">Admin</span>
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => signOut({ callbackUrl: "/" })} title="Logout">
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex items-center gap-1.5">
+                <Link href="/auth/login">
+                  <LogIn className="h-4 w-4" />
+                  <span className="text-xs">Login</span>
+                </Link>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -124,6 +146,36 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <div className="border-t border-gray-200 dark:border-gray-800 mt-2 pt-2">
+                {session ? (
+                  <>
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-gray-100 dark:text-blue-400 dark:hover:bg-gray-800"
+                    >
+                      <Shield className="h-4 w-4" />
+                      Admin Dashboard
+                    </Link>
+                    <button
+                      onClick={() => { signOut({ callbackUrl: "/" }); setMobileOpen(false); }}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-800 w-full text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-gray-100 dark:text-blue-400 dark:hover:bg-gray-800"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Login
+                  </Link>
+                )}
+              </div>
             </nav>
           </div>
         )}
