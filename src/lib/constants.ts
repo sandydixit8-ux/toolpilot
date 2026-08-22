@@ -2,7 +2,7 @@ export const SITE_NAME = "ToolPilot";
 export const SITE_TAGLINE = "Free Online Tools for Work, Money, Career & Everyday Life";
 export const SITE_DESCRIPTION =
   "Fast, simple and privacy-friendly tools — no complicated software required.";
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://toolpilot.in";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://toolpilotpro.in";
 
 export const ADS_ENABLED = process.env.NEXT_PUBLIC_ADS_ENABLED === "true";
 export const ADSENSE_PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID || "";

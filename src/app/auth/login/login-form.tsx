@@ -93,7 +93,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="admin@toolpilot.in"
+              placeholder="admin@toolpilotpro.in"
               className="mt-1"
             />
           </div>

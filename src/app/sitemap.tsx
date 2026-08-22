@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://toolpilot.in";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://toolpilotpro.in";
 
   const staticPages = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily" as const, priority: 1 },
