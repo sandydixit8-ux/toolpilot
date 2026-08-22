@@ -9,6 +9,7 @@ import { RelatedTools } from "@/components/tools/related-tools";
 import { WebAppSchema } from "@/components/seo/structured-data";
 import { ToolRenderer } from "@/components/tools/tool-renderer";
 import { Card, CardContent } from "@/components/ui/card";
+import { SidebarAd, InArticleAd } from "@/components/ads/ad-banner";
 import { getSiteUrl } from "@/lib/utils";
 import { CheckCircle, Lock, ArrowRight } from "lucide-react";
 
@@ -116,6 +117,7 @@ export default async function SlugPage({ params }: Props) {
                 ))}
               </ol>
             </section>
+            <InArticleAd slotId="0000000002" />
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Features</h2>
               <ul className="space-y-2">
@@ -146,6 +148,7 @@ export default async function SlugPage({ params }: Props) {
             {tool.faqs.length > 0 && <FAQSection faqs={tool.faqs} />}
           </div>
           <aside className="space-y-6">
+            <SidebarAd slotId="0000000003" />
             <Card>
               <CardContent className="p-5">
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Quick Info</h3>

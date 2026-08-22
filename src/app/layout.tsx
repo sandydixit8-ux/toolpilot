@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CookieConsent } from "@/components/ui/cookie-consent";
@@ -6,6 +7,9 @@ import { Providers } from "@/components/providers";
 import { OrganizationSchema, WebsiteSchema } from "@/components/seo/structured-data";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/constants";
 import "./globals.css";
+
+const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
+const ADS_ENABLED = process.env.NEXT_PUBLIC_ADS_ENABLED === "true";
 
 export const metadata: Metadata = {
   title: {
@@ -33,6 +37,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {ADS_ENABLED && ADSENSE_ID && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
         <script
           dangerouslySetInnerHTML={{
             __html: `
