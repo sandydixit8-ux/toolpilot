@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -109,6 +110,12 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
               placeholder="Enter password"
               className="mt-1"
             />
+            <Link
+              href="/auth/forgot-password"
+              className="mt-1 block text-right text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            >
+              Forgot Password?
+            </Link>
           </div>
 
           <button
