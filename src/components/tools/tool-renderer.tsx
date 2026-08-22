@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { getToolComponent } from "@/components/tools";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePathname } from "next/navigation";
 
 function ToolSkeleton() {
   return (
@@ -16,6 +17,22 @@ function ToolSkeleton() {
       </div>
     </div>
   );
+}
+
+function TrackToolUsage({ slug }: { slug: string }) {
+  const pathname = usePathname();
+  useEffect(() => {
+    fetch("/api/analytics/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: "tool_view",
+        page: slug,
+        metadata: { path: pathname },
+      }),
+    }).catch(() => {});
+  }, [slug, pathname]);
+  return null;
 }
 
 export function ToolRenderer({ slug }: { slug: string }) {
@@ -39,6 +56,7 @@ export function ToolRenderer({ slug }: { slug: string }) {
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-6">
+        <TrackToolUsage slug={slug} />
         <Suspense fallback={<ToolSkeleton />}>
           <ToolComponent />
         </Suspense>

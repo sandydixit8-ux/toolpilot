@@ -27,7 +27,11 @@ function LoginForm() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password");
+      if (result.error.includes("locked")) {
+        setError(result.error);
+      } else {
+        setError("Invalid email or password");
+      }
       setLoading(false);
     } else {
       router.push(callbackUrl);
