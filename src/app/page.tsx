@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFeaturedTools, getPopularTools } from "@/config/tools";
 import { CATEGORIES } from "@/lib/constants";
-import { BannerAd } from "@/components/ads/ad-banner";
+import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
 import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2 } from "lucide-react";
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -148,6 +148,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <InArticleAd slotId="0000000008" />
+
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8 flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-purple-600" />
@@ -191,6 +193,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <BannerAd slotId="0000000009" />
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Ready to get started?</h2>

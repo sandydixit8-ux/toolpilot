@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { renderBlogContent } from "@/lib/blog-renderer";
 import { InArticleAd } from "@/components/ads/ad-banner";
+import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,9 @@ export default async function BlogPostPage({ params }: Props) {
         className="prose dark:prose-invert mt-8 max-w-none"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
+      <InArticleAd slotId="0000000007" />
       <InArticleAd slotId="0000000004" />
+      <NewsletterCTA />
       <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-800">
         <Link href="/blog" className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">
           ← Back to Blog

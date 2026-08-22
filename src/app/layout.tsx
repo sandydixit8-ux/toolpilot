@@ -4,12 +4,16 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { Providers } from "@/components/providers";
+import { TipJar } from "@/components/revenue/tip-jar";
+import { AnchorAd } from "@/components/ads/ad-banner";
 import { OrganizationSchema, WebsiteSchema } from "@/components/seo/structured-data";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/constants";
 import "./globals.css";
 
 const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
 const ADS_ENABLED = process.env.NEXT_PUBLIC_ADS_ENABLED === "true";
+
+const ANCHOR_AD_SLOT = process.env.NEXT_PUBLIC_ANCHOR_AD_SLOT || "";
 
 export const metadata: Metadata = {
   title: {
@@ -71,6 +75,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main id="main-content" className="flex-1">{children}</main>
           <Footer />
           <CookieConsent />
+          <TipJar />
+          {ADS_ENABLED && ANCHOR_AD_SLOT && <AnchorAd slotId={ANCHOR_AD_SLOT} />}
         </Providers>
       </body>
     </html>

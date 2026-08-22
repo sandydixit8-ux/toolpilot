@@ -9,7 +9,10 @@ import { RelatedTools } from "@/components/tools/related-tools";
 import { WebAppSchema } from "@/components/seo/structured-data";
 import { ToolRenderer } from "@/components/tools/tool-renderer";
 import { Card, CardContent } from "@/components/ui/card";
-import { SidebarAd, InArticleAd } from "@/components/ads/ad-banner";
+import { SidebarAd, InArticleAd, BannerAd } from "@/components/ads/ad-banner";
+import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
+import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
+import { getAffiliatesForCategory } from "@/lib/affiliates";
 import { getSiteUrl } from "@/lib/utils";
 import { CheckCircle, Lock, ArrowRight } from "lucide-react";
 
@@ -54,7 +57,8 @@ export default async function SlugPage({ params }: Props) {
         <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: cat.name }]} />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{cat.name}</h1>
         <p className="text-gray-500 dark:text-gray-400 mb-8">{cat.description}</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <BannerAd slotId="0000000005" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
           {tools.map((tool) => (
             <Link key={tool.slug} href={`/tools/${tool.slug}`}>
               <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
@@ -77,6 +81,7 @@ export default async function SlugPage({ params }: Props) {
             </Link>
           ))}
         </div>
+        <InArticleAd slotId="0000000006" />
       </div>
     );
   }
@@ -146,6 +151,18 @@ export default async function SlugPage({ params }: Props) {
               </p>
             </section>
             {tool.faqs.length > 0 && <FAQSection faqs={tool.faqs} />}
+            <NewsletterCTA />
+            <AffiliatePromo
+              title="Recommended for you"
+              items={getAffiliatesForCategory(tool.categorySlug).map((a) => ({
+                name: a.name,
+                description: a.description,
+                url: a.url,
+                ctaText: a.ctaText,
+                rating: a.rating,
+                badge: a.badge,
+              }))}
+            />
           </div>
           <aside className="space-y-6">
             <SidebarAd slotId="0000000003" />
