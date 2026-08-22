@@ -35,13 +35,15 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
+  other: {
+    "google-site-verification": "CHGKvmIRZlXJSkPkvB5QOpUwnUcDx4imJBzxu3M-_ZY",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="google-site-verification" content="CHGKvmIRZlXJSkPkvB5QOpUwnUcDx4imJBzxu3M-_ZY" />
         {ADS_ENABLED && ADSENSE_ID && (
           <Script
             async
