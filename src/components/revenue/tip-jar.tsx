@@ -34,7 +34,7 @@ export function TipJar() {
             </p>
             <div className="mt-6 flex flex-col gap-3">
               <a
-                href="https://www.buymeacoffee.com/yourusername"
+                href="https://www.buymeacoffee.com/sandydixitp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
