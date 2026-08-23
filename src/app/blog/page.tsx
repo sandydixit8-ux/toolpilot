@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
+import { SITE_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Blog – Tips, Guides & Tutorials | ToolPilot",
   description: "Read tips, guides, and tutorials for using ToolPilot's free online tools. Learn how to boost your productivity with PDF, image, and career tools.",
-  alternates: { canonical: "/blog" },
+  alternates: { canonical: `${SITE_URL}/blog` },
 };
 
 export default async function BlogPage() {

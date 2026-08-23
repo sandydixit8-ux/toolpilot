@@ -5,12 +5,13 @@ import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { getToolsByCategory } from "@/config/tools";
 import { categories } from "@/config/categories";
 import { allTools } from "@/config/tools";
+import { SITE_URL } from "@/lib/constants";
 import { FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "All Tools – Free Online Tools | ToolPilot",
   description: "Browse all free online tools for work, money, career, and everyday life. PDF tools, image tools, calculators, and more.",
-  alternates: { canonical: "/tools" },
+  alternates: { canonical: `${SITE_URL}/tools` },
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {

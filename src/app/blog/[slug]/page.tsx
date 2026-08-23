@@ -6,6 +6,8 @@ import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { renderBlogContent } from "@/lib/blog-renderer";
 import { InArticleAd } from "@/components/ads/ad-banner";
 import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
+import { getSiteUrl } from "@/lib/utils";
+import { BreadcrumbListSchema } from "@/components/seo/structured-data";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.seoTitle,
     description: post.seoDescription,
-    alternates: { canonical: `/blog/${post.slug}` },
+    alternates: { canonical: `${getSiteUrl()}/blog/${post.slug}` },
     openGraph: { title: post.seoTitle, description: post.seoDescription, type: "article" },
     robots: { index: true, follow: true },
   };
@@ -45,6 +47,29 @@ export default async function BlogPostPage({ params }: Props) {
   const renderedContent = renderBlogContent(post.content);
 
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: post.title,
+            description: post.seoDescription,
+            author: { "@type": "Person", name: post.author },
+            publisher: { "@type": "Organization", name: "ToolPilot", url: getSiteUrl() },
+            datePublished: post.publishedAt?.toISOString(),
+            dateModified: post.updatedAt?.toISOString(),
+            url: `${getSiteUrl()}/blog/${post.slug}`,
+            mainEntityOfPage: { "@type": "WebPage", "@id": `${getSiteUrl()}/blog/${post.slug}` },
+          }).replace(/</g, "\\u003c").replace(/>/g, "\\u003e"),
+        }}
+      />
+      <BreadcrumbListSchema items={[
+        { name: "Home", url: getSiteUrl() },
+        { name: "Blog", url: `${getSiteUrl()}/blog` },
+        { name: post.title, url: `${getSiteUrl()}/blog/${post.slug}` },
+      ]} />
     <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <Breadcrumbs items={[
         { label: "Blog", href: "/blog" },
@@ -78,5 +103,6 @@ export default async function BlogPostPage({ params }: Props) {
         </Link>
       </div>
     </article>
+    </>
   );
 }

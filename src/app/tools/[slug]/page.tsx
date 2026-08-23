@@ -6,7 +6,7 @@ import { categories } from "@/config/categories";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { FAQSection } from "@/components/tools/faq-section";
 import { RelatedTools } from "@/components/tools/related-tools";
-import { WebAppSchema } from "@/components/seo/structured-data";
+import { WebAppSchema, BreadcrumbListSchema } from "@/components/seo/structured-data";
 import { ToolRenderer } from "@/components/tools/tool-renderer";
 import { Card, CardContent } from "@/components/ui/card";
 import { SidebarAd, InArticleAd, BannerAd } from "@/components/ads/ad-banner";
@@ -94,6 +94,12 @@ export default async function SlugPage({ params }: Props) {
   return (
     <>
       <WebAppSchema name={tool.name} description={tool.description} url={`${getSiteUrl()}/tools/${tool.slug}`} />
+      <BreadcrumbListSchema items={[
+        { name: "Home", url: getSiteUrl() },
+        { name: "Tools", url: `${getSiteUrl()}/tools` },
+        { name: toolCat?.name || tool.category, url: `${getSiteUrl()}/tools/${tool.categorySlug}` },
+        { name: tool.name, url: `${getSiteUrl()}/tools/${tool.slug}` },
+      ]} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumbs items={[
           { label: "Tools", href: "/tools" },

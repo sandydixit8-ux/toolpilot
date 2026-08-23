@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "About ToolPilot – Our Mission & Values",
   description: "Learn about ToolPilot's mission to make useful online tools accessible to everyone. Privacy-first, always free, simple and fast.",
-  alternates: { canonical: "/about" },
+  alternates: { canonical: `${SITE_URL}/about` },
 };
 
 export default function AboutPage() {

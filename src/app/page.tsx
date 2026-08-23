@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFeaturedTools, getPopularTools } from "@/config/tools";
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES, SITE_NAME, SITE_URL } from "@/lib/constants";
 import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
 import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  alternates: { canonical: SITE_URL },
+  title: `${SITE_NAME} – Free Online Tools for Work, Money, Career & Everyday Life`,
+};
 
 const categoryIcons: Record<string, React.ReactNode> = {
   pdf: <FileText className="h-6 w-6" />,
