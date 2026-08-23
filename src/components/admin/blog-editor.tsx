@@ -69,6 +69,7 @@ export function BlogEditor({ existing }: { existing?: BlogPostData }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          tags: [],
           slug: form.slug || autoSlug(form.title),
           seoTitle: form.seoTitle || form.title,
           seoDescription: form.seoDescription || form.excerpt || form.title,
