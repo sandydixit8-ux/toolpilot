@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, passwordResetEmail } from "@/lib/email";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
@@ -37,7 +38,18 @@ export async function POST(request: Request) {
 
     const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://toolpilotpro.in"}/auth/reset-password?token=${token}`;
 
-    console.log(`\n========== PASSWORD RESET ==========\nEmail: ${normalizedEmail}\nReset URL: ${resetUrl}\nExpires: ${expiresAt.toISOString()}\n====================================\n`);
+    const emailContent = passwordResetEmail(resetUrl);
+    const emailSent = await sendEmail({
+      to: normalizedEmail,
+      subject: emailContent.subject,
+      html: emailContent.html,
+    });
+
+    if (emailSent) {
+      console.log(`[PASSWORD RESET] Email sent to ${normalizedEmail}`);
+    } else {
+      console.log(`\n========== PASSWORD RESET (no SMTP) ==========\nEmail: ${normalizedEmail}\nReset URL: ${resetUrl}\nExpires: ${expiresAt.toISOString()}\n==============================================\n`);
+    }
 
     return NextResponse.json({
       success: true,
