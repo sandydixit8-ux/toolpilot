@@ -103,20 +103,21 @@ export function BlogEditor({ existing }: { existing?: BlogPostData }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <Label>Title</Label>
-              <Input value={form.title} onChange={(e) => set("title", e.target.value)} required placeholder="Blog post title" className="mt-1" />
+              <Label htmlFor="title">Title</Label>
+              <Input id="title" value={form.title} onChange={(e) => set("title", e.target.value)} required placeholder="Blog post title" className="mt-1" />
             </div>
             <div>
-              <Label>Slug</Label>
-              <Input value={form.slug} onChange={(e) => set("slug", e.target.value)} placeholder="auto-generated-from-title" className="mt-1" />
+              <Label htmlFor="slug">Slug</Label>
+              <Input id="slug" value={form.slug} onChange={(e) => set("slug", e.target.value)} placeholder="auto-generated-from-title" className="mt-1" />
             </div>
             <div>
-              <Label>Author</Label>
-              <Input value={form.author} onChange={(e) => set("author", e.target.value)} className="mt-1" />
+              <Label htmlFor="author">Author</Label>
+              <Input id="author" value={form.author} onChange={(e) => set("author", e.target.value)} className="mt-1" />
             </div>
             <div>
-              <Label>Category</Label>
+              <Label htmlFor="categoryId">Category</Label>
               <select
+                id="categoryId"
                 value={form.categoryId}
                 onChange={(e) => set("categoryId", e.target.value)}
                 className="mt-1 flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -128,8 +129,9 @@ export function BlogEditor({ existing }: { existing?: BlogPostData }) {
               </select>
             </div>
             <div>
-              <Label>Status</Label>
+              <Label htmlFor="status">Status</Label>
               <select
+                id="status"
                 value={form.status}
                 onChange={(e) => set("status", e.target.value)}
                 className="mt-1 flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -139,12 +141,12 @@ export function BlogEditor({ existing }: { existing?: BlogPostData }) {
               </select>
             </div>
             <div className="sm:col-span-2">
-              <Label>Excerpt</Label>
-              <Textarea value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} rows={2} placeholder="Short summary for cards and SEO" className="mt-1" />
+              <Label htmlFor="excerpt">Excerpt</Label>
+              <Textarea id="excerpt" value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} rows={2} placeholder="Short summary for cards and SEO" className="mt-1" />
             </div>
             <div className="sm:col-span-2">
-              <Label>Content (Markdown-like: ## for headings, - for lists, 1. for numbered, **bold**)</Label>
-              <Textarea value={form.content} onChange={(e) => set("content", e.target.value)} rows={16} required placeholder="Write your blog post content here..." className="mt-1 font-mono text-sm" />
+              <Label htmlFor="content">Content (Markdown-like: ## for headings, - for lists, 1. for numbered, **bold**)</Label>
+              <Textarea id="content" value={form.content} onChange={(e) => set("content", e.target.value)} rows={16} required placeholder="Write your blog post content here..." className="mt-1 font-mono text-sm" />
             </div>
           </div>
         </CardContent>
@@ -154,12 +156,12 @@ export function BlogEditor({ existing }: { existing?: BlogPostData }) {
         <CardContent className="p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">SEO</h2>
           <div>
-            <Label>SEO Title</Label>
-            <Input value={form.seoTitle} onChange={(e) => set("seoTitle", e.target.value)} placeholder="Defaults to post title" className="mt-1" />
+            <Label htmlFor="seoTitle">SEO Title</Label>
+            <Input id="seoTitle" value={form.seoTitle} onChange={(e) => set("seoTitle", e.target.value)} placeholder="Defaults to post title" className="mt-1" />
           </div>
           <div>
-            <Label>SEO Description</Label>
-            <Textarea value={form.seoDescription} onChange={(e) => set("seoDescription", e.target.value)} rows={2} placeholder="Defaults to excerpt" className="mt-1" />
+            <Label htmlFor="seoDescription">SEO Description</Label>
+            <Textarea id="seoDescription" value={form.seoDescription} onChange={(e) => set("seoDescription", e.target.value)} rows={2} placeholder="Defaults to excerpt" className="mt-1" />
           </div>
         </CardContent>
       </Card>

@@ -38,6 +38,7 @@ export function NewsletterCTA({ className }: { className?: string }) {
     <div className={`my-8 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-6 relative ${className || ""}`}>
       <button
         onClick={() => setDismissed(true)}
+        aria-label="Close newsletter"
         className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
       >
         <X className="h-4 w-4" />
@@ -50,13 +51,17 @@ export function NewsletterCTA({ className }: { className?: string }) {
         Join 2,000+ users getting weekly tips on free tools, shortcuts & productivity hacks.
       </p>
       {status === "success" ? (
-        <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+        <div role="status" className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
           <CheckCircle className="h-4 w-4" />
           You&apos;re subscribed! Check your inbox.
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex gap-2">
+          <label htmlFor="newsletter-email" className="sr-only">
+            Email address
+          </label>
           <Input
+            id="newsletter-email"
             type="email"
             placeholder="you@email.com"
             value={email}
