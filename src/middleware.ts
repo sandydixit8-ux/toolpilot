@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createHash } from "crypto";
 
 const rateLimit = new Map<string, { count: number; timestamp: number }>();
 const WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS = 30;
 
 function hashIp(ip: string): string {
-  return createHash("sha256").update(ip).digest("hex").slice(0, 16);
+  let h = 5381;
+  for (let i = 0; i < ip.length; i++) {
+    h = ((h << 5) + h + ip.charCodeAt(i)) | 0;
+  }
+  return (h >>> 0).toString(36);
 }
 
 export function middleware(request: NextRequest) {
