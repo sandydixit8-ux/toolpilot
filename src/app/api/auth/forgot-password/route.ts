@@ -42,8 +42,6 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: "If an account exists with that email, a reset link has been sent.",
-      // In production, remove this line and send email instead
-      resetUrl,
     });
   } catch (error) {
     console.error("Forgot password error:", error);

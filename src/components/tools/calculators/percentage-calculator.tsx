@@ -20,7 +20,7 @@ export function PercentageCalculatorTool() {
     result = a !== 0 ? ((b - a) / Math.abs(a)) * 100 : 0;
     formula = `Percentage change from ${a} to ${b} = ${result.toFixed(2)}%`;
   } else {
-    result = a !== 0 ? (Math.abs(b - a) / ((a + b) / 2)) * 100 : 0;
+    result = (a + b) !== 0 ? (Math.abs(b - a) / ((a + b) / 2)) * 100 : 0;
     formula = `Percentage difference between ${a} and ${b} = ${result.toFixed(2)}%`;
   }
 
@@ -59,7 +59,7 @@ export function PercentageCalculatorTool() {
           <div className="rounded-xl bg-gray-50 p-5 dark:bg-gray-800/50">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Result</h3>
             <p className="mt-2 text-2xl font-bold text-brand-600 dark:text-brand-400">
-              {mode === 'of' ? `₹${result.toFixed(2)}` : `${result.toFixed(2)}%`}
+              {mode === 'of' ? result.toFixed(2) : `${result.toFixed(2)}%`}
             </p>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{formula}</p>
           </div>

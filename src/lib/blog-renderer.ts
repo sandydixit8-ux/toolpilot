@@ -12,7 +12,13 @@ function renderInline(text: string): string {
   result = result.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   result = result.replace(/\*(.*?)\*/g, "<em>$1</em>");
   result = result.replace(/`([^`]+)`/g, "<code>$1</code>");
-  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" rel="noopener">$1</a>');
+  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, linkText, href) => {
+    const trimmed = href.trim();
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/")) {
+      return `<a href="${trimmed}" rel="noopener">${linkText}</a>`;
+    }
+    return `[${linkText}](${trimmed})`;
+  });
   return result;
 }
 

@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.co.in; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https://pagead2.googlesyndication.com https://adservice.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.co.in https://www.googletagmanager.com https://utt.impactcdn.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https://pagead2.googlesyndication.com https://adservice.google.com https://www.google-analytics.com https://analytics.google.com; frame-src 'self' https://pagead2.googlesyndication.com https://adservice.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com"
   );
   response.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
 
