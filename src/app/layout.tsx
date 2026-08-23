@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   verification: {
-    google: "CHGKvmIRZlXJSkPkvB5QOpUwnUcDx4imJBzxu3M-_ZY",
+    google: "Iuf4EIea_e6ZG2VDtkP2tS05up77lUBGPZysNY40p38",
   },
 };
 
