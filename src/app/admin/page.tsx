@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdminPage } from "@/lib/admin-page-auth";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Users, Wrench, BarChart3, Newspaper } from "lucide-react";
+import { Mail, Users, Wrench, BarChart3, Newspaper, DollarSign } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | ToolPilot",
@@ -62,6 +62,20 @@ export default async function AdminDashboard() {
                 <div>
                   <p className="text-lg font-bold text-gray-900 dark:text-gray-100">Analytics Dashboard</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Usage metrics, top tools, and engagement</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/revenue">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <div>
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">Revenue Dashboard</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Track earnings from AdSense, affiliates, tips</p>
                 </div>
               </div>
             </CardContent>
