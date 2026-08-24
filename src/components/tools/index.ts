@@ -31,6 +31,7 @@ const toolComponents: Record<string, () => Promise<{ default: ComponentType }>> 
   "ai-resume-summary-generator": lazyNamed(() => import("@/components/tools/ai/ai-resume-summary-generator"), "AiResumeSummaryGeneratorTool"),
   "ai-email-generator": lazyNamed(() => import("@/components/tools/ai/ai-email-generator"), "AiEmailGeneratorTool"),
   "resume-builder": lazyNamed(() => import("@/components/tools/career/resume-builder"), "ResumeBuilderTool"),
+  "resume-analyzer": lazyNamed(() => import("@/components/tools/career/resume-analyzer"), "ResumeAnalyzerTool"),
   "resume-ats-checker": lazyNamed(() => import("@/components/tools/career/resume-ats-checker"), "ResumeAtsCheckerTool"),
   "resume-jd-matcher": lazyNamed(() => import("@/components/tools/career/resume-jd-matcher"), "ResumeJdMatcherTool"),
   "cover-letter-generator": lazyNamed(() => import("@/components/tools/career/cover-letter-generator"), "CoverLetterGeneratorTool"),
