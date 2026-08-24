@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SidebarAd, InArticleAd, BannerAd } from "@/components/ads/ad-banner";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
+import { UpiPayment } from "@/components/revenue/upi-payment";
 import { getAffiliatesForCategory } from "@/lib/affiliates";
 import { getSiteUrl } from "@/lib/utils";
 import { CheckCircle, Lock, ArrowRight } from "lucide-react";
@@ -158,6 +159,7 @@ export default async function SlugPage({ params }: Props) {
             </section>
             {tool.faqs.length > 0 && <FAQSection faqs={tool.faqs} />}
             <NewsletterCTA />
+            <UpiPayment />
             <AffiliatePromo
               title="Recommended for you"
               items={getAffiliatesForCategory(tool.categorySlug).map((a) => ({
