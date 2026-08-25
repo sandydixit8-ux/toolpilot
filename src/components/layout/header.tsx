@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Search, Menu, X, LogIn, Shield, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
+import { LanguageSwitcher } from "@/components/i18n";
 import { searchTools } from "@/config/tools";
 import { cn } from "@/lib/utils";
 
@@ -98,6 +99,7 @@ export function Header() {
                 Ctrl K
               </kbd>
             </Button>
+            <LanguageSwitcher />
             <ThemeToggle />
             {session ? (
               <div className="hidden sm:flex items-center gap-1">

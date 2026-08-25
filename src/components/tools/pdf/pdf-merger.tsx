@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { PDFDocument } from 'pdf-lib';
 import { UploadBox } from '@/components/tools/upload-box';
+import { ProcessingOverlay } from '@/components/tools/processing-overlay';
 import {
   FileText,
   Download,
@@ -10,9 +11,8 @@ import {
   ArrowUp,
   ArrowDown,
   Trash2,
-  CheckCircle,
-  Loader2,
   RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import { formatBytes } from '@/lib/utils';
 
@@ -20,9 +20,11 @@ export function PdfMergerTool() {
   const [files, setFiles] = useState<File[]>([]);
   const [merging, setMerging] = useState(false);
   const [progress, setProgress] = useState('');
+  const [progressPercent, setProgressPercent] = useState(0);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [pageCounts, setPageCounts] = useState<Record<number, number>>({});
+  const [status, setStatus] = useState<'idle' | 'processing' | 'complete' | 'error'>('idle');
 
   const getPageCount = async (file: File) => {
     try {
@@ -72,13 +74,17 @@ export function PdfMergerTool() {
     if (files.length < 2) return;
     setMerging(true);
     setError('');
+    setStatus('processing');
     setProgress('Creating merged document...');
+    setProgressPercent(0);
 
     try {
       const mergedPdf = await PDFDocument.create();
 
       for (let i = 0; i < files.length; i++) {
+        const pct = ((i + 1) / files.length) * 100;
         setProgress(`Processing file ${i + 1} of ${files.length}...`);
+        setProgressPercent(pct);
         const pdfBytes = await files[i].arrayBuffer();
         const pdf = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
         const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
@@ -86,14 +92,18 @@ export function PdfMergerTool() {
       }
 
       setProgress('Finalizing...');
+      setProgressPercent(95);
       const mergedBytes = await mergedPdf.save();
       const blob = new Blob([mergedBytes as unknown as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
       setProgress('');
-    } catch (err) {
+      setProgressPercent(100);
+      setStatus('complete');
+    } catch {
       setError('Failed to merge PDFs. One or more files may be corrupted or password-protected.');
       setProgress('');
+      setStatus('error');
     } finally {
       setMerging(false);
     }
@@ -112,10 +122,10 @@ export function PdfMergerTool() {
     setPdfUrl(null);
     setError('');
     setProgress('');
+    setProgressPercent(0);
     setPageCounts({});
+    setStatus('idle');
   };
-
-  const totalPages = Object.values(pageCounts).reduce((sum, count) => sum + count, 0);
 
   return (
     <div className="card">
@@ -146,6 +156,7 @@ export function PdfMergerTool() {
           files={files}
           onFiles={handleFiles}
           onRemove={handleRemove}
+          showSizeInfo
         />
 
         {files.length > 1 && (
@@ -196,34 +207,36 @@ export function PdfMergerTool() {
           </div>
         )}
 
-        {merging && progress && (
-          <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            {progress}
-          </div>
+        {merging && (
+          <ProcessingOverlay
+            status="processing"
+            progress={progress}
+            percentage={progressPercent}
+          />
         )}
 
-        {pdfUrl && (
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700 dark:bg-green-950/50 dark:text-green-300">
-            <CheckCircle className="h-4 w-4" />
-            PDF merged successfully! Ready to download.
-          </div>
+        {!merging && status === 'complete' && (
+          <ProcessingOverlay
+            status="complete"
+            onDownload={handleDownload}
+          />
+        )}
+
+        {!merging && status === 'error' && (
+          <ProcessingOverlay
+            status="error"
+            error={error}
+          />
         )}
 
         <div className="flex flex-wrap gap-2">
           <button
             onClick={handleMerge}
             disabled={files.length < 2 || merging}
-            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {merging ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Merging...
-              </span>
-            ) : (
-              `Merge ${files.length} PDFs`
-            )}
+            <Sparkles className="h-4 w-4" />
+            Merge {files.length} PDFs
           </button>
           {pdfUrl && (
             <button onClick={handleDownload} className="btn-secondary flex items-center gap-2">

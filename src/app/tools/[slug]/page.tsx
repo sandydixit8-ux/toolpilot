@@ -8,6 +8,7 @@ import { FAQSection } from "@/components/tools/faq-section";
 import { RelatedTools } from "@/components/tools/related-tools";
 import { WebAppSchema, BreadcrumbListSchema } from "@/components/seo/structured-data";
 import { ToolRenderer } from "@/components/tools/tool-renderer";
+import { TrustBadges } from "@/components/tools/trust-badges";
 import { Card, CardContent } from "@/components/ui/card";
 import { SidebarAd, InArticleAd, BannerAd } from "@/components/ads/ad-banner";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
@@ -113,6 +114,7 @@ export default async function SlugPage({ params }: Props) {
               <p className="mt-2 text-gray-500 dark:text-gray-400">{tool.description}</p>
             </div>
             <ToolRenderer slug={tool.slug} />
+            <TrustBadges />
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">About this tool</h2>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{tool.longDescription}</p>

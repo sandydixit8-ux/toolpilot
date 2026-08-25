@@ -3,7 +3,8 @@
 
 import { useState, useCallback } from 'react';
 import { UploadBox } from '@/components/tools/upload-box';
-import { Download, Trash2 } from 'lucide-react';
+import { ProcessingOverlay } from '@/components/tools/processing-overlay';
+import { Download, Trash2, Sparkles, CheckCircle } from 'lucide-react';
 import { formatBytes } from '@/lib/utils';
 
 interface CompressedResult {
@@ -19,6 +20,7 @@ export function ImageCompressor() {
   const [quality, setQuality] = useState(80);
   const [results, setResults] = useState<CompressedResult[]>([]);
   const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleFiles = useCallback((newFiles: File[]) => {
     setFiles((prev) => [...prev, ...newFiles]);
@@ -70,8 +72,14 @@ export function ImageCompressor() {
 
   const handleCompress = async () => {
     setProcessing(true);
+    setProgress(0);
     try {
-      const compressed = await Promise.all(files.map(compressImage));
+      const compressed: CompressedResult[] = [];
+      for (let i = 0; i < files.length; i++) {
+        setProgress(((i + 1) / files.length) * 100);
+        const result = await compressImage(files[i]);
+        compressed.push(result);
+      }
       setResults(compressed);
     } finally {
       setProcessing(false);
@@ -90,6 +98,10 @@ export function ImageCompressor() {
     results.forEach((r) => handleDownload(r));
   };
 
+  const totalOriginal = results.reduce((sum, r) => sum + r.originalSize, 0);
+  const totalCompressed = results.reduce((sum, r) => sum + r.compressedSize, 0);
+  const totalSavings = totalOriginal > 0 ? ((1 - totalCompressed / totalOriginal) * 100).toFixed(1) : '0';
+
   return (
     <div className="card space-y-6">
       <UploadBox
@@ -97,6 +109,7 @@ export function ImageCompressor() {
         files={files}
         onRemove={handleRemove}
         accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.gif'] }}
+        showSizeInfo
       />
 
       {files.length > 0 && (
@@ -124,12 +137,14 @@ export function ImageCompressor() {
             <button
               onClick={handleCompress}
               disabled={processing}
-              className="btn-primary"
+              className="btn-primary flex items-center gap-2"
             >
+              <Sparkles className="h-4 w-4" />
               {processing ? 'Compressing...' : 'Compress Images'}
             </button>
             {results.length > 0 && (
-              <button onClick={handleDownloadAll} className="btn-secondary">
+              <button onClick={handleDownloadAll} className="btn-secondary flex items-center gap-2">
+                <Download className="h-4 w-4" />
                 Download All
               </button>
             )}
@@ -137,49 +152,64 @@ export function ImageCompressor() {
         </div>
       )}
 
-      {results.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Results</h3>
-          {results.map((result, i) => {
-            const savings = ((1 - result.compressedSize / result.originalSize) * 100).toFixed(1);
-            return (
-              <div
-                key={i}
-                className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-800/50"
-              >
-                {result.url && (
-                  <img
-                    src={result.url}
-                    alt={result.file.name}
-                    className="h-16 w-16 rounded object-cover"
-                  />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
-                    {result.file.name}
-                  </p>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                    <span>{formatBytes(result.originalSize)}</span>
-                    <span>→</span>
-                    <span>{formatBytes(result.compressedSize)}</span>
-                    <span className={`font-medium ${Number(savings) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {Number(savings) > 0 ? `-${savings}%` : `+${Math.abs(Number(savings))}%`}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDownload(result)}
-                  className="shrink-0 rounded-lg bg-brand-500 p-2 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
-              </div>
-            );
-          })}
-        </div>
+      {processing && (
+        <ProcessingOverlay
+          status="processing"
+          progress={`Compressing image ${Math.min(Math.ceil(progress / 100 * files.length), files.length)} of ${files.length}...`}
+          percentage={progress}
+        />
       )}
 
-      {files.length > 0 && results.length === 0 && (
+      {!processing && results.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700 dark:bg-green-950/50 dark:text-green-300">
+            <CheckCircle className="h-4 w-4" />
+            Compressed {results.length} image{results.length > 1 ? 's' : ''} — saved {totalSavings}% overall
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Results</h3>
+            {results.map((result, i) => {
+              const savings = ((1 - result.compressedSize / result.originalSize) * 100).toFixed(1);
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-800/50"
+                >
+                  {result.url && (
+                    <img
+                      src={result.url}
+                      alt={result.file.name}
+                      className="h-16 w-16 rounded object-cover"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                      {result.file.name}
+                    </p>
+                    <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                      <span>{formatBytes(result.originalSize)}</span>
+                      <span>→</span>
+                      <span>{formatBytes(result.compressedSize)}</span>
+                      <span className={`font-medium ${Number(savings) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {Number(savings) > 0 ? `-${savings}%` : `+${Math.abs(Number(savings))}%`}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDownload(result)}
+                    className="shrink-0 rounded-lg bg-brand-500 p-2 text-white hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {files.length > 0 && results.length === 0 && !processing && (
         <button
           onClick={() => { setFiles([]); setResults([]); }}
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"

@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { Providers } from "@/components/providers";
+import { I18nProvider } from "@/components/i18n";
 import { TipJar } from "@/components/revenue/tip-jar";
 import { AnchorAd } from "@/components/ads/ad-banner";
 import { OrganizationSchema, WebsiteSchema } from "@/components/seo/structured-data";
@@ -106,12 +107,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-background antialiased">
         <Providers>
-          <Header />
-          <main id="main-content" className="flex-1">{children}</main>
-          <Footer />
-          <CookieConsent />
-          <TipJar />
-          {ADS_ENABLED && ANCHOR_AD_SLOT && <AnchorAd slotId={ANCHOR_AD_SLOT} />}
+          <I18nProvider>
+            <Header />
+            <main id="main-content" className="flex-1">{children}</main>
+            <Footer />
+            <CookieConsent />
+            <TipJar />
+            {ADS_ENABLED && ANCHOR_AD_SLOT && <AnchorAd slotId={ANCHOR_AD_SLOT} />}
+          </I18nProvider>
         </Providers>
       </body>
     </html>
