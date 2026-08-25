@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 type Locale = 'en' | 'hi';
 
@@ -17,12 +17,14 @@ const translations = {
     'nav.career': 'Career',
     'nav.business': 'Business',
     'nav.developer': 'Developer',
+    'nav.ai': 'AI Tools',
     'nav.blog': 'Blog',
     'nav.login': 'Login',
     'nav.admin': 'Admin',
     'hero.title': 'Free Online Tools for Work, Money, Career & Everyday Life',
     'hero.subtitle': '74+ free tools — PDF, images, calculators, career, business & developer tools. No signup required.',
     'hero.cta': 'Explore Tools',
+    'hero.search': 'Search tools...',
     'tool.free': 'Free',
     'tool.popular': 'Popular',
     'tool.featured': 'Featured',
@@ -76,6 +78,14 @@ const translations = {
     'admin.revenueDesc': 'Track earnings from AdSense, affiliates, tips',
     'admin.recentContacts': 'Recent Contacts',
     'admin.noContacts': 'No contacts yet.',
+    'categories.all': 'All',
+    'categories.pdf': 'PDF Tools',
+    'categories.image': 'Image Tools',
+    'categories.calculators': 'Calculators',
+    'categories.career': 'Career Tools',
+    'categories.business': 'Business Tools',
+    'categories.developer': 'Developer Tools',
+    'categories.ai': 'AI Tools',
   },
   hi: {
     'nav.tools': 'टूल्स',
@@ -83,12 +93,14 @@ const translations = {
     'nav.career': 'करियर',
     'nav.business': 'बिज़नेस',
     'nav.developer': 'डेवलपर',
+    'nav.ai': 'AI टूल्स',
     'nav.blog': 'ब्लॉग',
     'nav.login': 'लॉगिन',
     'nav.admin': 'एडमिन',
     'hero.title': 'काम, पैसे, करियर और रोज़मर्रा की ज़िंदगी के लिए मुफ़्त ऑनलाइन टूल्स',
     'hero.subtitle': '74+ मुफ़्त टूल्स — PDF, इमेज, कैलकुलेटर, करियर, बिज़नेस और डेवलपर टूल्स। साइनअप की ज़रूरत नहीं।',
     'hero.cta': 'टूल्स देखें',
+    'hero.search': 'टूल्स खोजें...',
     'tool.free': 'मुफ़्त',
     'tool.popular': 'लोकप्रिय',
     'tool.featured': 'विशेष',
@@ -142,17 +154,42 @@ const translations = {
     'admin.revenueDesc': 'AdSense, एफिलिएट्स, टिप्स से कमाई ट्रैक करें',
     'admin.recentContacts': 'हाल के संपर्क',
     'admin.noContacts': 'अभी तक कोई संपर्क नहीं।',
+    'categories.all': 'सभी',
+    'categories.pdf': 'PDF टूल्स',
+    'categories.image': 'इमेज टूल्स',
+    'categories.calculators': 'कैलकुलेटर',
+    'categories.career': 'करियर टूल्स',
+    'categories.business': 'बिज़नेस टूल्स',
+    'categories.developer': 'डेवलपर टूल्स',
+    'categories.ai': 'AI टूल्स',
   },
 };
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('en');
+const STORAGE_KEY = 'toolpilot-locale';
 
-  const t = (key: string): string => {
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [locale, setLocaleState] = useState<Locale>('en');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
+    if (saved && (saved === 'en' || saved === 'hi')) {
+      setLocaleState(saved);
+    }
+    setMounted(true);
+  }, []);
+
+  const setLocale = useCallback((loc: Locale) => {
+    setLocaleState(loc);
+    localStorage.setItem(STORAGE_KEY, loc);
+    document.documentElement.lang = loc === 'hi' ? 'hi' : 'en';
+  }, []);
+
+  const t = useCallback((key: string): string => {
     return (translations[locale] as Record<string, string>)[key] || key;
-  };
+  }, [locale]);
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>

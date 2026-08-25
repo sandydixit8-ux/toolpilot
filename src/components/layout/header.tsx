@@ -6,22 +6,23 @@ import { useSession, signOut } from "next-auth/react";
 import { Search, Menu, X, LogIn, Shield, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
-import { LanguageSwitcher } from "@/components/i18n";
+import { LanguageSwitcher, useI18n } from "@/components/i18n";
 import { searchTools } from "@/config/tools";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Tools", href: "/tools" },
-  { label: "Calculators", href: "/tools/calculators" },
-  { label: "Career", href: "/tools/career" },
-  { label: "Business", href: "/tools/business" },
-  { label: "Developer", href: "/tools/developer" },
-  { label: "AI Tools", href: "/tools/ai" },
-  { label: "Blog", href: "/blog" },
+  { labelKey: "nav.tools", href: "/tools" },
+  { labelKey: "nav.calculators", href: "/tools/calculators" },
+  { labelKey: "nav.career", href: "/tools/career" },
+  { labelKey: "nav.business", href: "/tools/business" },
+  { labelKey: "nav.developer", href: "/tools/developer" },
+  { labelKey: "nav.ai", href: "/tools/ai" },
+  { labelKey: "nav.blog", href: "/blog" },
 ];
 
 export function Header() {
   const { data: session } = useSession();
+  const { t } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -81,7 +82,7 @@ export function Header() {
                 href={item.href}
                 className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
               >
-                {item.label}
+                {t(item.labelKey)}
               </Link>
             ))}
           </nav>
@@ -94,7 +95,7 @@ export function Header() {
               onClick={() => setSearchOpen(true)}
             >
               <Search className="h-4 w-4" />
-              <span className="text-xs">Search tools...</span>
+              <span className="text-xs">{t("hero.search")}</span>
               <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-gray-100 px-1.5 font-mono text-[10px] font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                 Ctrl K
               </kbd>
@@ -106,7 +107,7 @@ export function Header() {
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/admin" className="flex items-center gap-1.5">
                     <Shield className="h-4 w-4" />
-                    <span className="text-xs">Admin</span>
+                    <span className="text-xs">{t("nav.admin")}</span>
                   </Link>
                 </Button>
                 <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => signOut({ callbackUrl: "/" })} title="Logout">
@@ -145,7 +146,7 @@ export function Header() {
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                 >
-                  {item.label}
+                {t(item.labelKey)}
                 </Link>
               ))}
               <div className="border-t border-gray-200 dark:border-gray-800 mt-2 pt-2">
@@ -157,7 +158,7 @@ export function Header() {
                       className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-gray-100 dark:text-blue-400 dark:hover:bg-gray-800"
                     >
                       <Shield className="h-4 w-4" />
-                      Admin Dashboard
+                      {t("admin.dashboard")}
                     </Link>
                     <button
                       onClick={() => { signOut({ callbackUrl: "/" }); setMobileOpen(false); }}
