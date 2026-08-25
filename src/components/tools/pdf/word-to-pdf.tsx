@@ -54,15 +54,11 @@ export function WordToPdfTool() {
             const wMatch = pgSzTag.match(/w:w="(\d+)"/);
             const hMatch = pgSzTag.match(/w:h="(\d+)"/);
             if (wMatch && hMatch) {
-              const w = parseInt(wMatch[1], 10);
-              const h = parseInt(hMatch[1], 10);
-              isLandscape = w > h;
+              isLandscape = parseInt(wMatch[1], 10) > parseInt(hMatch[1], 10);
             }
           }
         }
-      } catch {
-        isLandscape = false;
-      }
+      } catch { /* default portrait */ }
 
       const TABLE_CSS = `
         table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
@@ -77,85 +73,125 @@ export function WordToPdfTool() {
         </div>
       `;
 
-      setProgress('Rendering full document...');
       const A4_W = 210;
       const A4_H = 297;
       const MARGIN = 10;
       const SCALE = 2;
       const CONTAINER_WIDTH = isLandscape ? 1123 : 794;
 
-      const fullContainer = document.createElement('div');
-      fullContainer.style.position = 'absolute';
-      fullContainer.style.left = '-9999px';
-      fullContainer.style.top = '0';
-      fullContainer.style.width = `${CONTAINER_WIDTH}px`;
-      fullContainer.style.padding = '40px';
-      fullContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
-      fullContainer.style.fontSize = '14px';
-      fullContainer.style.lineHeight = '1.6';
-      fullContainer.style.color = '#1a1a1a';
-      fullContainer.style.background = '#ffffff';
-      fullContainer.style.wordWrap = 'break-word';
-      fullContainer.style.overflowWrap = 'break-word';
-      fullContainer.innerHTML = `<style>${TABLE_CSS}</style>${TITLE_HTML}<div>${bodyHtml}</div>`;
-      document.body.appendChild(fullContainer);
-
-      const fullCanvas = await html2canvas(fullContainer, {
-        scale: SCALE,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: CONTAINER_WIDTH,
-      });
-      document.body.removeChild(fullContainer);
-
       const pageWidthMM = isLandscape ? A4_H : A4_W;
       const pageHeightMM = isLandscape ? A4_W : A4_H;
       const contentWidthMM = pageWidthMM - MARGIN * 2;
       const contentHeightMM = pageHeightMM - MARGIN * 2;
 
-      const pxPerMM = fullCanvas.width / contentWidthMM;
+      const pxPerMM = (CONTAINER_WIDTH * SCALE) / contentWidthMM;
       const pageContentHeightPx = Math.floor(contentHeightMM * pxPerMM);
 
-      setProgress(`Generating PDF (${isLandscape ? 'landscape' : 'portrait'})...`);
+      setProgress('Splitting content into pages...');
+      const fullHtml = `<style>${TABLE_CSS}</style>${TITLE_HTML}<div>${bodyHtml}</div>`;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(fullHtml, 'text/html');
+      const elements = Array.from(doc.body.childNodes);
+
+      const measureDiv = document.createElement('div');
+      measureDiv.style.position = 'absolute';
+      measureDiv.style.left = '-9999px';
+      measureDiv.style.width = `${CONTAINER_WIDTH}px`;
+      measureDiv.style.padding = '40px';
+      measureDiv.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      measureDiv.style.fontSize = '14px';
+      measureDiv.style.lineHeight = '1.6';
+      measureDiv.style.wordWrap = 'break-word';
+      measureDiv.style.overflowWrap = 'break-word';
+      document.body.appendChild(measureDiv);
+
+      const getHtml = (el: ChildNode): string => {
+        if (el.nodeType === 1) return (el as Element).outerHTML;
+        return el.textContent || '';
+      };
+
+      const pages: string[] = [];
+      let currentChunk = '';
+
+      for (let i = 0; i < elements.length; i++) {
+        const elHtml = getHtml(elements[i]);
+        const testHtml = currentChunk + elHtml;
+        measureDiv.innerHTML = testHtml;
+        const height = measureDiv.scrollHeight;
+
+        if (height > pageContentHeightPx && currentChunk.length > 0) {
+          pages.push(currentChunk);
+          currentChunk = elHtml;
+          measureDiv.innerHTML = elHtml;
+        } else {
+          currentChunk = testHtml;
+        }
+      }
+
+      if (currentChunk) {
+        pages.push(currentChunk);
+      }
+
+      document.body.removeChild(measureDiv);
+
+      setProgress(`Rendering ${pages.length} pages...`);
       const pdfDoc = await PDFDocument.create();
 
-      let srcY = 0;
-      let pageNum = 0;
+      for (let i = 0; i < pages.length; i++) {
+        setProgress(`Rendering page ${i + 1} of ${pages.length}...`);
 
-      while (srcY < fullCanvas.height) {
-        setProgress(`Rendering page ${pageNum + 1}...`);
+        const pageContainer = document.createElement('div');
+        pageContainer.style.position = 'absolute';
+        pageContainer.style.left = '-9999px';
+        pageContainer.style.top = '0';
+        pageContainer.style.width = `${CONTAINER_WIDTH}px`;
+        pageContainer.style.padding = '40px';
+        pageContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
+        pageContainer.style.fontSize = '14px';
+        pageContainer.style.lineHeight = '1.6';
+        pageContainer.style.color = '#1a1a1a';
+        pageContainer.style.background = '#ffffff';
+        pageContainer.style.wordWrap = 'break-word';
+        pageContainer.style.overflowWrap = 'break-word';
+        pageContainer.innerHTML = pages[i];
+        document.body.appendChild(pageContainer);
 
-        const currentSrcHeight = Math.min(pageContentHeightPx, fullCanvas.height - srcY);
-        const destHeightMM = currentSrcHeight / pxPerMM;
-
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = fullCanvas.width;
-        pageCanvas.height = currentSrcHeight;
-        const ctx = pageCanvas.getContext('2d')!;
-        ctx.drawImage(
-          fullCanvas,
-          0, srcY, fullCanvas.width, currentSrcHeight,
-          0, 0, fullCanvas.width, currentSrcHeight
-        );
+        const pageCanvas = await html2canvas(pageContainer, {
+          scale: SCALE,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          windowWidth: CONTAINER_WIDTH,
+        });
+        document.body.removeChild(pageContainer);
 
         const jpegDataUrl = pageCanvas.toDataURL('image/jpeg', 0.92);
         const jpegBytes = Uint8Array.from(atob(jpegDataUrl.split(',')[1]), c => c.charCodeAt(0));
         const jpegImage = await pdfDoc.embedJpg(jpegBytes);
 
-        const drawX = MARGIN;
-        const drawY = pageHeightMM - MARGIN - destHeightMM;
+        const imgAspect = pageCanvas.width / pageCanvas.height;
+        const pdfContentAspect = contentWidthMM / contentHeightMM;
+
+        let drawWidth: number;
+        let drawHeight: number;
+        if (imgAspect > pdfContentAspect) {
+          drawWidth = contentWidthMM;
+          drawHeight = contentWidthMM / imgAspect;
+        } else {
+          drawHeight = contentHeightMM;
+          drawWidth = contentHeightMM * imgAspect;
+        }
+
+        const drawX = MARGIN + (contentWidthMM - drawWidth) / 2;
+        const drawY = MARGIN + (contentHeightMM - drawHeight) / 2;
 
         const page = pdfDoc.addPage([pageWidthMM, pageHeightMM]);
         page.drawImage(jpegImage, {
           x: drawX,
-          y: drawY,
-          width: contentWidthMM,
-          height: destHeightMM,
+          y: pageHeightMM - drawY - drawHeight,
+          width: drawWidth,
+          height: drawHeight,
         });
-
-        srcY += currentSrcHeight;
-        pageNum++;
       }
 
       setProgress('Finalizing PDF...');
@@ -163,7 +199,7 @@ export function WordToPdfTool() {
       const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
       setFilename(outFilename);
-      setPageCount(pageNum);
+      setPageCount(pages.length);
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
       setProgress('');
