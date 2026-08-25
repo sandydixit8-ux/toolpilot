@@ -64,7 +64,7 @@ export function WordToPdfTool() {
 
       setProgress('Generating PDF...');
       const fullCanvas = await html2canvas(container, {
-        scale: 1.5,
+        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
@@ -74,29 +74,18 @@ export function WordToPdfTool() {
 
       const isLandscape = fullCanvas.width > fullCanvas.height;
 
-      const A4_WIDTH_MM = 210;
-      const A4_HEIGHT_MM = 297;
-      const MARGIN_MM = 10;
+      const A4_W = 210;
+      const A4_H = 297;
+      const MARGIN = 10;
 
-      let pageWidthMM: number;
-      let pageHeightMM: number;
+      const pageWidthMM = isLandscape ? A4_H : A4_W;
+      const pageHeightMM = isLandscape ? A4_W : A4_H;
 
-      if (isLandscape) {
-        pageWidthMM = A4_HEIGHT_MM;
-        pageHeightMM = A4_WIDTH_MM;
-      } else {
-        pageWidthMM = A4_WIDTH_MM;
-        pageHeightMM = A4_HEIGHT_MM;
-      }
+      const contentWidthMM = pageWidthMM - MARGIN * 2;
+      const contentHeightMM = pageHeightMM - MARGIN * 2;
 
-      const contentWidthMM = pageWidthMM - MARGIN_MM * 2;
-      const contentHeightMM = pageHeightMM - MARGIN_MM * 2;
-
-      const mmToPx = (mm: number) => Math.round((mm / 25.4) * 96);
-      const pageContentWidthPx = mmToPx(contentWidthMM);
-      const pageContentHeightPx = mmToPx(contentHeightMM);
-
-      const totalImgHeight = (fullCanvas.height * pageContentWidthPx) / fullCanvas.width;
+      const pxPerMM = fullCanvas.width / contentWidthMM;
+      const pageContentHeightPx = Math.floor(contentHeightMM * pxPerMM);
 
       const pdfDoc = await PDFDocument.create();
 
@@ -107,7 +96,7 @@ export function WordToPdfTool() {
         setProgress(`Rendering page ${pageNum + 1}...`);
 
         const currentSrcHeight = Math.min(pageContentHeightPx, fullCanvas.height - srcY);
-        const destHeightMM = (currentSrcHeight / pageContentWidthPx) * contentWidthMM;
+        const destHeightMM = currentSrcHeight / pxPerMM;
 
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = fullCanvas.width;
@@ -119,14 +108,14 @@ export function WordToPdfTool() {
           0, 0, fullCanvas.width, currentSrcHeight
         );
 
-        const pngDataUrl = pageCanvas.toDataURL('image/png');
-        const pngBytes = Uint8Array.from(atob(pngDataUrl.split(',')[1]), c => c.charCodeAt(0));
-        const pngImage = await pdfDoc.embedPng(pngBytes);
+        const jpegDataUrl = pageCanvas.toDataURL('image/jpeg', 0.92);
+        const jpegBytes = Uint8Array.from(atob(jpegDataUrl.split(',')[1]), c => c.charCodeAt(0));
+        const jpegImage = await pdfDoc.embedJpg(jpegBytes);
 
         const page = pdfDoc.addPage([pageWidthMM, pageHeightMM]);
-        page.drawImage(pngImage, {
-          x: MARGIN_MM,
-          y: pageHeightMM - MARGIN_MM - destHeightMM,
+        page.drawImage(jpegImage, {
+          x: MARGIN,
+          y: pageHeightMM - MARGIN - destHeightMM,
           width: contentWidthMM,
           height: destHeightMM,
         });
@@ -137,7 +126,7 @@ export function WordToPdfTool() {
 
       setProgress('Finalizing PDF...');
       const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
       setFilename(outFilename);
       setPageCount(pageNum);
