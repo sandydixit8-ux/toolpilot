@@ -137,6 +137,8 @@ export function WordToPdfTool() {
       setProgress(`Rendering ${pages.length} pages...`);
       const pdfDoc = await PDFDocument.create();
 
+      const canvasPageHeightPx = Math.floor((contentHeightMM / contentWidthMM) * CONTAINER_WIDTH * SCALE);
+
       for (let i = 0; i < pages.length; i++) {
         setProgress(`Rendering page ${i + 1} of ${pages.length}...`);
 
@@ -165,33 +167,62 @@ export function WordToPdfTool() {
         });
         document.body.removeChild(pageContainer);
 
-        const jpegDataUrl = pageCanvas.toDataURL('image/jpeg', 0.92);
-        const jpegBytes = Uint8Array.from(atob(jpegDataUrl.split(',')[1]), c => c.charCodeAt(0));
-        const jpegImage = await pdfDoc.embedJpg(jpegBytes);
+        if (pageCanvas.height <= canvasPageHeightPx) {
+          const jpegDataUrl = pageCanvas.toDataURL('image/jpeg', 0.92);
+          const jpegBytes = Uint8Array.from(atob(jpegDataUrl.split(',')[1]), c => c.charCodeAt(0));
+          const jpegImage = await pdfDoc.embedJpg(jpegBytes);
 
-        const imgAspect = pageCanvas.width / pageCanvas.height;
-        const pdfContentAspect = contentWidthMM / contentHeightMM;
+          const imgAspect = pageCanvas.width / pageCanvas.height;
+          const pdfContentAspect = contentWidthMM / contentHeightMM;
+          let drawW: number, drawH: number;
+          if (imgAspect > pdfContentAspect) {
+            drawW = contentWidthMM;
+            drawH = contentWidthMM / imgAspect;
+          } else {
+            drawH = contentHeightMM;
+            drawW = contentHeightMM * imgAspect;
+          }
+          const drawX = MARGIN + (contentWidthMM - drawW) / 2;
+          const drawY = MARGIN + (contentHeightMM - drawH) / 2;
 
-        let drawWidth: number;
-        let drawHeight: number;
-        if (imgAspect > pdfContentAspect) {
-          drawWidth = contentWidthMM;
-          drawHeight = contentWidthMM / imgAspect;
+          const page = pdfDoc.addPage([pageWidthMM, pageHeightMM]);
+          page.drawImage(jpegImage, {
+            x: drawX,
+            y: pageHeightMM - drawY - drawH,
+            width: drawW,
+            height: drawH,
+          });
         } else {
-          drawHeight = contentHeightMM;
-          drawWidth = contentHeightMM * imgAspect;
+          let srcY = 0;
+          while (srcY < pageCanvas.height) {
+            const clipHeight = Math.min(canvasPageHeightPx, pageCanvas.height - srcY);
+            const destHeightMM = (clipHeight / canvasPageHeightPx) * contentHeightMM;
+
+            const clipCanvas = document.createElement('canvas');
+            clipCanvas.width = pageCanvas.width;
+            clipCanvas.height = clipHeight;
+            const ctx = clipCanvas.getContext('2d')!;
+            ctx.drawImage(
+              pageCanvas,
+              0, srcY, pageCanvas.width, clipHeight,
+              0, 0, pageCanvas.width, clipHeight
+            );
+
+            const jpegDataUrl = clipCanvas.toDataURL('image/jpeg', 0.92);
+            const jpegBytes = Uint8Array.from(atob(jpegDataUrl.split(',')[1]), c => c.charCodeAt(0));
+            const jpegImage = await pdfDoc.embedJpg(jpegBytes);
+
+            const page = pdfDoc.addPage([pageWidthMM, pageHeightMM]);
+            page.drawImage(jpegImage, {
+              x: MARGIN,
+              y: pageHeightMM - MARGIN - destHeightMM,
+              width: contentWidthMM,
+              height: destHeightMM,
+            });
+
+            srcY += clipHeight;
+          }
         }
-
-        const drawX = MARGIN + (contentWidthMM - drawWidth) / 2;
-        const drawY = MARGIN + (contentHeightMM - drawHeight) / 2;
-
-        const page = pdfDoc.addPage([pageWidthMM, pageHeightMM]);
-        page.drawImage(jpegImage, {
-          x: drawX,
-          y: pageHeightMM - drawY - drawHeight,
-          width: drawWidth,
-          height: drawHeight,
-        });
       }
 
       setProgress('Finalizing PDF...');
@@ -199,7 +230,7 @@ export function WordToPdfTool() {
       const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
       setFilename(outFilename);
-      setPageCount(pages.length);
+      setPageCount(pdfDoc.getPageCount());
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
       setProgress('');
