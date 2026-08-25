@@ -8,7 +8,7 @@ const execFileAsync = promisify(execFile);
 
 const CONVERSION_TIMEOUT = 120_000;
 
-function findLibreOfficePath(): string {
+function findLibreOfficePath(): string | null {
   const platform = os.platform();
 
   if (platform === 'win32') {
@@ -22,7 +22,7 @@ function findLibreOfficePath(): string {
         return p;
       } catch {}
     }
-    return 'soffice';
+    return null;
   }
 
   const candidates = [
@@ -57,36 +57,72 @@ export async function convertDocxToPdf(
   const warnings: string[] = [];
   const sofficePath = findLibreOfficePath();
 
+  if (!sofficePath) {
+    return {
+      success: false,
+      error: 'LibreOffice is not installed. Please install LibreOffice to enable document conversion.',
+      warnings: [],
+    };
+  }
+
   await fs.mkdir(outputDir, { recursive: true });
 
-  try {
-    const { stdout, stderr } = await execFileAsync(
-      sofficePath,
-      [
-        '--headless',
-        '--norestore',
-        '--convert-to',
-        'pdf:writer_pdf_Export',
-        '--outdir',
-        outputDir,
-        inputPath,
-      ],
-      {
-        timeout,
-        maxBuffer: 50 * 1024 * 1024,
-        env: {
-          ...process.env,
-          HOME: os.tmpdir(),
-        },
-      }
-    );
+  const loProfileDir = path.join(os.tmpdir(), 'toolpilotpro', 'lo-profile');
+  await fs.mkdir(loProfileDir, { recursive: true });
 
-    if (stderr && stderr.includes('Warning')) {
-      warnings.push('LibreOffice reported warnings during conversion.');
+  try {
+    const args = [
+      '--headless',
+      '--norestore',
+      '--nofirststartwizard',
+      '--convert-to',
+      'pdf:writer_pdf_Export',
+      '--outdir',
+      outputDir,
+      inputPath,
+    ];
+
+    const env = {
+      ...process.env,
+      HOME: os.tmpdir(),
+      TMPDIR: os.tmpdir(),
+      TEMP: os.tmpdir(),
+      TMP: os.tmpdir(),
+    };
+
+    if (os.platform() === 'win32') {
+      env.USERPROFILE = loProfileDir;
     }
 
     const baseName = path.basename(inputPath, path.extname(inputPath));
     const pdfPath = path.join(outputDir, `${baseName}.pdf`);
+
+    let stdout = '';
+    let stderr = '';
+
+    try {
+      const result = await execFileAsync(sofficePath, args, {
+        timeout,
+        maxBuffer: 50 * 1024 * 1024,
+        env,
+        windowsHide: true,
+      });
+      stdout = result.stdout;
+      stderr = result.stderr;
+    } catch (execErr: any) {
+      stderr = execErr.stderr || '';
+      stdout = execErr.stdout || '';
+
+      try {
+        await fs.access(pdfPath);
+      } catch {
+        throw execErr;
+      }
+    }
+
+    if (stderr && stderr.includes('Warning')) {
+      warnings.push('LibreOffice reported warnings during conversion.');
+    }
 
     try {
       await fs.access(pdfPath);
