@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { UploadBox } from '@/components/tools/upload-box';
-import { FileText, Loader2, CheckCircle, Download } from 'lucide-react';
+import { FileText, CheckCircle, Download } from 'lucide-react';
 import { ProcessingOverlay } from '@/components/tools/processing-overlay';
 import { Sparkles } from 'lucide-react';
 
@@ -39,12 +39,13 @@ export function WordToPdfTool() {
         return;
       }
 
+      // First render in wide container to detect orientation
       setProgress('Rendering document...');
       const container = document.createElement('div');
       container.style.position = 'absolute';
       container.style.left = '-9999px';
       container.style.top = '0';
-      container.style.width = '794px'; // A4 width at 96dpi
+      container.style.width = '1123px'; // A4 landscape width at 96dpi
       container.style.padding = '40px';
       container.style.fontFamily = 'Arial, Helvetica, sans-serif';
       container.style.fontSize = '14px';
@@ -67,29 +68,38 @@ export function WordToPdfTool() {
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
+        windowWidth: 1123,
       });
       document.body.removeChild(container);
 
+      // Detect landscape: if rendered width > height significantly
+      const aspectRatio = canvas.width / canvas.height;
+      const isLandscape = aspectRatio > 1.3;
+
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const orientation = isLandscape ? 'l' : 'p';
+      const pdf = new jsPDF(orientation, 'mm', 'a4');
+
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth - 20; // 10mm margin each side
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const margin = 10;
+      const contentWidth = pdfWidth - margin * 2;
+      const contentHeight = pdfHeight - margin * 2;
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
 
       let heightLeft = imgHeight;
-      let position = 10; // top margin
+      let position = margin;
 
       // First page
-      pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-      heightLeft -= (pdfHeight - 20); // minus top/bottom margins
+      pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
+      heightLeft -= contentHeight;
 
       // Additional pages if needed
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight + 10;
+        position = heightLeft - imgHeight + margin;
         pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-        heightLeft -= (pdfHeight - 20);
+        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
+        heightLeft -= contentHeight;
       }
 
       const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
