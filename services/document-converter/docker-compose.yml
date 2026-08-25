@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  document-converter:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+    tmpfs:
+      - /tmp:size=512M
