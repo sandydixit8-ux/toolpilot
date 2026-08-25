@@ -6,79 +6,6 @@ import { FileText, CheckCircle, Download } from 'lucide-react';
 import { ProcessingOverlay } from '@/components/tools/processing-overlay';
 import { Sparkles } from 'lucide-react';
 
-interface PageChunk {
-  html: string;
-}
-
-function splitHtmlIntoPages(html: string, containerWidth: number, pageHeightPx: number): string[] {
-  const fullContainer = document.createElement('div');
-  fullContainer.style.position = 'absolute';
-  fullContainer.style.left = '-9999px';
-  fullContainer.style.top = '0';
-  fullContainer.style.width = `${containerWidth}px`;
-  fullContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
-  fullContainer.style.fontSize = '14px';
-  fullContainer.style.lineHeight = '1.6';
-  fullContainer.style.padding = '40px';
-  fullContainer.style.wordWrap = 'break-word';
-  fullContainer.style.overflowWrap = 'break-word';
-  fullContainer.innerHTML = html;
-  document.body.appendChild(fullContainer);
-
-  const totalHeight = fullContainer.scrollHeight;
-  document.body.removeChild(fullContainer);
-
-  if (totalHeight <= pageHeightPx) {
-    return [html];
-  }
-
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const elements = Array.from(doc.body.childNodes);
-  const pages: string[] = [];
-  let currentChunks: string[] = [];
-
-  const measureContainer = document.createElement('div');
-  measureContainer.style.position = 'absolute';
-  measureContainer.style.left = '-9999px';
-  measureContainer.style.width = `${containerWidth}px`;
-  measureContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
-  measureContainer.style.fontSize = '14px';
-  measureContainer.style.lineHeight = '1.6';
-  measureContainer.style.padding = '40px';
-  measureContainer.style.wordWrap = 'break-word';
-  measureContainer.style.overflowWrap = 'break-word';
-  document.body.appendChild(measureContainer);
-
-  const getHtml = (el: ChildNode): string => {
-    if (el.nodeType === 1) return (el as Element).outerHTML;
-    return el.textContent || '';
-  };
-
-  for (let i = 0; i < elements.length; i++) {
-    const el = elements[i];
-    const elHtml = getHtml(el);
-    measureContainer.innerHTML = currentChunks.join('') + elHtml;
-    const newHeight = measureContainer.scrollHeight;
-
-    if (newHeight > pageHeightPx && currentChunks.length > 0) {
-      pages.push(currentChunks.join(''));
-      currentChunks = [];
-      measureContainer.innerHTML = elHtml;
-      currentChunks.push(elHtml);
-    } else {
-      currentChunks.push(elHtml);
-    }
-  }
-
-  document.body.removeChild(measureContainer);
-
-  if (currentChunks.length > 0) {
-    pages.push(currentChunks.join(''));
-  }
-
-  return pages;
-}
-
 export function WordToPdfTool() {
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<'idle' | 'processing' | 'complete' | 'error'>('idle');
@@ -113,120 +40,101 @@ export function WordToPdfTool() {
         return;
       }
 
-      setProgress('Detecting layout...');
+      const TABLE_CSS = `
+        table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+        th, td { border: 1px solid #333; padding: 6px 10px; text-align: left; vertical-align: top; }
+        th { background: #f0f0f0; font-weight: bold; }
+        tr:nth-child(even) { background: #fafafa; }
+      `;
 
+      const TITLE_HTML = `
+        <div style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2563eb;">
+          <h1 style="margin: 0; font-size: 22px; color: #2563eb;">${file.name.replace(/\.(doc|docx)$/i, '')}</h1>
+        </div>
+      `;
+
+      setProgress('Rendering full document...');
       const CONTAINER_WIDTH = 1123;
       const SCALE = 2;
       const A4_W = 210;
       const A4_H = 297;
       const MARGIN = 10;
 
-      const probeContainer = document.createElement('div');
-      probeContainer.style.position = 'absolute';
-      probeContainer.style.left = '-9999px';
-      probeContainer.style.width = `${CONTAINER_WIDTH}px`;
-      probeContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
-      probeContainer.style.fontSize = '14px';
-      probeContainer.style.lineHeight = '1.6';
-      probeContainer.style.padding = '40px';
-      probeContainer.style.wordWrap = 'break-word';
-      probeContainer.style.overflowWrap = 'break-word';
-      probeContainer.innerHTML = `<div>${bodyHtml}</div>`;
-      document.body.appendChild(probeContainer);
-      const naturalHeight = probeContainer.scrollHeight;
-      document.body.removeChild(probeContainer);
+      const fullContainer = document.createElement('div');
+      fullContainer.style.position = 'absolute';
+      fullContainer.style.left = '-9999px';
+      fullContainer.style.top = '0';
+      fullContainer.style.width = `${CONTAINER_WIDTH}px`;
+      fullContainer.style.padding = '40px';
+      fullContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      fullContainer.style.fontSize = '14px';
+      fullContainer.style.lineHeight = '1.6';
+      fullContainer.style.color = '#1a1a1a';
+      fullContainer.style.background = '#ffffff';
+      fullContainer.style.wordWrap = 'break-word';
+      fullContainer.style.overflowWrap = 'break-word';
+      fullContainer.innerHTML = `<style>${TABLE_CSS}</style>${TITLE_HTML}<div>${bodyHtml}</div>`;
+      document.body.appendChild(fullContainer);
 
-      const probeCanvas = document.createElement('canvas');
-      probeCanvas.width = CONTAINER_WIDTH;
-      probeCanvas.height = Math.min(naturalHeight, 4000);
-      const probeCtx = probeCanvas.getContext('2d')!;
-      const probeImg = await html2canvas(probeContainer, { scale: SCALE, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: CONTAINER_WIDTH }).catch(() => null);
+      const fullCanvas = await html2canvas(fullContainer, {
+        scale: SCALE,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: CONTAINER_WIDTH,
+      });
+      document.body.removeChild(fullContainer);
 
-      let isLandscape: boolean;
-      if (probeImg) {
-        isLandscape = probeImg.width > probeImg.height;
-      } else {
-        isLandscape = naturalHeight < CONTAINER_WIDTH * 0.7;
-      }
+      setProgress('Detecting layout...');
+      const isLandscape = fullCanvas.width > fullCanvas.height;
 
       const pageWidthMM = isLandscape ? A4_H : A4_W;
       const pageHeightMM = isLandscape ? A4_W : A4_H;
       const contentWidthMM = pageWidthMM - MARGIN * 2;
       const contentHeightMM = pageHeightMM - MARGIN * 2;
 
-      const containerWidth = CONTAINER_WIDTH;
-      const pxPerMM = (containerWidth * SCALE) / contentWidthMM;
+      const pxPerMM = fullCanvas.width / contentWidthMM;
       const pageContentHeightPx = Math.floor(contentHeightMM * pxPerMM);
 
-      setProgress('Splitting into pages...');
-      const pageHtmls = splitHtmlIntoPages(
-        `<div style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2563eb;">
-          <h1 style="margin: 0; font-size: 22px; color: #2563eb;">${file.name.replace(/\.(doc|docx)$/i, '')}</h1>
-        </div>
-        <div>${bodyHtml}</div>`,
-        containerWidth,
-        pageContentHeightPx
-      );
-
-      setProgress(`Rendering ${pageHtmls.length} pages...`);
+      setProgress(`Generating PDF (${isLandscape ? 'landscape' : 'portrait'})...`);
       const pdfDoc = await PDFDocument.create();
 
-      for (let i = 0; i < pageHtmls.length; i++) {
-        setProgress(`Rendering page ${i + 1} of ${pageHtmls.length}...`);
+      let srcY = 0;
+      let pageNum = 0;
 
-        const pageContainer = document.createElement('div');
-        pageContainer.style.position = 'absolute';
-        pageContainer.style.left = '-9999px';
-        pageContainer.style.top = '0';
-        pageContainer.style.width = `${containerWidth}px`;
-        pageContainer.style.padding = '40px';
-        pageContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
-        pageContainer.style.fontSize = '14px';
-        pageContainer.style.lineHeight = '1.6';
-        pageContainer.style.color = '#1a1a1a';
-        pageContainer.style.background = '#ffffff';
-        pageContainer.style.wordWrap = 'break-word';
-        pageContainer.style.overflowWrap = 'break-word';
-        pageContainer.innerHTML = pageHtmls[i];
-        document.body.appendChild(pageContainer);
+      while (srcY < fullCanvas.height) {
+        setProgress(`Rendering page ${pageNum + 1}...`);
 
-        const pageCanvas = await html2canvas(pageContainer, {
-          scale: SCALE,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: containerWidth,
-        });
-        document.body.removeChild(pageContainer);
+        const currentSrcHeight = Math.min(pageContentHeightPx, fullCanvas.height - srcY);
+        const destHeightMM = currentSrcHeight / pxPerMM;
+
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = fullCanvas.width;
+        pageCanvas.height = currentSrcHeight;
+        const ctx = pageCanvas.getContext('2d')!;
+        ctx.drawImage(
+          fullCanvas,
+          0, srcY, fullCanvas.width, currentSrcHeight,
+          0, 0, fullCanvas.width, currentSrcHeight
+        );
 
         const jpegDataUrl = pageCanvas.toDataURL('image/jpeg', 0.92);
         const jpegBytes = Uint8Array.from(atob(jpegDataUrl.split(',')[1]), c => c.charCodeAt(0));
         const jpegImage = await pdfDoc.embedJpg(jpegBytes);
 
-        const imgAspect = pageCanvas.width / pageCanvas.height;
-        const pdfContentAspect = contentWidthMM / contentHeightMM;
-
-        let drawWidth: number;
-        let drawHeight: number;
-
-        if (imgAspect > pdfContentAspect) {
-          drawWidth = contentWidthMM;
-          drawHeight = contentWidthMM / imgAspect;
-        } else {
-          drawHeight = contentHeightMM;
-          drawWidth = contentHeightMM * imgAspect;
-        }
-
-        const drawX = MARGIN + (contentWidthMM - drawWidth) / 2;
-        const drawY = MARGIN + (contentHeightMM - drawHeight) / 2;
+        const drawX = MARGIN;
+        const drawY = pageHeightMM - MARGIN - destHeightMM;
 
         const page = pdfDoc.addPage([pageWidthMM, pageHeightMM]);
         page.drawImage(jpegImage, {
           x: drawX,
-          y: pageHeightMM - drawY - drawHeight,
-          width: drawWidth,
-          height: drawHeight,
+          y: drawY,
+          width: contentWidthMM,
+          height: destHeightMM,
         });
+
+        srcY += currentSrcHeight;
+        pageNum++;
       }
 
       setProgress('Finalizing PDF...');
@@ -234,7 +142,7 @@ export function WordToPdfTool() {
       const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
       const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
       setFilename(outFilename);
-      setPageCount(pageHtmls.length);
+      setPageCount(pageNum);
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
       setProgress('');
