@@ -26,6 +26,7 @@ export function WordToPdfTool() {
       const mammoth = await import('mammoth');
       const html2canvas = (await import('html2canvas')).default;
       const { PDFDocument } = await import('pdf-lib');
+      const JSZip = (await import('jszip')).default;
 
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();
@@ -38,6 +39,29 @@ export function WordToPdfTool() {
         setError('Could not extract text from document.');
         setStatus('error');
         return;
+      }
+
+      setProgress('Detecting page orientation...');
+      let isLandscape = false;
+      try {
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const docXmlFile = zip.file('word/document.xml');
+        if (docXmlFile) {
+          const docXml = await docXmlFile.async('text');
+          const pgSzMatch = docXml.match(/<w:pgSz[^/]*?\/>/);
+          if (pgSzMatch) {
+            const pgSzTag = pgSzMatch[0];
+            const wMatch = pgSzTag.match(/w:w="(\d+)"/);
+            const hMatch = pgSzTag.match(/w:h="(\d+)"/);
+            if (wMatch && hMatch) {
+              const w = parseInt(wMatch[1], 10);
+              const h = parseInt(hMatch[1], 10);
+              isLandscape = w > h;
+            }
+          }
+        }
+      } catch {
+        isLandscape = false;
       }
 
       const TABLE_CSS = `
@@ -54,11 +78,11 @@ export function WordToPdfTool() {
       `;
 
       setProgress('Rendering full document...');
-      const CONTAINER_WIDTH = 1123;
-      const SCALE = 2;
       const A4_W = 210;
       const A4_H = 297;
       const MARGIN = 10;
+      const SCALE = 2;
+      const CONTAINER_WIDTH = isLandscape ? 1123 : 794;
 
       const fullContainer = document.createElement('div');
       fullContainer.style.position = 'absolute';
@@ -84,9 +108,6 @@ export function WordToPdfTool() {
         windowWidth: CONTAINER_WIDTH,
       });
       document.body.removeChild(fullContainer);
-
-      setProgress('Detecting layout...');
-      const isLandscape = fullCanvas.width > fullCanvas.height;
 
       const pageWidthMM = isLandscape ? A4_H : A4_W;
       const pageHeightMM = isLandscape ? A4_W : A4_H;
