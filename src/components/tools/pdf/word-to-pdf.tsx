@@ -23,6 +23,7 @@ export function WordToPdfTool() {
 
     try {
       const mammoth = await import('mammoth');
+      const html2canvas = (await import('html2canvas')).default;
       const { default: jsPDF } = await import('jspdf');
 
       const file = files[0];
@@ -38,51 +39,90 @@ export function WordToPdfTool() {
         return;
       }
 
-      setProgress('Generating PDF...');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      // Create styled HTML content
-      const styledHtml = `
-        <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; padding: 10px;">
-          <div style="margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #2563eb;">
-            <h1 style="margin: 0; font-size: 20px; color: #2563eb;">${file.name.replace(/\.(doc|docx)$/i, '')}</h1>
-          </div>
-          ${html}
-        </div>
-      `;
-
-      // Create temporary container for rendering
+      setProgress('Rendering document...');
       const container = document.createElement('div');
       container.style.position = 'absolute';
       container.style.left = '-9999px';
       container.style.top = '0';
-      container.style.width = '794px'; // A4 width at 96dpi
-      container.innerHTML = styledHtml;
+      container.style.width = '1123px';
+      container.style.padding = '40px';
+      container.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      container.style.fontSize = '14px';
+      container.style.lineHeight = '1.6';
+      container.style.color = '#1a1a1a';
+      container.style.background = '#ffffff';
+      container.style.wordWrap = 'break-word';
+      container.style.overflowWrap = 'break-word';
+      container.innerHTML = `
+        <div style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2563eb;">
+          <h1 style="margin: 0; font-size: 22px; color: #2563eb;">${file.name.replace(/\.(doc|docx)$/i, '')}</h1>
+        </div>
+        <div>${html}</div>
+      `;
       document.body.appendChild(container);
 
-      // Use jsPDF.html() which handles multi-page splitting automatically
-      await pdf.html(container, {
-        callback: function (doc) {
-          document.body.removeChild(container);
-          const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
-          setFilename(outFilename);
-          const blob = doc.output('blob');
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-          setProgress('');
-          setStatus('complete');
-        },
-        x: 10,
-        y: 10,
-        width: 170, // A4 width minus margins (210 - 20)
-        windowWidth: 794,
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-        },
+      setProgress('Generating PDF...');
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1123,
       });
+      document.body.removeChild(container);
+
+      const isLandscape = canvas.width > canvas.height;
+      const orientation = isLandscape ? 'l' : 'p';
+      const pdf = new jsPDF(orientation, 'mm', 'a4');
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pdfWidth - margin * 2;
+      const contentHeight = pdfHeight - margin * 2;
+
+      const scaledImgWidth = contentWidth;
+      const scaledImgHeight = (canvas.height * contentWidth) / canvas.width;
+
+      const pageCanvas = document.createElement('canvas');
+      const pageCtx = pageCanvas.getContext('2d')!;
+
+      const srcPageHeight = (canvas.width * contentHeight) / contentWidth;
+
+      let srcY = 0;
+      let isFirstPage = true;
+
+      while (srcY < canvas.height) {
+        if (!isFirstPage) {
+          pdf.addPage();
+        }
+
+        const currentSrcHeight = Math.min(srcPageHeight, canvas.height - srcY);
+        const destHeight = (currentSrcHeight * contentWidth) / canvas.width;
+
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = currentSrcHeight;
+        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+        pageCtx.drawImage(
+          canvas,
+          0, srcY, canvas.width, currentSrcHeight,
+          0, 0, canvas.width, currentSrcHeight
+        );
+
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.92);
+        pdf.addImage(pageImgData, 'JPEG', margin, margin, contentWidth, destHeight);
+
+        srcY += srcPageHeight;
+        isFirstPage = false;
+      }
+
+      const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
+      setFilename(outFilename);
+      const blob = pdf.output('blob');
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+      setProgress('');
+      setStatus('complete');
     } catch (err) {
       console.error('Word to PDF conversion error:', err);
       setError('Conversion failed. Please try a different file.');
@@ -138,10 +178,7 @@ export function WordToPdfTool() {
         />
 
         {status === 'processing' && (
-          <ProcessingOverlay
-            status="processing"
-            progress={progress}
-          />
+          <ProcessingOverlay status="processing" progress={progress} />
         )}
 
         {status === 'complete' && (
