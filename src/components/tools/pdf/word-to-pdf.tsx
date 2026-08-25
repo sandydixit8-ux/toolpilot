@@ -23,7 +23,6 @@ export function WordToPdfTool() {
 
     try {
       const mammoth = await import('mammoth');
-      const { default: html2canvas } = await import('html2canvas');
       const { default: jsPDF } = await import('jspdf');
 
       const file = files[0];
@@ -39,76 +38,51 @@ export function WordToPdfTool() {
         return;
       }
 
-      // First render in wide container to detect orientation
-      setProgress('Rendering document...');
+      setProgress('Generating PDF...');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      // Create styled HTML content
+      const styledHtml = `
+        <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a1a; padding: 10px;">
+          <div style="margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #2563eb;">
+            <h1 style="margin: 0; font-size: 20px; color: #2563eb;">${file.name.replace(/\.(doc|docx)$/i, '')}</h1>
+          </div>
+          ${html}
+        </div>
+      `;
+
+      // Create temporary container for rendering
       const container = document.createElement('div');
       container.style.position = 'absolute';
       container.style.left = '-9999px';
       container.style.top = '0';
-      container.style.width = '1123px'; // A4 landscape width at 96dpi
-      container.style.padding = '40px';
-      container.style.fontFamily = 'Arial, Helvetica, sans-serif';
-      container.style.fontSize = '14px';
-      container.style.lineHeight = '1.6';
-      container.style.color = '#1a1a1a';
-      container.style.background = '#ffffff';
-      container.innerHTML = `
-        <div style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2563eb;">
-          <h1 style="margin: 0; font-size: 22px; color: #2563eb;">${file.name.replace(/\.(doc|docx)$/i, '')}</h1>
-        </div>
-        <div style="word-wrap: break-word; overflow-wrap: break-word;">
-          ${html}
-        </div>
-      `;
+      container.style.width = '794px'; // A4 width at 96dpi
+      container.innerHTML = styledHtml;
       document.body.appendChild(container);
 
-      setProgress('Generating PDF...');
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: 1123,
+      // Use jsPDF.html() which handles multi-page splitting automatically
+      await pdf.html(container, {
+        callback: function (doc) {
+          document.body.removeChild(container);
+          const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
+          setFilename(outFilename);
+          const blob = doc.output('blob');
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          setProgress('');
+          setStatus('complete');
+        },
+        x: 10,
+        y: 10,
+        width: 170, // A4 width minus margins (210 - 20)
+        windowWidth: 794,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+        },
       });
-      document.body.removeChild(container);
-
-      // Detect landscape: if rendered width > height significantly
-      const aspectRatio = canvas.width / canvas.height;
-      const isLandscape = aspectRatio > 1.3;
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const orientation = isLandscape ? 'l' : 'p';
-      const pdf = new jsPDF(orientation, 'mm', 'a4');
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const contentWidth = pdfWidth - margin * 2;
-      const contentHeight = pdfHeight - margin * 2;
-      const imgHeight = (canvas.height * contentWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = margin;
-
-      // First page
-      pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-      heightLeft -= contentHeight;
-
-      // Additional pages if needed
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + margin;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, imgHeight);
-        heightLeft -= contentHeight;
-      }
-
-      const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
-      setFilename(outFilename);
-      const blob = pdf.output('blob');
-      const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
-      setProgress('');
-      setStatus('complete');
     } catch (err) {
       console.error('Word to PDF conversion error:', err);
       setError('Conversion failed. Please try a different file.');
