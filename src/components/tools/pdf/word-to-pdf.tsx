@@ -84,14 +84,13 @@ export function WordToPdfTool() {
       const contentWidthMM = pageWidthMM - MARGIN * 2;
       const contentHeightMM = pageHeightMM - MARGIN * 2;
 
-      const pxPerMM = (CONTAINER_WIDTH * SCALE) / contentWidthMM;
+      const pxPerMM = CONTAINER_WIDTH / contentWidthMM;
       const pageContentHeightPx = Math.floor(contentHeightMM * pxPerMM);
 
       setProgress('Splitting content into pages...');
-      const fullHtml = `<style>${TABLE_CSS}</style>${TITLE_HTML}<div>${bodyHtml}</div>`;
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(fullHtml, 'text/html');
-      const elements = Array.from(doc.body.childNodes);
+      const bodyDoc = new DOMParser().parseFromString(`<div id="root">${bodyHtml}</div>`, 'text/html');
+      const contentEl = bodyDoc.getElementById('root')!;
+      const elements = Array.from(contentEl.childNodes);
 
       const measureDiv = document.createElement('div');
       measureDiv.style.position = 'absolute';
@@ -105,13 +104,15 @@ export function WordToPdfTool() {
       measureDiv.style.overflowWrap = 'break-word';
       document.body.appendChild(measureDiv);
 
+      const styleBlock = `<style>${TABLE_CSS}</style>`;
+
       const getHtml = (el: ChildNode): string => {
         if (el.nodeType === 1) return (el as Element).outerHTML;
         return el.textContent || '';
       };
 
       const pages: string[] = [];
-      let currentChunk = '';
+      let currentChunk = styleBlock + TITLE_HTML;
 
       for (let i = 0; i < elements.length; i++) {
         const elHtml = getHtml(elements[i]);
@@ -119,10 +120,9 @@ export function WordToPdfTool() {
         measureDiv.innerHTML = testHtml;
         const height = measureDiv.scrollHeight;
 
-        if (height > pageContentHeightPx && currentChunk.length > 0) {
+        if (height > pageContentHeightPx && currentChunk.length > styleBlock.length + TITLE_HTML.length) {
           pages.push(currentChunk);
-          currentChunk = elHtml;
-          measureDiv.innerHTML = elHtml;
+          currentChunk = styleBlock + elHtml;
         } else {
           currentChunk = testHtml;
         }
