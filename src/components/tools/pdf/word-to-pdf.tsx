@@ -26,37 +26,57 @@ export function WordToPdfTool() {
 
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.convertToHtml({ arrayBuffer });
-    const html = result.value;
 
-    const container = document.createElement('div');
-    container.innerHTML = `
-      <div style="font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; max-width: 800px; margin: 0 auto; padding: 40px;">
-        ${html}
-      </div>
-    `;
-    container.style.position = 'fixed';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '800px';
-    document.body.appendChild(container);
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.left = '0';
+    iframe.style.top = '0';
+    iframe.style.width = '800px';
+    iframe.style.height = '1200px';
+    iframe.style.border = 'none';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) throw new Error('Could not create rendering frame');
+
+    doc.open();
+    doc.write(`<!DOCTYPE html>
+      <html><head><meta charset="utf-8"><style>
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.6; color: #1a1a1a; margin: 0; padding: 40px; }
+        table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+        th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; }
+        th { background: #f5f5f5; font-weight: 600; }
+        img { max-width: 100%; height: auto; }
+        p { margin: 8px 0; }
+        ul, ol { margin: 8px 0; padding-left: 24px; }
+        h1, h2, h3, h4, h5, h6 { margin: 16px 0 8px 0; }
+      </style></head><body>
+        ${result.value}
+      </body></html>`);
+    doc.close();
+
+    // Wait for iframe content to fully render
+    await new Promise((r) => setTimeout(r, 500));
 
     try {
       const options = {
-          margin: [0.75, 0.75, 0.75, 0.75] as [number, number, number, number],
-          filename: 'output.pdf',
-          image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const },
-        };
+        margin: [0.75, 0.75, 0.75, 0.75] as [number, number, number, number],
+        filename: 'output.pdf',
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const },
+      };
 
       const pdfBlob = await html2pdf()
         .set(options)
-        .from(container)
+        .from(doc.body)
         .outputPdf('blob');
 
       return pdfBlob;
     } finally {
-      document.body.removeChild(container);
+      document.body.removeChild(iframe);
     }
   };
 
