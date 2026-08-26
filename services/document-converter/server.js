@@ -64,13 +64,24 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
       { timeout: TIMEOUT, maxBuffer: 50 * 1024 * 1024, env: { ...process.env, HOME: '/tmp' } }
     );
 
+    console.log('[DOCX-to-PDF] soffice stdout:', stdout);
+    console.log('[DOCX-to-PDF] soffice stderr:', stderr);
+
     const baseName = path.basename(req.file.originalname, path.extname(req.file.originalname));
-    const pdfPath = path.join(outputDir, `${baseName}.pdf`);
+    let pdfPath = path.join(outputDir, 'input.pdf');
 
     try {
       await fs.access(pdfPath);
     } catch {
-      return res.status(500).json({ success: false, error: 'PDF output not found after conversion.' });
+      const files = await fs.readdir(outputDir);
+      console.log('[DOCX-to-PDF] Output dir contents:', files);
+      const pdfFile = files.find(f => f.toLowerCase().endsWith('.pdf'));
+      if (pdfFile) {
+        pdfPath = path.join(outputDir, pdfFile);
+      } else {
+        console.error('[DOCX-to-PDF] No PDF found. Files:', files);
+        return res.status(500).json({ success: false, error: 'PDF output not found after conversion.' });
+      }
     }
 
     const pdfBuffer = await fs.readFile(pdfPath);
