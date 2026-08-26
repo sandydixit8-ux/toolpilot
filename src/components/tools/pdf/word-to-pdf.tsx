@@ -18,13 +18,12 @@ export function WordToPdfTool() {
   const [pageCount, setPageCount] = useState(0);
 
   useEffect(() => {
-    fetch(`${RENDER_URL}/health`, { signal: AbortSignal.timeout(60000) }).catch(() => {});
+    fetch(`${RENDER_URL}/health`, { mode: 'no-cors', signal: AbortSignal.timeout(60000) }).catch(() => {});
   }, []);
 
   const handleConvert = async () => {
     if (files.length === 0) return;
     setStatus('processing');
-    setProgress('Converting with LibreOffice engine...');
     setError('');
     setPdfUrl(null);
 
@@ -33,15 +32,12 @@ export function WordToPdfTool() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      setProgress('Converting with LibreOffice engine...');
 
-      const response = await fetch(`${RENDER_URL}/convert/docx-to-pdf`, {
+      const response = await fetch('/api/convert/docx-to-pdf', {
         method: 'POST',
         body: formData,
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errBody = await response.json().catch(() => null);
@@ -61,14 +57,14 @@ export function WordToPdfTool() {
       setProgress('');
       setStatus('complete');
     } catch (err: unknown) {
-      const error = err as { name?: string; message?: string };
+      const error = err as { message?: string };
       console.error('Word to PDF conversion error:', err);
-      if (error.name === 'AbortError') {
-        setError('Conversion timed out. Render service may be starting up, please try again in 30 seconds.');
-      } else if (error.message?.includes('Failed to fetch')) {
-        setError('Conversion service is unavailable. Please try again later.');
+      if (error.message?.includes('waking up') || error.message?.includes('unavailable')) {
+        setError('Conversion service is starting up. Please try again in 30 seconds.');
+      } else if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
+        setError('Conversion timed out. The document may be too large.');
       } else {
-        setError(error.message || 'Conversion failed. Please try a different file.');
+        setError(error.message || 'Conversion failed. Please try again.');
       }
       setStatus('error');
     }
