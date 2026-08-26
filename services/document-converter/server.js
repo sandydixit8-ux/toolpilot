@@ -163,10 +163,9 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
     }
 
     await fs.mkdir(jobDir, { recursive: true });
-    await fs.mkdir(path.join(jobDir, 'output'), { recursive: true });
 
     const inputPath = path.join(jobDir, `input${path.extname(req.file.originalname)}`);
-    const outputDir = path.join(jobDir, 'output');
+    const outputDir = jobDir;
 
     await fs.writeFile(inputPath, req.file.buffer);
 
