@@ -58,7 +58,7 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
       '--norestore',
       '--nofirststartwizard',
       '--convert-to',
-      'pdf',
+      'pdf:writer_pdf_Export',
       '--outdir',
       outputDir,
       inputPath,
