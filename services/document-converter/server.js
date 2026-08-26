@@ -50,38 +50,75 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
     await fs.writeFile(inputPath, req.file.buffer);
 
     const sofficePath = '/usr/bin/soffice';
-    const { stdout, stderr } = await execFileAsync(
-      sofficePath,
-      [
-        '--headless',
-        '--norestore',
-        '--convert-to',
-        'pdf:writer_pdf_Export',
-        '--outdir',
-        outputDir,
-        inputPath,
-      ],
-      { timeout: TIMEOUT, maxBuffer: 50 * 1024 * 1024, env: { ...process.env, HOME: '/tmp' } }
-    );
+    const lockDir = '/tmp/.~lock.X11-unix';
+    try { await fs.rm(lockDir, { recursive: true, force: true }); } catch {}
 
-    console.log('[DOCX-to-PDF] soffice stdout:', stdout);
-    console.log('[DOCX-to-PDF] soffice stderr:', stderr);
+    const args = [
+      '--headless',
+      '--norestore',
+      '--nofirststartwizard',
+      '--convert-to',
+      'pdf',
+      '--outdir',
+      outputDir,
+      inputPath,
+    ];
+    console.log('[DOCX-to-PDF] Running:', sofficePath, args.join(' '));
+    console.log('[DOCX-to-PDF] Input exists:', await fs.access(inputPath).then(() => 'yes').catch(() => 'no'));
+    console.log('[DOCX-to-PDF] Output dir exists:', await fs.access(outputDir).then(() => 'yes').catch(() => 'no'));
+    console.log('[DOCX-to-PDF] Input file size:', req.file.size);
 
-    const baseName = path.basename(req.file.originalname, path.extname(req.file.originalname));
+    let stdout = '', stderr = '';
+    try {
+      const result = await execFileAsync(sofficePath, args, {
+        timeout: TIMEOUT,
+        maxBuffer: 50 * 1024 * 1024,
+        env: {
+          HOME: '/tmp',
+          USER: 'root',
+          DBUS_SESSION_BUS_ADDRESS: '/dev/null',
+          PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        },
+      });
+      stdout = result.stdout;
+      stderr = result.stderr;
+    } catch (sofficeErr) {
+      stdout = sofficeErr.stdout || '';
+      stderr = sofficeErr.stderr || '';
+      console.error('[DOCX-to-PDF] soffice error code:', sofficeErr.code);
+      console.error('[DOCX-to-PDF] soffice signal:', sofficeErr.signal);
+      console.error('[DOCX-to-PDF] soffice killed:', sofficeErr.killed);
+      console.error('[DOCX-to-PDF] soffice stdout:', stdout);
+      console.error('[DOCX-to-PDF] soffice stderr:', stderr);
+      if (sofficeErr.killed) {
+        return res.status(504).json({ success: false, error: 'Conversion timed out.' });
+      }
+    }
+
+    console.log('[DOCX-to-PDF] soffice stdout:', stdout.trim());
+    console.log('[DOCX-to-PDF] soffice stderr:', stderr.trim());
+
+    const filesAfter = await fs.readdir(outputDir);
+    console.log('[DOCX-to-PDF] Output dir contents after conversion:', filesAfter);
+
     let pdfPath = path.join(outputDir, 'input.pdf');
-
+    let found = false;
     try {
       await fs.access(pdfPath);
-    } catch {
-      const files = await fs.readdir(outputDir);
-      console.log('[DOCX-to-PDF] Output dir contents:', files);
-      const pdfFile = files.find(f => f.toLowerCase().endsWith('.pdf'));
+      found = true;
+    } catch {}
+
+    if (!found) {
+      const pdfFile = filesAfter.find(f => f.toLowerCase().endsWith('.pdf'));
       if (pdfFile) {
         pdfPath = path.join(outputDir, pdfFile);
-      } else {
-        console.error('[DOCX-to-PDF] No PDF found. Files:', files);
-        return res.status(500).json({ success: false, error: 'PDF output not found after conversion.' });
+        found = true;
       }
+    }
+
+    if (!found) {
+      console.error('[DOCX-to-PDF] CRITICAL: No PDF produced. Input file size:', req.file.size);
+      return res.status(500).json({ success: false, error: 'PDF output not found after conversion.' });
     }
 
     const pdfBuffer = await fs.readFile(pdfPath);
@@ -107,13 +144,8 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
 
     res.send(pdfBuffer);
   } catch (err) {
-    console.error('[DOCX-to-PDF]', err);
-
-    if (err.killed || err.code === 'ETIMEDOUT') {
-      return res.status(504).json({ success: false, error: 'Conversion timed out. Document may be too large.' });
-    }
-
-    res.status(500).json({ success: false, error: 'Conversion failed. Document may be corrupted.' });
+    console.error('[DOCX-to-PDF] FATAL:', err.message, err.stack);
+    res.status(500).json({ success: false, error: 'Conversion failed. ' + (err.message || '') });
   } finally {
     try {
       await fs.rm(jobDir, { recursive: true, force: true });

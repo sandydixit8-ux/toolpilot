@@ -8,10 +8,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-freefont-ttf \
     && rm -rf /var/lib/apt/lists/*
 
+ENV HOME=/tmp
+ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
+
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install --production
+RUN npm install --omit=dev
 
 COPY server.js ./
 
