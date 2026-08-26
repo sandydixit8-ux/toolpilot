@@ -3,46 +3,6 @@ import { validateFile, sanitizeFilename } from '@/lib/converters/security';
 
 const EXTERNAL_SERVICE_URL = process.env.CONVERTER_SERVICE_URL;
 
-async function convertViaExternalService(
-  fileBuffer: Buffer,
-  filename: string,
-  mimeType: string
-): Promise<Response> {
-  const formData = new FormData();
-  const blob = new Blob([new Uint8Array(fileBuffer)], { type: mimeType });
-  formData.append('file', blob, filename);
-
-  const response = await fetch(`${EXTERNAL_SERVICE_URL}/convert/docx-to-pdf`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  return response;
-}
-
-async function convertLocally(
-  fileBuffer: Buffer,
-  filename: string
-): Promise<Response> {
-  const { convertDocument } = await import('@/lib/converters');
-  const result = await convertDocument(fileBuffer, filename);
-
-  const headers = new Headers({
-    'Content-Type': 'application/pdf',
-    'Content-Disposition': `attachment; filename="${result.filename}"`,
-    'X-Page-Count': String(result.pageCount),
-    'X-Text-Selectable': String(result.validation.hasText),
-    'X-Rasterized': String(result.validation.isRasterized),
-    'X-Validation-Status': result.validation.valid ? 'PASS' : 'WARN',
-  });
-
-  if (result.conversion.warnings.length > 0) {
-    headers.set('X-Warnings', result.conversion.warnings.join('; '));
-  }
-
-  return new NextResponse(new Uint8Array(result.buffer), { status: 200, headers });
-}
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -50,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { success: false, error: { code: 'NO_FILE', message: 'No file provided.' } },
+        { success: false, error: 'No file provided.' },
         { status: 400 }
       );
     }
@@ -58,27 +18,36 @@ export async function POST(request: NextRequest) {
     const securityCheck = validateFile(file);
     if (!securityCheck.valid) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_FILE', message: securityCheck.error } },
+        { success: false, error: securityCheck.error },
         { status: 400 }
+      );
+    }
+
+    if (!EXTERNAL_SERVICE_URL) {
+      return NextResponse.json(
+        { success: false, error: 'Conversion service not configured. Please try again later.' },
+        { status: 503 }
       );
     }
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const safeFilename = sanitizeFilename(file.name);
 
-    let response: Response;
+    const remoteFormData = new FormData();
+    const blob = new Blob([new Uint8Array(fileBuffer)], { type: file.type });
+    remoteFormData.append('file', blob, safeFilename);
 
-    if (EXTERNAL_SERVICE_URL) {
-      response = await convertViaExternalService(fileBuffer, safeFilename, file.type);
-    } else {
-      response = await convertLocally(fileBuffer, safeFilename);
-    }
+    const response = await fetch(`${EXTERNAL_SERVICE_URL}/convert/docx-to-pdf`, {
+      method: 'POST',
+      body: remoteFormData,
+      signal: AbortSignal.timeout(120000),
+    });
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => null);
       const message = errorBody?.error || 'Conversion failed on remote service.';
       return NextResponse.json(
-        { success: false, error: { code: 'CONVERSION_ERROR', message } },
+        { success: false, error: message },
         { status: response.status >= 500 ? 500 : response.status }
       );
     }
@@ -93,13 +62,11 @@ export async function POST(request: NextRequest) {
     const pageCount = response.headers.get('X-Page-Count');
     const hasText = response.headers.get('X-Text-Selectable');
     const isRasterized = response.headers.get('X-Rasterized');
-    const validationStatus = response.headers.get('X-Validation-Status');
     const warnings = response.headers.get('X-Warnings');
 
     if (pageCount) headers.set('X-Page-Count', pageCount);
     if (hasText) headers.set('X-Text-Selectable', hasText);
     if (isRasterized) headers.set('X-Rasterized', isRasterized);
-    if (validationStatus) headers.set('X-Validation-Status', validationStatus);
     if (warnings) headers.set('X-Warnings', warnings);
 
     return new NextResponse(pdfBuffer, { status: 200, headers });
@@ -108,19 +75,14 @@ export async function POST(request: NextRequest) {
     console.error('[DOCX-to-PDF]', err);
 
     let message: string;
-    if (error.message?.includes('temporarily unavailable') || error.message?.includes('ECONNREFUSED')) {
-      message = 'Document conversion service is temporarily unavailable. Please try again later.';
-    } else if (error.message?.includes('timed out') || error.message?.includes('ETIMEDOUT')) {
-      message = 'Conversion took too long. Please try a smaller document.';
-    } else if (error.message?.includes('soffice') || error.message?.includes('ENOENT')) {
-      message = 'Document conversion engine is not installed. Please contact support.';
+    if (error.message?.includes('timeout') || error.message?.includes('aborted')) {
+      message = 'Conversion service is waking up. Please try again in 30 seconds.';
+    } else if (error.message?.includes('ECONNREFUSED')) {
+      message = 'Document conversion service is temporarily unavailable.';
     } else {
-      message = 'Conversion failed. The document may be corrupted or contain unsupported elements.';
+      message = 'Conversion failed. Please try again.';
     }
 
-    return NextResponse.json(
-      { success: false, error: { code: 'CONVERSION_ERROR', message } },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

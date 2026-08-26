@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UploadBox } from '@/components/tools/upload-box';
-import { FileText, CheckCircle, Download, AlertTriangle } from 'lucide-react';
+import { FileText, CheckCircle, Download } from 'lucide-react';
 import { ProcessingOverlay } from '@/components/tools/processing-overlay';
 import { Sparkles } from 'lucide-react';
 
-const RENDER_URL = process.env.NEXT_PUBLIC_RENDER_CONVERTER_URL || '';
+const RENDER_URL = 'https://toolpilot-5b6c.onrender.com';
 
 export function WordToPdfTool() {
   const [files, setFiles] = useState<File[]>([]);
@@ -17,78 +17,58 @@ export function WordToPdfTool() {
   const [filename, setFilename] = useState('');
   const [pageCount, setPageCount] = useState(0);
 
+  useEffect(() => {
+    fetch(`${RENDER_URL}/health`, { signal: AbortSignal.timeout(60000) }).catch(() => {});
+  }, []);
+
   const handleConvert = async () => {
     if (files.length === 0) return;
     setStatus('processing');
-    setProgress('Uploading document...');
+    setProgress('Converting with LibreOffice engine...');
     setError('');
     setPdfUrl(null);
 
     try {
       const file = files[0];
-      let pdfBlob: Blob | null = null;
-
       const formData = new FormData();
       formData.append('file', file);
 
-      const endpoints = [
-        ...(RENDER_URL ? [`${RENDER_URL}/convert/docx-to-pdf`] : []),
-        '/api/convert/docx-to-pdf',
-      ];
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-      for (const endpoint of endpoints) {
-        try {
-          setProgress(endpoint.includes('render') ? 'Converting with LibreOffice engine...' : 'Converting with server...');
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 90000);
+      const response = await fetch(`${RENDER_URL}/convert/docx-to-pdf`, {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
 
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-
-          if (response.ok) {
-            const blob = await response.blob();
-            if (blob.size > 100 && (blob.type.includes('pdf') || blob.size > 1000)) {
-              pdfBlob = blob;
-
-              const pageCountHeader = response.headers.get('X-Page-Count');
-              if (pageCountHeader) setPageCount(parseInt(pageCountHeader, 10));
-
-              const isRasterized = response.headers.get('X-Rasterized') === 'true';
-              const warnings = response.headers.get('X-Warnings');
-              if (isRasterized) {
-                setError('Warning: PDF may contain rasterized content.');
-              } else if (warnings) {
-                setError(`Note: ${warnings}`);
-              }
-              break;
-            }
-          }
-        } catch {
-          continue;
-        }
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => null);
+        throw new Error(errBody?.error || 'Conversion failed');
       }
 
-      if (!pdfBlob) {
-        throw new Error('All conversion methods failed. Please try again later.');
-      }
+      const blob = await response.blob();
+      if (blob.size < 100) throw new Error('Conversion produced empty file');
+
+      const pageCountHeader = response.headers.get('X-Page-Count');
+      if (pageCountHeader) setPageCount(parseInt(pageCountHeader, 10));
 
       const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
       setFilename(outFilename);
-      const url = URL.createObjectURL(pdfBlob);
+      const url = URL.createObjectURL(blob);
       setPdfUrl(url);
       setProgress('');
       setStatus('complete');
     } catch (err: unknown) {
-      const error = err as { message?: string };
+      const error = err as { name?: string; message?: string };
       console.error('Word to PDF conversion error:', err);
-      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+      if (error.name === 'AbortError') {
+        setError('Conversion timed out. Render service may be starting up, please try again in 30 seconds.');
+      } else if (error.message?.includes('Failed to fetch')) {
         setError('Conversion service is unavailable. Please try again later.');
       } else {
-        setError(error.message || 'Conversion failed. The document may be corrupted or contain unsupported elements.');
+        setError(error.message || 'Conversion failed. Please try a different file.');
       }
       setStatus('error');
     }
@@ -122,16 +102,11 @@ export function WordToPdfTool() {
         </div>
 
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Convert your .doc or .docx files to PDF.
-          Server-side conversion (LibreOffice) for best quality.
+          Convert your .doc or .docx files to PDF using LibreOffice engine.
         </p>
 
         {error && (
-          <div className={`rounded-lg border p-3 text-sm ${
-            error.startsWith('Warning') || error.startsWith('Note')
-              ? 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300'
-              : 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300'
-          }`}>
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
             {error}
           </div>
         )}
