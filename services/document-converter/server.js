@@ -237,7 +237,9 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
 
     if (!found) {
       console.error('[PDF-to-DOCX] CRITICAL: No DOCX produced. Files:', filesAfter);
-      return res.status(500).json({ success: false, error: 'DOCX output not found after conversion.' });
+      console.error('[PDF-to-DOCX] soffice stdout:', stdout.trim());
+      console.error('[PDF-to-DOCX] soffice stderr:', stderr.trim());
+      return res.status(500).json({ success: false, error: 'DOCX output not found after conversion. soffice stderr: ' + (stderr.trim() || 'empty') + ' | stdout: ' + (stdout.trim() || 'empty') });
     }
 
     const docxBuffer = await fs.readFile(docxPath);

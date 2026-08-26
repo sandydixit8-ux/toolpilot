@@ -3,9 +3,11 @@ FROM node:20-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-writer \
     libreoffice-core \
+    libreoffice-draw \
     fonts-liberation \
     fonts-dejavu-core \
     fonts-freefont-ttf \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 ENV HOME=/tmp
