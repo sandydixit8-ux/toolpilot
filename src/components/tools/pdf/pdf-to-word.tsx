@@ -31,68 +31,146 @@ interface TextBlock {
   isTable: boolean;
 }
 
+function clusterValues(values: number[], tolerance: number): number[][] {
+  const sorted = [...values].sort((a, b) => a - b);
+  const clusters: number[][] = [];
+  let current = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] - current[current.length - 1] <= tolerance) {
+      current.push(sorted[i]);
+    } else {
+      clusters.push(current);
+      current = [sorted[i]];
+    }
+  }
+  clusters.push(current);
+  return clusters;
+}
+
 function detectTables(lines: TextLine[]): TextBlock[] {
-  if (lines.length === 0) return [];
+  if (lines.length < 2) {
+    return lines.map(line => ({ lines: [line], isTable: false }));
+  }
 
-  const sortedLines = [...lines].sort((a, b) => b.y - a.y);
-  const COLUMN_TOLERANCE = 15;
-  const ROW_TOLERANCE = 8;
+  const sortedLines = [...lines].sort((a, b) => a.y - b.y);
 
-  const allXPositions: number[] = [];
+  const allXValues: number[] = [];
   for (const line of sortedLines) {
     for (const item of line.items) {
-      const x = Math.round(item.x / COLUMN_TOLERANCE) * COLUMN_TOLERANCE;
-      if (!allXPositions.includes(x)) allXPositions.push(x);
-    }
-  }
-  allXPositions.sort((a, b) => a - b);
-
-  const mergedColumns: number[][] = [];
-  for (const x of allXPositions) {
-    const lastCol = mergedColumns[mergedColumns.length - 1];
-    if (lastCol && Math.abs(x - lastCol[lastCol.length - 1]) < COLUMN_TOLERANCE * 1.5) {
-      lastCol.push(x);
-    } else {
-      mergedColumns.push([x]);
+      allXValues.push(item.x);
     }
   }
 
-  const columnCenters = mergedColumns.map(col => col.reduce((a, b) => a + b, 0) / col.length);
+  const xClusters = clusterValues(allXValues, 20);
+  const columnEdges = xClusters.map(cluster => cluster.reduce((a, b) => a + b, 0) / cluster.length);
 
-  const isLikelyTable = columnCenters.length >= 2 && sortedLines.length >= 2;
-
-  if (!isLikelyTable) {
-    return sortedLines.map(line => ({
-      lines: [line],
-      isTable: false,
-    }));
+  if (columnEdges.length < 3) {
+    return sortedLines.map(line => ({ lines: [line], isTable: false }));
   }
 
-  const lineGroups: TextLine[][] = [];
-  let currentGroup: TextLine[] = [sortedLines[0]];
-
-  for (let i = 1; i < sortedLines.length; i++) {
-    const prevY = currentGroup[0].y;
-    const curY = sortedLines[i].y;
-    if (Math.abs(prevY - curY) < ROW_TOLERANCE * 2) {
-      currentGroup.push(sortedLines[i]);
-    } else {
-      lineGroups.push(currentGroup);
-      currentGroup = [sortedLines[i]];
+  const lineColumnHits = sortedLines.map(line => {
+    let hits = 0;
+    for (const item of line.items) {
+      for (const edge of columnEdges) {
+        if (Math.abs(item.x - edge) < 25) {
+          hits++;
+          break;
+        }
+      }
     }
-  }
-  lineGroups.push(currentGroup);
+    return hits;
+  });
 
-  const blocks: TextBlock[] = [];
-  for (const group of lineGroups) {
-    if (group.length >= 2) {
-      blocks.push({ lines: group, isTable: true });
-    } else {
-      blocks.push({ lines: group, isTable: false });
+  const multiColLines = lineColumnHits.filter(h => h >= 2).length;
+  const tableThreshold = Math.max(3, Math.floor(sortedLines.length * 0.4));
+
+  if (multiColLines < tableThreshold) {
+    return sortedLines.map(line => ({ lines: [line], isTable: false }));
+  }
+
+  const assignToColumn = (x: number): number => {
+    let bestCol = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < columnEdges.length; i++) {
+      const dist = Math.abs(x - columnEdges[i]);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestCol = i;
+      }
     }
+    return bestCol;
+  };
+
+  const result: TextBlock[] = [];
+  let i = 0;
+  while (i < sortedLines.length) {
+    const line = sortedLines[i];
+    const hits = lineColumnHits[i];
+
+    if (hits < 2) {
+      result.push({ lines: [line], isTable: false });
+      i++;
+      continue;
+    }
+
+    const tableLines: TextLine[] = [];
+    while (i < sortedLines.length && lineColumnHits[i] >= 2) {
+      tableLines.push(sortedLines[i]);
+      i++;
+    }
+
+    const numCols = columnEdges.length;
+    const rows: (string | null)[][] = [];
+
+    for (const tl of tableLines) {
+      const cells: (string | null)[] = new Array(numCols).fill(null);
+      for (const item of tl.items) {
+        const col = assignToColumn(item.x);
+        if (cells[col]) {
+          cells[col] += ' ' + item.str;
+        } else {
+          cells[col] = item.str;
+        }
+      }
+      rows.push(cells);
+    }
+
+    const usedCols: number[] = [];
+    for (let c = 0; c < numCols; c++) {
+      const filled = rows.filter(r => r[c] !== null && r[c]!.trim().length > 0).length;
+      if (filled >= 2) {
+        usedCols.push(c);
+      }
+    }
+
+    if (usedCols.length < 2) {
+      for (const tl of tableLines) {
+        result.push({ lines: [tl], isTable: false });
+      }
+      continue;
+    }
+
+    const tableRows: TextLine[] = rows.map((cells, rowIdx) => {
+      const items: TextItem[] = usedCols.map(c => ({
+        str: cells[c] || '',
+        x: columnEdges[c],
+        y: tableLines[rowIdx].y,
+        width: 0,
+        height: 0,
+        fontSize: 12,
+      }));
+      return {
+        items,
+        y: tableLines[rowIdx].y,
+        xMin: 0,
+        xMax: 0,
+      };
+    });
+
+    result.push({ lines: tableRows, isTable: true });
   }
 
-  return blocks;
+  return result;
 }
 
 export function PdfToWordTool() {
