@@ -179,7 +179,7 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
       '--norestore',
       '--nofirststartwizard',
       '--convert-to',
-      'docx:MS Word 2007 XML',
+      'docx',
       '--outdir',
       outputDir,
       inputPath,
@@ -211,6 +211,7 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
       if (sofficeErr.killed) {
         return res.status(504).json({ success: false, error: 'Conversion timed out.' });
       }
+      return res.status(500).json({ success: false, error: 'LibreOffice conversion failed. ' + (stderr || stdout || '') });
     }
 
     console.log('[PDF-to-DOCX] soffice stdout:', stdout.trim());
