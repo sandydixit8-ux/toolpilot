@@ -157,9 +157,10 @@ export function PdfToWordTool() {
         setProgress(`Analyzing page ${i} of ${pageCount}...`);
         const page = await pdf.getPage(i);
         const viewport = page.getViewport({ scale: 1.0 });
+        const pageRotation = page.rotate || 0;
         const textContent = await page.getTextContent();
 
-        const isLandscape = viewport.width > viewport.height;
+        const isLandscape = viewport.width > viewport.height || pageRotation === 90 || pageRotation === 270;
 
         interface RawTextItem {
           str: string;
@@ -341,12 +342,17 @@ export function PdfToWordTool() {
           }
         }
 
+        const rawWidth = Math.round(pageData.width * (1440 / 72));
+        const rawHeight = Math.round(pageData.height * (1440 / 72));
+        const finalWidth = Math.min(rawWidth, rawHeight);
+        const finalHeight = Math.max(rawWidth, rawHeight);
+
         return {
           properties: {
             page: {
               size: {
-                width: Math.round(pageData.width * (1440 / 72)),
-                height: Math.round(pageData.height * (1440 / 72)),
+                width: finalWidth,
+                height: finalHeight,
                 orientation: pageData.isLandscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT,
               },
               margin: pageMargin,
