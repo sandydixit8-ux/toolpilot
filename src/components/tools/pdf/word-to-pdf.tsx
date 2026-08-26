@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { UploadBox } from '@/components/tools/upload-box';
-import { FileText, CheckCircle, Download } from 'lucide-react';
+import { FileText, CheckCircle, Download, AlertTriangle } from 'lucide-react';
 import { ProcessingOverlay } from '@/components/tools/processing-overlay';
 import { Sparkles } from 'lucide-react';
 
@@ -14,8 +14,51 @@ export function WordToPdfTool() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [filename, setFilename] = useState('');
   const [pageCount, setPageCount] = useState(0);
+  const [usedFallback, setUsedFallback] = useState(false);
 
   const CONVERSION_API = '/api/convert/docx-to-pdf';
+
+  const convertViaClientSide = async (file: File): Promise<Blob> => {
+    const [{ default: mammoth }, { default: html2pdf }] = await Promise.all([
+      import('mammoth'),
+      import('html2pdf.js'),
+    ]);
+
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    const html = result.value;
+
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div style="font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; max-width: 800px; margin: 0 auto; padding: 40px;">
+        ${html}
+      </div>
+    `;
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '800px';
+    document.body.appendChild(container);
+
+    try {
+      const options = {
+          margin: [0.75, 0.75, 0.75, 0.75] as [number, number, number, number],
+          filename: 'output.pdf',
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const },
+        };
+
+      const pdfBlob = await html2pdf()
+        .set(options)
+        .from(container)
+        .outputPdf('blob');
+
+      return pdfBlob;
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
 
   const handleConvert = async () => {
     if (files.length === 0) return;
@@ -23,51 +66,63 @@ export function WordToPdfTool() {
     setProgress('Uploading document...');
     setError('');
     setPdfUrl(null);
+    setUsedFallback(false);
 
     try {
       const file = files[0];
-      const formData = new FormData();
-      formData.append('file', file);
+      let pdfBlob: Blob;
+      let serverSuccess = false;
 
-      setProgress('Converting with LibreOffice engine...');
+      // Try server-side conversion first
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const response = await fetch(CONVERSION_API, {
-        method: 'POST',
-        body: formData,
-      });
+        setProgress('Converting with LibreOffice engine...');
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const message = errorData?.error?.message || `Conversion failed (${response.status})`;
-        throw new Error(message);
+        const response = await fetch(CONVERSION_API, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          if (blob.size > 100) {
+            pdfBlob = blob;
+            serverSuccess = true;
+
+            const pageCountHeader = response.headers.get('X-Page-Count');
+            const pages = pageCountHeader ? parseInt(pageCountHeader, 10) : 0;
+            setPageCount(pages);
+
+            const isRasterized = response.headers.get('X-Rasterized') === 'true';
+            const warnings = response.headers.get('X-Warnings');
+            if (isRasterized) {
+              setError('Warning: PDF may contain rasterized content. Text might not be fully selectable.');
+            } else if (warnings) {
+              setError(`Note: ${warnings}`);
+            }
+          }
+        }
+      } catch {
+        // Server conversion failed, will use client-side fallback
       }
 
-      const isRasterized = response.headers.get('X-Rasterized') === 'true';
-      const warnings = response.headers.get('X-Warnings');
-
-      setProgress('Validating PDF...');
-      const blob = await response.blob();
-
-      if (blob.size < 100) {
-        throw new Error('Generated PDF is too small and may be corrupted.');
+      // Fallback to client-side conversion
+      if (!serverSuccess!) {
+        setProgress('Using browser-based conversion...');
+        setUsedFallback(true);
+        pdfBlob = await convertViaClientSide(file);
+        setPageCount(0);
+        setError('');
       }
-
-      const pageCountHeader = response.headers.get('X-Page-Count');
-      const pages = pageCountHeader ? parseInt(pageCountHeader, 10) : 0;
 
       const outFilename = file.name.replace(/\.(doc|docx)$/i, '.pdf');
       setFilename(outFilename);
-      setPageCount(pages);
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(pdfBlob!);
       setPdfUrl(url);
       setProgress('');
       setStatus('complete');
-
-      if (isRasterized) {
-        setError('Warning: PDF may contain rasterized content. Text might not be fully selectable.');
-      } else if (warnings) {
-        setError(`Note: ${warnings}`);
-      }
     } catch (err: unknown) {
       const error = err as { message?: string };
       console.error('Word to PDF conversion error:', err);
@@ -97,6 +152,7 @@ export function WordToPdfTool() {
     setPdfUrl(null);
     setFilename('');
     setPageCount(0);
+    setUsedFallback(false);
   };
 
   return (
@@ -108,8 +164,8 @@ export function WordToPdfTool() {
         </div>
 
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Convert your .doc or .docx files to PDF with full layout preservation. 
-          Server-side conversion using LibreOffice for accurate results — text selectable, tables preserved, pages matched.
+          Convert your .doc or .docx files to PDF. 
+          Server-side conversion (LibreOffice) for best quality, with automatic browser-based fallback.
         </p>
 
         {error && (
@@ -144,9 +200,15 @@ export function WordToPdfTool() {
               <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
               <p className="text-sm font-medium text-green-700 dark:text-green-400">
                 PDF created successfully! {pageCount > 0 && `${pageCount} pages • `}
-                Text selectable • Layout preserved
+                {usedFallback ? 'Browser-based conversion' : 'LibreOffice engine'}
               </p>
             </div>
+            {usedFallback && (
+              <div className="mb-3 flex items-start gap-2 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>Browser-based conversion may not perfectly preserve complex layouts. For best results, use our API-based converter.</span>
+              </div>
+            )}
             <button
               onClick={handleDownload}
               className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
