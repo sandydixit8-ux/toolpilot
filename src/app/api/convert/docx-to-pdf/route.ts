@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateFile, sanitizeFilename } from '@/lib/converters/security';
 
+export const maxDuration = 60;
+
 const RENDER_URL = process.env.CONVERTER_SERVICE_URL || 'https://toolpilot-5b6c.onrender.com';
 
 export async function POST(request: NextRequest) {

@@ -4,12 +4,6 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["sin1"],
-  "crons": [
-    {
-      "path": "/api/cron/keepalive",
-      "schedule": "*/10 * * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
