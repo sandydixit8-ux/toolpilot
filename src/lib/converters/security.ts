@@ -1,8 +1,9 @@
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const ALLOWED_EXTENSIONS = ['.docx', '.doc'];
+const ALLOWED_EXTENSIONS = ['.docx', '.doc', '.pdf'];
 const ALLOWED_MIMES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/msword',
+  'application/pdf',
   'application/octet-stream',
 ];
 
@@ -15,7 +16,7 @@ export function validateFile(file: File): SecurityCheck {
   const ext = '.' + file.name.split('.').pop()?.toLowerCase();
 
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return { valid: false, error: 'Unsupported file format. Only .doc and .docx files are accepted.' };
+    return { valid: false, error: 'Unsupported file format. Only .doc, .docx, and .pdf files are accepted.' };
   }
 
   if (file.size > MAX_FILE_SIZE) {
