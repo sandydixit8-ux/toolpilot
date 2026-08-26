@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateFile, sanitizeFilename } from '@/lib/converters/security';
 
-const EXTERNAL_SERVICE_URL = process.env.CONVERTER_SERVICE_URL;
+const RENDER_URL = process.env.CONVERTER_SERVICE_URL || 'https://toolpilot-5b6c.onrender.com';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,13 +23,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!EXTERNAL_SERVICE_URL) {
-      return NextResponse.json(
-        { success: false, error: 'Conversion service not configured. Please try again later.' },
-        { status: 503 }
-      );
-    }
-
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const safeFilename = sanitizeFilename(file.name);
 
@@ -37,7 +30,7 @@ export async function POST(request: NextRequest) {
     const blob = new Blob([new Uint8Array(fileBuffer)], { type: file.type });
     remoteFormData.append('file', blob, safeFilename);
 
-    const response = await fetch(`${EXTERNAL_SERVICE_URL}/convert/docx-to-pdf`, {
+    const response = await fetch(`${RENDER_URL}/convert/docx-to-pdf`, {
       method: 'POST',
       body: remoteFormData,
       signal: AbortSignal.timeout(120000),
