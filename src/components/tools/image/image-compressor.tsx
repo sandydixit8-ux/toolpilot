@@ -52,9 +52,12 @@ export function ImageCompressor() {
     const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
     const q = quality / 100;
 
-    const blob = await new Promise<Blob>((resolve) => {
+    const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
-        (b) => resolve(b!),
+        (b) => {
+          if (b) resolve(b);
+          else reject(new Error('Failed to compress image'));
+        },
         mimeType,
         mimeType === 'image/png' ? undefined : q
       );

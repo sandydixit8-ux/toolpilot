@@ -48,8 +48,11 @@ export function JpgToPng() {
           ctx.drawImage(img, 0, 0);
           URL.revokeObjectURL(img.src);
 
-          const blob = await new Promise<Blob>((resolve) => {
-            canvas.toBlob((b) => resolve(b!), 'image/png');
+          const blob = await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob((b) => {
+              if (b) resolve(b);
+              else reject(new Error('Failed to convert image'));
+            }, 'image/png');
           });
 
           return { file, url: URL.createObjectURL(blob), blob };

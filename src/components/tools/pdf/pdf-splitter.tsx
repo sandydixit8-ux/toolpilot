@@ -122,7 +122,7 @@ export function PdfSplitterTool() {
       setPdfUrl(url);
       setDone(true);
       setProgress('');
-    } catch (err) {
+    } catch {
       setError('Failed to split PDF. Please check your page range and try again.');
       setProgress('');
     } finally {

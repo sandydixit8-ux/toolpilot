@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Download, Plus, Trash2, Copy, FileText } from 'lucide-react';
 
 interface WorkEntry {

@@ -89,8 +89,11 @@ export function ImageCropper() {
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(imgRef.current, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((b) => resolve(b!), files[0].type);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (b) resolve(b);
+          else reject(new Error('Failed to crop image'));
+        }, files[0].type);
       });
 
       setResult({

@@ -131,7 +131,7 @@ export function AiParaphraserTool() {
         <div>
           <label className="label">Text to Paraphrase</label>
           <textarea
-            className="input mt-1 min-h-[160px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+              className="input mt-1 min-h-[160px] resize-y"
             placeholder="Paste the text you want to paraphrase..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -172,7 +172,7 @@ export function AiParaphraserTool() {
               </button>
             </div>
             <textarea
-              className="input mt-1 min-h-[160px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+            className="input mt-1 min-h-[160px] resize-y"
               readOnly
               value={output}
             />

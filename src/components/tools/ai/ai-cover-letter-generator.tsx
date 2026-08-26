@@ -54,23 +54,23 @@ export function AiCoverLetterGeneratorTool() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="label">Your Name</label>
-            <input type="text" className="input mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800" placeholder="Jane Doe" value={form.yourName} onChange={(e) => update('yourName', e.target.value)} />
+            <input type="text" className="input mt-1" placeholder="Jane Doe" value={form.yourName} onChange={(e) => update('yourName', e.target.value)} />
           </div>
           <div>
             <label className="label">Company Name</label>
-            <input type="text" className="input mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800" placeholder="Acme Inc." value={form.companyName} onChange={(e) => update('companyName', e.target.value)} />
+            <input type="text" className="input mt-1" placeholder="Acme Inc." value={form.companyName} onChange={(e) => update('companyName', e.target.value)} />
           </div>
         </div>
 
         <div>
           <label className="label">Position</label>
-          <input type="text" className="input mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800" placeholder="Senior Software Engineer" value={form.position} onChange={(e) => update('position', e.target.value)} />
+          <input type="text" className="input mt-1" placeholder="Senior Software Engineer" value={form.position} onChange={(e) => update('position', e.target.value)} />
         </div>
 
         <div>
           <label className="label">Key Skills / Experience</label>
           <textarea
-            className="input mt-1 min-h-[80px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+            className="input mt-1 min-h-[80px] resize-y"
             placeholder="React, TypeScript, 5 years of experience in full-stack development..."
             value={form.skills}
             onChange={(e) => update('skills', e.target.value)}
@@ -92,7 +92,7 @@ export function AiCoverLetterGeneratorTool() {
               </button>
             </div>
             <textarea
-              className="input mt-1 min-h-[280px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+              className="input mt-1 min-h-[280px] resize-y"
               readOnly
               value={output}
             />

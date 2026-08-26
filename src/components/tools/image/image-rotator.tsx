@@ -6,7 +6,7 @@ import { UploadBox } from '@/components/tools/upload-box';
 import {
   RotateCcw,
   RotateCw,
-  RotateCcwIcon,
+
   FlipHorizontal,
   FlipVertical,
   Download,
@@ -76,8 +76,11 @@ export function ImageRotator() {
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       URL.revokeObjectURL(img.src);
 
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((b) => resolve(b!), files[0].type);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (b) resolve(b);
+          else reject(new Error('Failed to rotate image'));
+        }, files[0].type);
       });
 
       const descs: string[] = [];
@@ -144,7 +147,7 @@ export function ImageRotator() {
   const buttons = [
     { icon: RotateCcw, label: '90° Left', action: rotateLeft },
     { icon: RotateCw, label: '90° Right', action: rotateRight },
-    { icon: RotateCcwIcon, label: '180°', action: rotate180 },
+    { icon: RotateCcw, label: '180°', action: rotate180 },
     { icon: FlipHorizontal, label: 'Flip H', action: flipHorizontal },
     { icon: FlipVertical, label: 'Flip V', action: flipVertical },
   ];

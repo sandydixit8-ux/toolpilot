@@ -62,7 +62,7 @@ export function SalaryCalculatorTool() {
   const standardDeduction = regime === 'new' ? STANDARD_DEDUCTION_NEW : STANDARD_DEDUCTION_OLD;
   const taxableIncome = Math.max(
     0,
-    annualCtc - standardDeduction - (regime === 'old' ? PROF_TAX : 0)
+    annualCtc - standardDeduction - PROF_TAX
   );
 
   const taxBeforeRebate = calculateTaxBeforeRebate(taxableIncome, regime);

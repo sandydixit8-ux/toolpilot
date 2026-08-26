@@ -68,12 +68,13 @@ export function WordToPdfTool() {
       } else if (warnings) {
         setError(`Note: ${warnings}`);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       console.error('Word to PDF conversion error:', err);
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
         setError('Conversion service is unavailable. Please try again later.');
       } else {
-        setError(err.message || 'Conversion failed. Please try a different file.');
+        setError(error.message || 'Conversion failed. Please try a different file.');
       }
       setStatus('error');
     }

@@ -131,7 +131,20 @@ export function InterviewQuestionGeneratorTool() {
 
   const handleGenerate = () => {
     const bank = questionBank[role] || questionBank['Default'];
-    setGenerated(bank);
+    if (experienceLevel) {
+      const levelPrefix = experienceLevel.split(' ')[0].toLowerCase();
+      const levelHint = levelPrefix === 'junior' ? 'Focus on foundational concepts and learning agility.'
+        : levelPrefix === 'mid-level' ? 'Focus on ownership, collaboration, and system design.'
+        : levelPrefix === 'senior' ? 'Focus on architecture decisions, mentoring, and trade-offs.'
+        : 'Focus on strategy, cross-team leadership, and organizational impact.';
+      const annotated: Record<string, string[]> = {};
+      for (const [cat, questions] of Object.entries(bank)) {
+        annotated[cat] = [...questions, `[${experienceLevel} Tip: ${levelHint}]`];
+      }
+      setGenerated(annotated);
+    } else {
+      setGenerated(bank);
+    }
   };
 
   return (

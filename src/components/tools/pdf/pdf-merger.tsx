@@ -23,27 +23,12 @@ export function PdfMergerTool() {
   const [progressPercent, setProgressPercent] = useState(0);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [pageCounts, setPageCounts] = useState<Record<number, number>>({});
   const [status, setStatus] = useState<'idle' | 'processing' | 'complete' | 'error'>('idle');
-
-  const getPageCount = async (file: File) => {
-    try {
-      const bytes = await file.arrayBuffer();
-      const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
-      return pdf.getPageCount();
-    } catch {
-      return 0;
-    }
-  };
 
   const handleFiles = useCallback(async (newFiles: File[]) => {
     setPdfUrl(null);
     setError('');
     setFiles((prev) => [...prev, ...newFiles]);
-    for (let i = 0; i < newFiles.length; i++) {
-      const count = await getPageCount(newFiles[i]);
-      setPageCounts((prev) => ({ ...prev, [Date.now() + i]: count }));
-    }
   }, []);
 
   const handleRemove = useCallback((index: number) => {
@@ -123,7 +108,6 @@ export function PdfMergerTool() {
     setError('');
     setProgress('');
     setProgressPercent(0);
-    setPageCounts({});
     setStatus('idle');
   };
 

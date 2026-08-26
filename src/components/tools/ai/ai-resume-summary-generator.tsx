@@ -66,23 +66,23 @@ export function AiResumeSummaryGeneratorTool() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="label">Your Name</label>
-            <input type="text" className="input mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800" placeholder="Jane Doe" value={form.name} onChange={(e) => update('name', e.target.value)} />
+            <input type="text" className="input mt-1" placeholder="Jane Doe" value={form.name} onChange={(e) => update('name', e.target.value)} />
           </div>
           <div>
             <label className="label">Current / Target Role</label>
-            <input type="text" className="input mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800" placeholder="Product Manager" value={form.role} onChange={(e) => update('role', e.target.value)} />
+            <input type="text" className="input mt-1" placeholder="Product Manager" value={form.role} onChange={(e) => update('role', e.target.value)} />
           </div>
         </div>
 
         <div>
           <label className="label">Years of Experience</label>
-          <input type="number" className="input mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800" placeholder="5" min="0" value={form.yearsOfExperience} onChange={(e) => update('yearsOfExperience', e.target.value)} />
+          <input type="number" className="input mt-1" placeholder="5" min="0" value={form.yearsOfExperience} onChange={(e) => update('yearsOfExperience', e.target.value)} />
         </div>
 
         <div>
           <label className="label">Key Skills</label>
           <textarea
-            className="input mt-1 min-h-[80px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+            className="input mt-1 min-h-[80px] resize-y"
             placeholder="Project management, Agile, Data analysis, Stakeholder communication..."
             value={form.skills}
             onChange={(e) => update('skills', e.target.value)}
@@ -104,7 +104,7 @@ export function AiResumeSummaryGeneratorTool() {
               </button>
             </div>
             <textarea
-              className="input mt-1 min-h-[140px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+              className="input mt-1 min-h-[140px] resize-y"
               readOnly
               value={output}
             />

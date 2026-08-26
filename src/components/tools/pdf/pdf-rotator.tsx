@@ -33,7 +33,7 @@ export function PdfRotatorTool() {
 
     try {
       const pdfBytes = await files[0].arrayBuffer();
-      const pdf = await PDFDocument.load(pdfBytes);
+      const pdf = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
 
       const pages = pdf.getPages();
       for (const page of pages) {
@@ -45,8 +45,8 @@ export function PdfRotatorTool() {
       const blob = new Blob([newBytes as unknown as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
-    } catch (err) {
-      setError((err as Error).message);
+    } catch {
+      setError('Failed to rotate PDF. Please try a different file.');
     } finally {
       setRotating(false);
     }

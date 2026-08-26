@@ -103,15 +103,16 @@ export async function POST(request: NextRequest) {
     if (warnings) headers.set('X-Warnings', warnings);
 
     return new NextResponse(pdfBuffer, { status: 200, headers });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as { message?: string };
     console.error('[DOCX-to-PDF]', err);
 
     let message: string;
-    if (err.message?.includes('temporarily unavailable') || err.message?.includes('ECONNREFUSED')) {
+    if (error.message?.includes('temporarily unavailable') || error.message?.includes('ECONNREFUSED')) {
       message = 'Document conversion service is temporarily unavailable. Please try again later.';
-    } else if (err.message?.includes('timed out') || err.message?.includes('ETIMEDOUT')) {
+    } else if (error.message?.includes('timed out') || error.message?.includes('ETIMEDOUT')) {
       message = 'Conversion took too long. Please try a smaller document.';
-    } else if (err.message?.includes('soffice') || err.message?.includes('ENOENT')) {
+    } else if (error.message?.includes('soffice') || error.message?.includes('ENOENT')) {
       message = 'Document conversion engine is not installed. Please contact support.';
     } else {
       message = 'Conversion failed. The document may be corrupted or contain unsupported elements.';

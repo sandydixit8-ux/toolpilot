@@ -1,14 +1,12 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { UploadBox } from '@/components/tools/upload-box';
 import {
   FileText,
   Download,
-  CheckCircle,
   Loader2,
   RotateCcw,
-  Image as ImageIcon,
 } from 'lucide-react';
 
 export function PdfToJpgTool() {
@@ -18,8 +16,6 @@ export function PdfToJpgTool() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
   const [pageImages, setPageImages] = useState<{ url: string; page: number }[]>([]);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const handleFiles = useCallback((newFiles: File[]) => {
     setFiles(newFiles.slice(0, 1));
     setDone(false);
@@ -172,8 +168,6 @@ export function PdfToJpgTool() {
             </div>
           </div>
         )}
-
-        <canvas ref={canvasRef} className="hidden" />
 
         <div className="flex flex-wrap gap-2">
           <button

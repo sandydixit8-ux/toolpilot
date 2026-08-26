@@ -12,7 +12,6 @@ import {
   ArrowUp,
   ArrowDown,
   Trash2,
-  GripVertical,
 } from 'lucide-react';
 import { formatBytes } from '@/lib/utils';
 

@@ -62,8 +62,11 @@ export function ImageQualityOptimizer() {
     ctx.drawImage(img, 0, 0);
 
     const mimeType = 'image/jpeg';
-    const blob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((b) => resolve(b!), mimeType, quality / 100);
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error('Failed to optimize image'));
+      }, mimeType, quality / 100);
     });
 
     return {

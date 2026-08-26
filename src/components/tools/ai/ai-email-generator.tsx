@@ -69,18 +69,18 @@ export function AiEmailGeneratorTool() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="label">Recipient Name</label>
-            <input type="text" className="input mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800" placeholder="John Smith" value={form.recipient} onChange={(e) => update('recipient', e.target.value)} />
+            <input type="text" className="input mt-1" placeholder="John Smith" value={form.recipient} onChange={(e) => update('recipient', e.target.value)} />
           </div>
           <div>
             <label className="label">Subject</label>
-            <input type="text" className="input mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800" placeholder="Follow-up on Proposal" value={form.subject} onChange={(e) => update('subject', e.target.value)} />
+            <input type="text" className="input mt-1" placeholder="Follow-up on Proposal" value={form.subject} onChange={(e) => update('subject', e.target.value)} />
           </div>
         </div>
 
         <div>
           <label className="label">Purpose / Context</label>
           <textarea
-            className="input mt-1 min-h-[80px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+            className="input mt-1 min-h-[80px] resize-y"
             placeholder="Describe what this email is about..."
             value={form.purpose}
             onChange={(e) => update('purpose', e.target.value)}
@@ -121,7 +121,7 @@ export function AiEmailGeneratorTool() {
               </button>
             </div>
             <textarea
-              className="input mt-1 min-h-[260px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+              className="input mt-1 min-h-[260px] resize-y"
               readOnly
               value={output}
             />

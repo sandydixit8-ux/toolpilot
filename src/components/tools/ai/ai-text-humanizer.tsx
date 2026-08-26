@@ -125,7 +125,7 @@ export function AiTextHumanizerTool() {
         <div>
           <label className="label">AI-Generated Text</label>
           <textarea
-            className="input mt-1 min-h-[160px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+              className="input mt-1 min-h-[160px] resize-y"
             placeholder="Paste your AI-generated text here..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -147,7 +147,7 @@ export function AiTextHumanizerTool() {
               </button>
             </div>
             <textarea
-              className="input mt-1 min-h-[160px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+            className="input mt-1 min-h-[160px] resize-y"
               readOnly
               value={output}
             />

@@ -9,7 +9,6 @@ import {
   CheckCircle,
   Loader2,
   RotateCcw,
-  ArrowDown,
   ArrowRight,
   Minus,
 } from 'lucide-react';
@@ -91,7 +90,7 @@ export function PdfCompressorTool() {
       setCompressedUrl(url);
       setCompressedSize(blob.size);
       setProgress('');
-    } catch (err) {
+    } catch {
       setError('Failed to compress PDF. The file may be corrupted or password-protected.');
       setProgress('');
     } finally {
@@ -167,7 +166,7 @@ export function PdfCompressorTool() {
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{opt.description}</p>
                   <p className={`mt-1 text-xs font-medium ${quality === opt.value ? 'text-blue-600 dark:text-blue-400' : 'text-green-600 dark:text-green-400'}`}>
-                    ~{opt.reduction} reduction
+                    {opt.reduction} reduction
                   </p>
                 </button>
               ))}

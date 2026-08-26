@@ -60,7 +60,7 @@ export function AiTextSummarizerTool() {
         <div>
           <label className="label">Text to Summarize</label>
           <textarea
-            className="input mt-1 min-h-[180px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+            className="input mt-1 min-h-[180px] resize-y"
             placeholder="Paste a long article, essay, or document here..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -101,7 +101,7 @@ export function AiTextSummarizerTool() {
               </button>
             </div>
             <textarea
-              className="input mt-1 min-h-[100px] w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-800"
+              className="input mt-1 min-h-[100px] resize-y"
               readOnly
               value={output}
             />

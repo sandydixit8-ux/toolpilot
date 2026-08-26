@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import os from 'os';
 
 const execFileAsync = promisify(execFile);
@@ -18,7 +19,7 @@ function findLibreOfficePath(): string | null {
     ];
     for (const p of candidates) {
       try {
-        require('fs').accessSync(p);
+        fsSync.accessSync(p);
         return p;
       } catch {}
     }
@@ -34,7 +35,7 @@ function findLibreOfficePath(): string | null {
   ];
   for (const p of candidates) {
     try {
-      require('fs').accessSync(p);
+      fsSync.accessSync(p);
       return p;
     } catch {}
   }
@@ -82,7 +83,7 @@ export async function convertDocxToPdf(
       inputPath,
     ];
 
-    const env = {
+    const env: NodeJS.ProcessEnv = {
       ...process.env,
       HOME: os.tmpdir(),
       TMPDIR: os.tmpdir(),
@@ -109,9 +110,10 @@ export async function convertDocxToPdf(
       });
       stdout = result.stdout;
       stderr = result.stderr;
-    } catch (execErr: any) {
-      stderr = execErr.stderr || '';
-      stdout = execErr.stdout || '';
+    } catch (execErr: unknown) {
+      const execError = execErr as { stderr?: string; stdout?: string };
+      stderr = execError.stderr || '';
+      stdout = execError.stdout || '';
 
       try {
         await fs.access(pdfPath);
@@ -139,8 +141,9 @@ export async function convertDocxToPdf(
       pdfPath,
       warnings,
     };
-  } catch (err: any) {
-    if (err.killed || err.code === 'ETIMEDOUT') {
+  } catch (err: unknown) {
+    const error = err as { killed?: boolean; code?: string; message?: string };
+    if (error.killed || error.code === 'ETIMEDOUT') {
       return {
         success: false,
         error: 'Conversion timed out. The document may be too large or complex.',
@@ -149,7 +152,7 @@ export async function convertDocxToPdf(
     }
     return {
       success: false,
-      error: `LibreOffice conversion failed: ${err.message || 'Unknown error'}`,
+      error: `LibreOffice conversion failed: ${error.message || 'Unknown error'}`,
       warnings,
     };
   }

@@ -81,8 +81,11 @@ export function ImageResizer() {
           ctx.drawImage(img, 0, 0, width, height);
           URL.revokeObjectURL(img.src);
 
-          const blob = await new Promise<Blob>((resolve) => {
-            canvas.toBlob((b) => resolve(b!), file.type);
+          const blob = await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob((b) => {
+              if (b) resolve(b);
+              else reject(new Error('Failed to resize image'));
+            }, file.type);
           });
 
           return {
