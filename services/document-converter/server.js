@@ -157,24 +157,20 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
 
 app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
   const jobId = uuidv4();
-  const jobDir = `/tmp/toolpilotpro/jobs/${jobId}`;
+  const workDir = `/tmp/lo_${jobId.slice(0, 8)}`;
 
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No file provided.' });
     }
 
-    await fs.mkdir(jobDir, { recursive: true });
-    try { execSync(`chmod -R 777 ${jobDir}`); } catch {}
+    await fs.mkdir(workDir, { recursive: true });
 
-    const inputPath = path.join(jobDir, `input${path.extname(req.file.originalname)}`);
-    const outputDir = jobDir;
+    const inputPath = path.join(workDir, `input.pdf`);
 
     await fs.writeFile(inputPath, req.file.buffer);
 
     const sofficePath = '/usr/bin/soffice';
-    const lockDir = '/tmp/.~lock.X11-unix';
-    try { await fs.rm(lockDir, { recursive: true, force: true }); } catch {}
 
     const args = [
       '--headless',
@@ -183,7 +179,7 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
       '--convert-to',
       'docx:MS Word 2007 XML',
       '--outdir',
-      outputDir,
+      '/tmp',
       inputPath,
     ];
     console.log('[PDF-to-DOCX] Running:', sofficePath, args.join(' '));
@@ -219,29 +215,25 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
     console.log('[PDF-to-DOCX] soffice stdout:', stdout.trim());
     console.log('[PDF-to-DOCX] soffice stderr:', stderr.trim());
 
-    const filesAfter = await fs.readdir(outputDir);
-    console.log('[PDF-to-DOCX] Output dir contents:', filesAfter);
+    const filesAfter = await fs.readdir('/tmp');
+    const docxFiles = filesAfter.filter(f => f.endsWith('.docx'));
+    console.log('[PDF-to-DOCX] /tmp docx files:', docxFiles);
 
-    let docxPath = path.join(outputDir, 'input.docx');
+    let docxPath = '/tmp/input.docx';
     let found = false;
     try {
       await fs.access(docxPath);
       found = true;
     } catch {}
 
-    if (!found) {
-      const docxFile = filesAfter.find(f => f.toLowerCase().endsWith('.docx'));
-      if (docxFile) {
-        docxPath = path.join(outputDir, docxFile);
-        found = true;
-      }
+    if (!found && docxFiles.length > 0) {
+      docxPath = path.join('/tmp', docxFiles[docxFiles.length - 1]);
+      found = true;
     }
 
     if (!found) {
-      console.error('[PDF-to-DOCX] CRITICAL: No DOCX produced. Files:', filesAfter);
-      console.error('[PDF-to-DOCX] soffice stdout:', stdout.trim());
-      console.error('[PDF-to-DOCX] soffice stderr:', stderr.trim());
-      return res.status(500).json({ success: false, error: 'DOCX output not found after conversion. soffice stderr: ' + (stderr.trim() || 'empty') + ' | stdout: ' + (stdout.trim() || 'empty') });
+      console.error('[PDF-to-DOCX] CRITICAL: No DOCX in /tmp');
+      return res.status(500).json({ success: false, error: 'DOCX output not found. soffice stderr: ' + (stderr.trim() || 'empty') });
     }
 
     const docxBuffer = await fs.readFile(docxPath);
@@ -251,12 +243,15 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${outputFilename}"`);
 
     res.send(docxBuffer);
+
+    try { await fs.unlink(docxPath); } catch {}
+    try { await fs.unlink(inputPath); } catch {}
   } catch (err) {
     console.error('[PDF-to-DOCX] FATAL:', err.message, err.stack);
     res.status(500).json({ success: false, error: 'Conversion failed. ' + (err.message || '') });
   } finally {
     try {
-      await fs.rm(jobDir, { recursive: true, force: true });
+      await fs.rm(workDir, { recursive: true, force: true });
     } catch {}
   }
 });
