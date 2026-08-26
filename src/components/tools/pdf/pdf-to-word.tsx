@@ -10,6 +10,91 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
+interface TextItem {
+  str: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fontSize: number;
+}
+
+interface TextLine {
+  items: TextItem[];
+  y: number;
+  xMin: number;
+  xMax: number;
+}
+
+interface TextBlock {
+  lines: TextLine[];
+  isTable: boolean;
+}
+
+function detectTables(lines: TextLine[]): TextBlock[] {
+  if (lines.length === 0) return [];
+
+  const sortedLines = [...lines].sort((a, b) => b.y - a.y);
+  const COLUMN_TOLERANCE = 15;
+  const ROW_TOLERANCE = 8;
+
+  const allXPositions: number[] = [];
+  for (const line of sortedLines) {
+    for (const item of line.items) {
+      const x = Math.round(item.x / COLUMN_TOLERANCE) * COLUMN_TOLERANCE;
+      if (!allXPositions.includes(x)) allXPositions.push(x);
+    }
+  }
+  allXPositions.sort((a, b) => a - b);
+
+  const mergedColumns: number[][] = [];
+  for (const x of allXPositions) {
+    const lastCol = mergedColumns[mergedColumns.length - 1];
+    if (lastCol && Math.abs(x - lastCol[lastCol.length - 1]) < COLUMN_TOLERANCE * 1.5) {
+      lastCol.push(x);
+    } else {
+      mergedColumns.push([x]);
+    }
+  }
+
+  const columnCenters = mergedColumns.map(col => col.reduce((a, b) => a + b, 0) / col.length);
+
+  const isLikelyTable = columnCenters.length >= 2 && sortedLines.length >= 2;
+
+  if (!isLikelyTable) {
+    return sortedLines.map(line => ({
+      lines: [line],
+      isTable: false,
+    }));
+  }
+
+  const lineGroups: TextLine[][] = [];
+  let currentGroup: TextLine[] = [sortedLines[0]];
+
+  for (let i = 1; i < sortedLines.length; i++) {
+    const prevY = currentGroup[0].y;
+    const curY = sortedLines[i].y;
+    if (Math.abs(prevY - curY) < ROW_TOLERANCE * 2) {
+      currentGroup.push(sortedLines[i]);
+    } else {
+      lineGroups.push(currentGroup);
+      currentGroup = [sortedLines[i]];
+    }
+  }
+  lineGroups.push(currentGroup);
+
+  const blocks: TextBlock[] = [];
+  for (const group of lineGroups) {
+    if (group.length >= 2) {
+      blocks.push({ lines: group, isTable: true });
+    } else {
+      blocks.push({ lines: group, isTable: false });
+    }
+  }
+
+  return blocks;
+}
+
 export function PdfToWordTool() {
   const [files, setFiles] = useState<File[]>([]);
   const [converting, setConverting] = useState(false);
@@ -42,34 +127,104 @@ export function PdfToWordTool() {
       const pdfjsLib = await import('pdfjs-dist');
       pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
+      const docxLib = await import('docx');
+
+      const {
+        Document,
+        Packer,
+        Paragraph,
+        Table,
+        TableRow,
+        TableCell,
+        WidthType,
+        AlignmentType,
+        HeadingLevel,
+        PageOrientation,
+        BorderStyle,
+        TextRun,
+        VerticalAlign,
+        convertInchesToTwip,
+      } = docxLib;
+
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const pageCount = pdf.numPages;
 
-      const paragraphs: string[] = [];
+      const allBlocks: { blocks: TextBlock[]; isLandscape: boolean; width: number; height: number }[] = [];
 
       for (let i = 1; i <= pageCount; i++) {
-        setProgress(`Extracting text from page ${i} of ${pageCount}...`);
+        setProgress(`Analyzing page ${i} of ${pageCount}...`);
         const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.0 });
         const textContent = await page.getTextContent();
 
-        let lastY = -1;
-        let lineText = '';
+        const isLandscape = viewport.width > viewport.height;
 
-        for (const item of textContent.items as { str: string; transform: number[] }[]) {
-          const currentY = item.transform[5];
-          if (lastY !== -1 && Math.abs(currentY - lastY) > 5) {
-            if (lineText.trim()) paragraphs.push(lineText.trim());
-            lineText = '';
-          }
-          lineText += item.str;
-          lastY = currentY;
+        interface RawTextItem {
+          str: string;
+          transform: number[];
+          width?: number;
+          height?: number;
         }
-        if (lineText.trim()) paragraphs.push(lineText.trim());
+        const rawItems = textContent.items as RawTextItem[];
+        const textItems: TextItem[] = rawItems
+          .filter((item) => item.str && item.str.trim().length > 0)
+          .map((item) => {
+            const tx = item.transform;
+            return {
+              str: item.str,
+              x: tx[4],
+              y: tx[5],
+              width: item.width || 0,
+              height: item.height || 0,
+              fontSize: Math.abs(tx[0]) || Math.abs(tx[3]) || 12,
+            };
+          });
+
+        const lines: TextLine[] = [];
+        const sorted = [...textItems].sort((a, b) => b.y - a.y);
+        let currentLine: TextItem[] = [];
+        let lineY = -1;
+
+        for (const item of sorted) {
+          if (lineY === -1 || Math.abs(item.y - lineY) < 5) {
+            currentLine.push(item);
+            if (lineY === -1) lineY = item.y;
+          } else {
+            if (currentLine.length > 0) {
+              currentLine.sort((a, b) => a.x - b.x);
+              lines.push({
+                items: currentLine,
+                y: lineY,
+                xMin: Math.min(...currentLine.map(it => it.x)),
+                xMax: Math.max(...currentLine.map(it => it.x + it.width)),
+              });
+            }
+            currentLine = [item];
+            lineY = item.y;
+          }
+        }
+        if (currentLine.length > 0) {
+          currentLine.sort((a, b) => a.x - b.x);
+          lines.push({
+            items: currentLine,
+            y: lineY,
+            xMin: Math.min(...currentLine.map(it => it.x)),
+            xMax: Math.max(...currentLine.map(it => it.x + it.width)),
+          });
+        }
+
+        const blocks = detectTables(lines);
+        allBlocks.push({
+          blocks,
+          isLandscape,
+          width: viewport.width,
+          height: viewport.height,
+        });
       }
 
-      if (paragraphs.length === 0) {
+      if (allBlocks.length === 0) {
         setError('No text found in PDF. The document may be image-based or scanned.');
         setConverting(false);
         setProgress('');
@@ -78,39 +233,140 @@ export function PdfToWordTool() {
 
       setProgress('Generating Word document...');
 
-      const htmlContent = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office"
-              xmlns:w="urn:schemas-microsoft-com:office:word"
-              xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-          <meta charset="utf-8">
-          <title>${file.name.replace(/\.pdf$/i, '')}</title>
-          <!--[if gte mso 9]>
-          <xml>
-            <w:WordDocument>
-              <w:View>Print</w:View>
-              <w:Zoom>100</w:Zoom>
-            </w:WordDocument>
-          </xml>
-          <![endif]-->
-          <style>
-            body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5; color: #1a1a1a; max-width: 800px; margin: 0 auto; padding: 40px; }
-            h1 { font-size: 20pt; color: #2563eb; margin-bottom: 5px; }
-            hr { border: 1px solid #2563eb; margin-bottom: 20px; }
-            p { margin: 8px 0; }
-          </style>
-        </head>
-        <body>
-          <h1>${file.name.replace(/\.pdf$/i, '')}</h1>
-          <hr>
-          ${paragraphs.map((p) => `<p>${p.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`).join('\n')}
-        </body>
-        </html>
-      `;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const children: any[] = [];
 
-      const blob = new Blob([htmlContent], {
-        type: 'application/msword',
+      children.push(new Paragraph({
+        children: [
+          new TextRun({
+            text: file.name.replace(/\.pdf$/i, ''),
+            bold: true,
+            size: 32,
+          }),
+        ],
+        heading: HeadingLevel.HEADING_1,
+        spacing: { after: 200 },
+      }));
+
+      children.push(new Paragraph({
+        border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '999999' } },
+        spacing: { after: 300 },
+      }));
+
+      for (let pageIdx = 0; pageIdx < allBlocks.length; pageIdx++) {
+        const pageData = allBlocks[pageIdx];
+
+        if (pageIdx > 0) {
+          children.push(new Paragraph({
+            children: [
+              new TextRun({
+                text: `--- Page ${pageIdx + 1} ---`,
+                color: '999999',
+                size: 18,
+                italics: true,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 400, after: 200 },
+          }));
+        }
+
+        for (const block of pageData.blocks) {
+          if (block.isTable && block.lines.length >= 2) {
+            const maxCols = Math.max(...block.lines.map(l => l.items.length));
+
+            const rows = block.lines.map(line => {
+              const cells = [];
+              for (let col = 0; col < maxCols; col++) {
+                const item = line.items[col];
+                cells.push(
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: item ? item.str : '',
+                            size: 20,
+                          }),
+                        ],
+                        spacing: { before: 40, after: 40 },
+                      }),
+                    ],
+                    verticalAlign: VerticalAlign.CENTER,
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
+                      bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
+                      left: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
+                      right: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
+                    },
+                  })
+                );
+              }
+              return new TableRow({ children: cells });
+            });
+
+            children.push(
+              new Table({
+                rows,
+                width: {
+                  size: 100,
+                  type: WidthType.PERCENTAGE,
+                },
+              })
+            );
+          } else {
+            const text = block.lines
+              .flatMap(l => l.items.map(it => it.str))
+              .join(' ')
+              .trim();
+
+            if (text) {
+              children.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text,
+                      size: 22,
+                    }),
+                  ],
+                  spacing: { before: 80, after: 80 },
+                })
+              );
+            }
+          }
+        }
+      }
+
+      const sectionPages = allBlocks.map((p) => ({
+        size: {
+          width: Math.round(p.width * (1440 / 72)),
+          height: Math.round(p.height * (1440 / 72)),
+          orientation: p.isLandscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT,
+        },
+      }));
+
+      const doc = new Document({
+        sections: [{
+          properties: {
+            page: {
+              size: sectionPages[0]?.size || {
+                width: convertInchesToTwip(8.5),
+                height: convertInchesToTwip(11),
+                orientation: PageOrientation.PORTRAIT,
+              },
+              margin: {
+                top: convertInchesToTwip(1),
+                right: convertInchesToTwip(1),
+                bottom: convertInchesToTwip(1),
+                left: convertInchesToTwip(1),
+              },
+            },
+          },
+          children,
+        }],
       });
+
+      const blob = await Packer.toBlob(doc);
       setDocxBlob(blob);
       setProgress('');
       setDone(true);
@@ -128,7 +384,7 @@ export function PdfToWordTool() {
     const url = URL.createObjectURL(docxBlob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = files[0].name.replace(/\.pdf$/i, '.doc');
+    a.download = files[0].name.replace(/\.pdf$/i, '.docx');
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -150,7 +406,7 @@ export function PdfToWordTool() {
         </div>
 
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Extract text from your PDF and convert it to an editable Word document. All processing happens in your browser.
+          Convert your PDF to an editable Word document. Preserves page orientation, tables, and formatting. All processing happens in your browser.
         </p>
 
         {error && (
@@ -199,7 +455,7 @@ export function PdfToWordTool() {
           {done && (
             <button onClick={handleDownload} className="btn-secondary flex items-center gap-2">
               <Download className="h-4 w-4" />
-              Download .doc
+              Download .docx
             </button>
           )}
           {files.length > 0 && (
