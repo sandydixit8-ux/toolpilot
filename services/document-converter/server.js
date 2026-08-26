@@ -20,10 +20,10 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (ext === '.docx' || ext === '.doc') {
+    if (['.docx', '.doc', '.pdf'].includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Unsupported file format. Only .doc and .docx files are accepted.'));
+      cb(new Error('Unsupported file format. Only .doc, .docx, and .pdf files are accepted.'));
     }
   },
 });
@@ -145,6 +145,109 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
     res.send(pdfBuffer);
   } catch (err) {
     console.error('[DOCX-to-PDF] FATAL:', err.message, err.stack);
+    res.status(500).json({ success: false, error: 'Conversion failed. ' + (err.message || '') });
+  } finally {
+    try {
+      await fs.rm(jobDir, { recursive: true, force: true });
+    } catch {}
+  }
+});
+
+app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
+  const jobId = uuidv4();
+  const jobDir = `/tmp/toolpilotpro/jobs/${jobId}`;
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No file provided.' });
+    }
+
+    await fs.mkdir(jobDir, { recursive: true });
+    await fs.mkdir(path.join(jobDir, 'output'), { recursive: true });
+
+    const inputPath = path.join(jobDir, `input${path.extname(req.file.originalname)}`);
+    const outputDir = path.join(jobDir, 'output');
+
+    await fs.writeFile(inputPath, req.file.buffer);
+
+    const sofficePath = '/usr/bin/soffice';
+    const lockDir = '/tmp/.~lock.X11-unix';
+    try { await fs.rm(lockDir, { recursive: true, force: true }); } catch {}
+
+    const args = [
+      '--headless',
+      '--norestore',
+      '--nofirststartwizard',
+      '--convert-to',
+      'docx:MS Word 2007 XML',
+      '--outdir',
+      outputDir,
+      inputPath,
+    ];
+    console.log('[PDF-to-DOCX] Running:', sofficePath, args.join(' '));
+    console.log('[PDF-to-DOCX] Input file size:', req.file.size);
+
+    let stdout = '', stderr = '';
+    try {
+      const result = await execFileAsync(sofficePath, args, {
+        timeout: TIMEOUT,
+        maxBuffer: 50 * 1024 * 1024,
+        env: {
+          HOME: '/tmp',
+          USER: 'root',
+          DBUS_SESSION_BUS_ADDRESS: '/dev/null',
+          PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        },
+      });
+      stdout = result.stdout;
+      stderr = result.stderr;
+    } catch (sofficeErr) {
+      stdout = sofficeErr.stdout || '';
+      stderr = sofficeErr.stderr || '';
+      console.error('[PDF-to-DOCX] soffice error code:', sofficeErr.code);
+      console.error('[PDF-to-DOCX] soffice killed:', sofficeErr.killed);
+      console.error('[PDF-to-DOCX] soffice stdout:', stdout);
+      console.error('[PDF-to-DOCX] soffice stderr:', stderr);
+      if (sofficeErr.killed) {
+        return res.status(504).json({ success: false, error: 'Conversion timed out.' });
+      }
+    }
+
+    console.log('[PDF-to-DOCX] soffice stdout:', stdout.trim());
+    console.log('[PDF-to-DOCX] soffice stderr:', stderr.trim());
+
+    const filesAfter = await fs.readdir(outputDir);
+    console.log('[PDF-to-DOCX] Output dir contents:', filesAfter);
+
+    let docxPath = path.join(outputDir, 'input.docx');
+    let found = false;
+    try {
+      await fs.access(docxPath);
+      found = true;
+    } catch {}
+
+    if (!found) {
+      const docxFile = filesAfter.find(f => f.toLowerCase().endsWith('.docx'));
+      if (docxFile) {
+        docxPath = path.join(outputDir, docxFile);
+        found = true;
+      }
+    }
+
+    if (!found) {
+      console.error('[PDF-to-DOCX] CRITICAL: No DOCX produced. Files:', filesAfter);
+      return res.status(500).json({ success: false, error: 'DOCX output not found after conversion.' });
+    }
+
+    const docxBuffer = await fs.readFile(docxPath);
+    const outputFilename = req.file.originalname.replace(/\.pdf$/i, '.docx');
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${outputFilename}"`);
+
+    res.send(docxBuffer);
+  } catch (err) {
+    console.error('[PDF-to-DOCX] FATAL:', err.message, err.stack);
     res.status(500).json({ success: false, error: 'Conversion failed. ' + (err.message || '') });
   } finally {
     try {
