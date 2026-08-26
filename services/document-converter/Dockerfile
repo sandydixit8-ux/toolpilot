@@ -18,7 +18,7 @@ RUN npm install --omit=dev
 
 COPY server.js ./
 
-RUN mkdir -p /tmp/toolpilotpro/jobs
+RUN mkdir -p /tmp/toolpilotpro/jobs && chmod -R 777 /tmp/toolpilotpro
 
 EXPOSE 3001
 

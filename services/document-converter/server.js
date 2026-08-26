@@ -8,6 +8,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 const execFileAsync = promisify(execFile);
+const { execSync } = require('child_process');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const TIMEOUT = 120_000;
@@ -43,6 +44,7 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
 
     await fs.mkdir(jobDir, { recursive: true });
     await fs.mkdir(path.join(jobDir, 'output'), { recursive: true });
+    try { execSync(`chmod -R 777 ${jobDir}`); } catch {}
 
     const inputPath = path.join(jobDir, `input${path.extname(req.file.originalname)}`);
     const outputDir = path.join(jobDir, 'output');
@@ -163,6 +165,7 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
     }
 
     await fs.mkdir(jobDir, { recursive: true });
+    try { execSync(`chmod -R 777 ${jobDir}`); } catch {}
 
     const inputPath = path.join(jobDir, `input${path.extname(req.file.originalname)}`);
     const outputDir = jobDir;
