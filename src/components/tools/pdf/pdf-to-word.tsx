@@ -233,31 +233,36 @@ export function PdfToWordTool() {
 
       setProgress('Generating Word document...');
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const children: any[] = [];
+      const pageMargin = {
+        top: convertInchesToTwip(1),
+        right: convertInchesToTwip(1),
+        bottom: convertInchesToTwip(1),
+        left: convertInchesToTwip(1),
+      };
 
-      children.push(new Paragraph({
-        children: [
-          new TextRun({
-            text: file.name.replace(/\.pdf$/i, ''),
-            bold: true,
-            size: 32,
-          }),
-        ],
-        heading: HeadingLevel.HEADING_1,
-        spacing: { after: 200 },
-      }));
+      const sections = allBlocks.map((pageData, pageIdx) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pageChildren: any[] = [];
 
-      children.push(new Paragraph({
-        border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '999999' } },
-        spacing: { after: 300 },
-      }));
+        if (pageIdx === 0) {
+          pageChildren.push(new Paragraph({
+            children: [
+              new TextRun({
+                text: file.name.replace(/\.pdf$/i, ''),
+                bold: true,
+                size: 32,
+              }),
+            ],
+            heading: HeadingLevel.HEADING_1,
+            spacing: { after: 200 },
+          }));
 
-      for (let pageIdx = 0; pageIdx < allBlocks.length; pageIdx++) {
-        const pageData = allBlocks[pageIdx];
-
-        if (pageIdx > 0) {
-          children.push(new Paragraph({
+          pageChildren.push(new Paragraph({
+            border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '999999' } },
+            spacing: { after: 300 },
+          }));
+        } else {
+          pageChildren.push(new Paragraph({
             children: [
               new TextRun({
                 text: `--- Page ${pageIdx + 1} ---`,
@@ -305,7 +310,7 @@ export function PdfToWordTool() {
               return new TableRow({ children: cells });
             });
 
-            children.push(
+            pageChildren.push(
               new Table({
                 rows,
                 width: {
@@ -321,7 +326,7 @@ export function PdfToWordTool() {
               .trim();
 
             if (text) {
-              children.push(
+              pageChildren.push(
                 new Paragraph({
                   children: [
                     new TextRun({
@@ -335,35 +340,24 @@ export function PdfToWordTool() {
             }
           }
         }
-      }
 
-      const sectionPages = allBlocks.map((p) => ({
-        size: {
-          width: Math.round(p.width * (1440 / 72)),
-          height: Math.round(p.height * (1440 / 72)),
-          orientation: p.isLandscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT,
-        },
-      }));
-
-      const doc = new Document({
-        sections: [{
+        return {
           properties: {
             page: {
-              size: sectionPages[0]?.size || {
-                width: convertInchesToTwip(8.5),
-                height: convertInchesToTwip(11),
-                orientation: PageOrientation.PORTRAIT,
+              size: {
+                width: Math.round(pageData.width * (1440 / 72)),
+                height: Math.round(pageData.height * (1440 / 72)),
+                orientation: pageData.isLandscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT,
               },
-              margin: {
-                top: convertInchesToTwip(1),
-                right: convertInchesToTwip(1),
-                bottom: convertInchesToTwip(1),
-                left: convertInchesToTwip(1),
-              },
+              margin: pageMargin,
             },
           },
-          children,
-        }],
+          children: pageChildren,
+        };
+      });
+
+      const doc = new Document({
+        sections,
       });
 
       const blob = await Packer.toBlob(doc);
