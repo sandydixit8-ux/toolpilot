@@ -179,7 +179,7 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
       '--norestore',
       '--nofirststartwizard',
       '--convert-to',
-      'docx',
+      'docx:MS Word 2007 XML',
       '--outdir',
       outputDir,
       inputPath,
