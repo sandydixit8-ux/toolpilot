@@ -21,7 +21,7 @@ const legalLinks = [
 ];
 
 const socialLinks = [
-  { label: "Facebook", href: "https://www.facebook.com/toolpilotpro", icon: Facebook },
+  { label: "Facebook", href: "https://www.facebook.com/share/19WQT9GtwF", icon: Facebook },
   { label: "Instagram", href: "https://www.instagram.com/toolpilotpro", icon: Instagram },
   { label: "Twitter / X", href: "https://www.twitter.com/toolpilotpro", icon: Twitter },
   { label: "YouTube", href: "https://www.youtube.com/@toolpilotpro", icon: Youtube },
