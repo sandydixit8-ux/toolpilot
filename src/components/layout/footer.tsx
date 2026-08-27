@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CATEGORIES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Facebook, Instagram, Twitter, Youtube, Linkedin } from "lucide-react";
 
 const companyLinks = [
   { label: "About", href: "/about" },
@@ -18,6 +18,14 @@ const legalLinks = [
   { label: "Terms of Service", href: "/terms" },
   { label: "Cookie Policy", href: "/cookie-policy" },
   { label: "Disclaimer", href: "/disclaimer" },
+];
+
+const socialLinks = [
+  { label: "Facebook", href: "https://www.facebook.com/toolpilotpro", icon: Facebook },
+  { label: "Instagram", href: "https://www.instagram.com/toolpilotpro", icon: Instagram },
+  { label: "Twitter / X", href: "https://www.twitter.com/toolpilotpro", icon: Twitter },
+  { label: "YouTube", href: "https://www.youtube.com/@toolpilotpro", icon: Youtube },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/toolpilotpro", icon: Linkedin },
 ];
 
 export function Footer() {
@@ -58,6 +66,21 @@ export function Footer() {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Free online tools for work, money, career & everyday life.
             </p>
+            <div className="mt-4 flex gap-2">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  title={link.label}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition-colors hover:border-blue-600 hover:text-blue-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-blue-400"
+                >
+                  <link.icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
           </div>
 
           <div>
