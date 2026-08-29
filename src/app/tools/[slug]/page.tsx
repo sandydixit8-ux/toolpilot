@@ -13,7 +13,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SidebarAd, InArticleAd, BannerAd } from "@/components/ads/ad-banner";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
-import { UpiPayment } from "@/components/revenue/upi-payment";
 import { getAffiliatesForCategory } from "@/lib/affiliates";
 import { getSiteUrl } from "@/lib/utils";
 import { CheckCircle, Lock, ArrowRight } from "lucide-react";
@@ -174,7 +173,6 @@ export default async function SlugPage({ params }: Props) {
             />
           </div>
           <aside className="space-y-6">
-            <UpiPayment />
             <SidebarAd slotId="0000000003" />
             <Card>
               <CardContent className="p-5">
