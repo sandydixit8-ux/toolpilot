@@ -1,4 +1,13 @@
 const express = require('express');
+
+// Polyfill for Node <22 (Promise.withResolvers)
+if (typeof Promise.withResolvers !== 'function') {
+  Promise.withResolvers = function () {
+    let resolve, reject;
+    const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+    return { promise, resolve, reject };
+  };
+}
 const multer = require('multer');
 const cors = require('cors');
 const { execFile } = require('child_process');
