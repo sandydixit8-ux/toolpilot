@@ -610,7 +610,9 @@ function analyzePage(page) {
 function buildTableRows(lines, boundaries, emPage, columns) {
   if (!boundaries) return [];
   const col0X = columns[0] || 0;
-  const col0Min = col0X - 1;
+  // the S.No header cell ("S.N") can sit ~9pt LEFT of the digit values below
+  // it (narrow first column), so only exclude lines clearly left of the table.
+  const col0Min = col0X - 14;
   const alignTol = Math.max(4, emPage * 0.3);
   const HEADER_TOKEN = /^(S\.?N|No\.?|Item|#\.?|o\.)$/i;
 
@@ -661,7 +663,11 @@ function buildTableRows(lines, boundaries, emPage, columns) {
     }
     const anchor = isAnchor(line);
     if (anchor) {
-      if (open && open.hasCol0 && open.y - line.y <= emPage * 1.2 && !pending.length) {
+      // wrapped col0 continuation: a small S.No continuation ("S.N"+"o.") or a
+      // vertically centred S.No line sits close above its row's anchor. REAL
+      // next-row anchors are rowish (span ≥2 cells) and gap > 1.2em.
+      const contGap = isRowishLine(line, emPage) ? emPage * 1.2 : emPage * 1.6;
+      if (open && open.hasCol0 && open.y - line.y <= contGap && !pending.length) {
         open.lines.push(line); open.lastY = line.y; // wrapped col0 cell continuation
       } else {
         // pre-anchor content more than 2.2em above the anchor belongs to the
