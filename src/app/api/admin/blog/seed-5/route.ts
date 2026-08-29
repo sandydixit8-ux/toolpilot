@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -136,6 +137,8 @@ export async function POST(request: Request) {
       results.push({ slug: post.slug, status: "error", error: String(e) });
     }
   }
+
+  if (results.some((r) => r.status === "created")) revalidatePath("/blog");
 
   return NextResponse.json({ results });
 }

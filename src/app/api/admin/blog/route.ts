@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { blogPostSchema } from "@/lib/validations";
@@ -52,6 +53,9 @@ export async function POST(request: Request) {
         publishedAt: status === "PUBLISHED" ? new Date() : null,
       },
     });
+
+    revalidatePath("/blog");
+    if (post.status === "PUBLISHED") revalidatePath(`/blog/${post.slug}`);
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {

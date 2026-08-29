@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { blogPostSchema } from "@/lib/validations";
@@ -62,6 +63,10 @@ export async function PUT(request: Request, { params }: Props) {
       },
     });
 
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${post.slug}`);
+    if (existingPost.slug !== post.slug) revalidatePath(`/blog/${existingPost.slug}`);
+
     return NextResponse.json(post);
   } catch (error: unknown) {
     console.error("[Admin Blog PUT]", error);
@@ -79,6 +84,7 @@ export async function DELETE(_request: Request, { params }: Props) {
   try {
     const { id } = await params;
     await prisma.blogPost.delete({ where: { id } });
+    revalidatePath("/blog");
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error("[Admin Blog DELETE]", error);
