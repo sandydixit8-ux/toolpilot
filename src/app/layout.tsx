@@ -44,15 +44,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         {ADS_ENABLED && ADSENSE_PUBLISHER_ID && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
+          <>
+            <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
+            <link rel="preconnect" href="https://adservice.google.com" crossOrigin="anonymous" />
+            <Script
+              async
+              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`}
+              crossOrigin="anonymous"
+              strategy="afterInteractive"
+            />
+          </>
         )}
         {GA_ID && (
           <>
+            <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
+            <link rel="preconnect" href="https://www.google-analytics.com" crossOrigin="anonymous" />
             <Script
               async
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
@@ -94,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <OrganizationSchema />
         <WebsiteSchema />
+        <link rel="preconnect" href="https://utt.impactcdn.com" crossOrigin="anonymous" />
         <Script
           id="impact-affiliate"
           type="text/javascript"
