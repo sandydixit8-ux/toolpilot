@@ -148,7 +148,8 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
   }
 });
 
-// PDF to DOCX — uses pdftotext + docx library (pure Node.js, no LibreOffice)
+// PDF to DOCX — uses pdfjs-dist structure extraction + docx library
+// Preserves tables, page orientation, and heading structure.
 app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
   const jobId = uuidv4();
   const jobDir = `/tmp/toolpilotpro/jobs/${jobId}`;
@@ -165,97 +166,12 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
 
     console.log('[PDF-to-DOCX] Input file size:', req.file.size);
 
-    // Step 1: Extract text using pdftotext (from poppler-utils, pre-installed in Docker)
-    let textContent = '';
-    try {
-      const result = await execFileAsync('pdftotext', ['-layout', inputPath, '-'], {
-        timeout: 60_000,
-        maxBuffer: 50 * 1024 * 1024,
-      });
-      textContent = result.stdout || '';
-      console.log('[PDF-to-DOCX] Extracted text length:', textContent.length);
-    } catch (pdftotextErr) {
-      console.error('[PDF-to-DOCX] pdftotext failed:', pdftotextErr.message);
-      return res.status(500).json({ success: false, error: 'Failed to extract text from PDF. The file may be image-based or corrupted.' });
-    }
+    const { extractStructure, buildDocxFromPages } = require('./pdf-to-docx.js');
 
-    if (!textContent.trim()) {
-      return res.status(400).json({ success: false, error: 'No text could be extracted from this PDF. It may be a scanned/image-based document.' });
-    }
+    const pages = await extractStructure(inputPath);
+    console.log('[PDF-to-DOCX] Pages:', pages.length);
 
-    // Step 2: Parse text into structured paragraphs
-    const lines = textContent.split('\n');
-    const paragraphs = [];
-    let currentParagraph = [];
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-
-      if (trimmed === '') {
-        if (currentParagraph.length > 0) {
-          paragraphs.push(currentParagraph.join(' '));
-          currentParagraph = [];
-        }
-        continue;
-      }
-
-      // Detect headings: short lines that look like titles (uppercase, bold-like patterns)
-      const isLikelyHeading = trimmed.length < 100 &&
-        (trimmed === trimmed.toUpperCase() && trimmed.length > 2 ||
-         /^[A-Z][A-Za-z\s:,\-—–]+$/.test(trimmed) && trimmed.length < 80 &&
-         !trimmed.endsWith('.') && !trimmed.endsWith(','));
-
-      if (isLikelyHeading && currentParagraph.length === 0) {
-        if (currentParagraph.length > 0) {
-          paragraphs.push(currentParagraph.join(' '));
-          currentParagraph = [];
-        }
-        paragraphs.push('__HEADING__' + trimmed);
-        continue;
-      }
-
-      currentParagraph.push(trimmed);
-    }
-
-    if (currentParagraph.length > 0) {
-      paragraphs.push(currentParagraph.join(' '));
-    }
-
-    console.log('[PDF-to-DOCX] Parsed paragraphs:', paragraphs.length);
-
-    // Step 3: Create DOCX using docx library
-    const docxParagraphs = paragraphs.map(text => {
-      if (text.startsWith('__HEADING__')) {
-        const headingText = text.replace('__HEADING__', '');
-        return new Paragraph({
-          children: [
-            new TextRun({ text: headingText, bold: true, size: 28, font: 'Calibri' }),
-          ],
-          heading: HeadingLevel.HEADING_2,
-          spacing: { before: 240, after: 120 },
-        });
-      }
-
-      return new Paragraph({
-        children: [
-          new TextRun({ text, size: 22, font: 'Calibri' }),
-        ],
-        spacing: { after: 120 },
-      });
-    });
-
-    const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
-          },
-        },
-        children: docxParagraphs,
-      }],
-    });
-
-    const docxBuffer = await Packer.toBuffer(doc);
+    const docxBuffer = await buildDocxFromPages(pages);
     const outputFilename = req.file.originalname.replace(/\.pdf$/i, '.docx');
 
     console.log('[PDF-to-DOCX] DOCX created, size:', docxBuffer.length);
