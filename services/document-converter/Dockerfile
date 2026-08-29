@@ -17,6 +17,7 @@ COPY package.json ./
 RUN npm install --omit=dev
 
 COPY server.js ./
+COPY pdf-to-docx.js ./
 
 RUN mkdir -p /tmp/toolpilotpro/jobs && chmod -R 777 /tmp/toolpilotpro
 
