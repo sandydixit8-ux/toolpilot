@@ -325,37 +325,44 @@ function groupLines(words) {
   return lines;
 }
 
-/** Column boundaries = midpoints between column start-x positions. Deterministic cell assignment. */
-function columnBoundaries(columns, pageWidth) {
-  const pts = [0];
-  for (let i = 0; i < columns.length - 1; i++) pts.push((columns[i] + columns[i + 1]) / 2);
+/** Column boundaries separate cells: a wide middle cell (e.g. "MoU Reference"
+ *  ending at ~x180 while the next column starts at x190) must NOT be split by
+ *  a midpoint rule — every column's content ends at the NEXT column's left
+ *  edge minus a small slack, so a boundary sits just before the next column. */
+function columnBoundaries(columns, pageWidth, em) {
+  const slack = Math.max(4, em * 0.2);
+  const pts = [];
+  for (let i = 0; i < columns.length - 1; i++) pts.push(columns[i + 1] - slack);
   pts.push(pageWidth);
   return pts;
 }
 
-/** Assign WORDS to columns by word-center within [boundary_i, boundary_{i+1}). */
+/** Assign WORDS to columns. `boundaries[i]` is the RIGHT edge of column i
+ *  (last = page width): column 0 spans [0, b0), column i spans [b_{i-1}, b_i).
+ *  Word CENTER determines the containing cell. */
 function assignRunsToColumns(runs, boundaries) {
-  const n = boundaries.length - 1;
+  const n = boundaries.length;
   const cells = Array.from({ length: n }, () => []);
   for (const w of [...runs].sort((a, b) => a.x - b.x)) {
     const c = (w.x + w.x1) / 2;
+    let idx = n - 1;
     for (let i = 0; i < n; i++) {
-      if (c >= boundaries[i] && c < boundaries[i + 1]) { cells[i].push(w); break; }
+      if (c < boundaries[i]) { idx = i; break; }
     }
+    cells[idx].push(w);
   }
   return cells.map(ws => ws.map(w => w.text).join(' ').replace(/\s+/g, ' ').trim());
 }
 
 /**
- * A line is a TABLE ROW when its word stream contains ≥2 wide gutters.
- * Real cell-to-cell gaps are typically ≥1.5em; paragraph word spaces are
- * ~0.25-0.33em (fragment emission) so paragraphs never qualify.
+ * A line that visibly spans ≥2 table cells: ≥2 word-gaps wider than a
+ * justified-space (~7.6pt at 11pt) but ≤ a real cell gap (≥10pt).
  */
-function isRowLikeLine(line, em) {
-  const gapMin = Math.max(15, em * 1.5);
-  const sorted = [...line.items].sort((a, b) => a.x - b.x);
+function isRowishLine(line, em) {
+  const gapMin = Math.max(8, em * 0.8);
+  const ws = [...line.items].sort((a, b) => a.x - b.x);
   let big = 0, prevEnd = null;
-  for (const w of sorted) {
+  for (const w of ws) {
     if (prevEnd !== null && w.x - prevEnd >= gapMin) big += 1;
     prevEnd = Math.max(prevEnd, w.x1);
   }
@@ -363,57 +370,105 @@ function isRowLikeLine(line, em) {
 }
 
 /**
- * Cluster column start-x candidates; returns sorted column x positions.
- * Column cues (multi-signal, per master prompt §8):
- *  - line-leading (leftmost token) alignment across rows → column 0,
- *  - consistent cell-to-cell gaps (repeated X boundaries) → remaining columns.
- * Only ROW-LIKE lines contribute so paragraph text can never seed phantom columns.
+ * Detect the table COLUMN GRID (master prompt §9-10).
+ * COLUMN-0 = the leftmost DIGIT-LED leading cluster (≥2 lines whose first
+ * token starts with a digit — S.No values like "1","2","12"), falling back
+ * to the leftmost recurring leading edge. This keeps the body MARGIN
+ * (non-digit, page-wide paragraphs like "This document records…") out of the
+ * grid while still giving continuation pages a grid. Column candidates:
+ *   - recurring LEFT EDGE (leadingCount ≥ 2 across all lines), OR
+ *   - recurring boundary reached after a gap on ≥3 ROW-ISH lines that start
+ *     in the column-0 band (single-word cells like "GSI"/"RACI") and their
+ *     leading edges elsewhere.
+ * The rowish+band restriction stops justified-text spread inside a cell from
+ * seeding columns. Columns closer than ~1.4em merge (a centred S.No header at
+ * x=45 + its 1-digit values at x=54 are ONE column); column-0 stays leftmost.
  */
-function findTableColumns(lines, minSupport = 3) {
-  const em = median(lines.map(l => l.size)) || 10;
-  const tol = Math.max(3, em * 0.35);
-  const rowLines = lines.filter(l => isRowLikeLine(l, em));
-  if (rowLines.length < 2) return [];
+function detectColumnGrid(lines, pageWidth, em) {
+  const tol = Math.max(3, em * 0.5);
+  const minColGap = Math.max(16, em * 1.4);
+  const voidMin = Math.max(8, em * 0.8);
 
-  const clusters = [];
-  const registerX = (x) => registerCluster(clusters, x, tol);
+  const allLeadClusters = [];
+  for (const line of lines) {
+    if (line._isPageNumber) continue;
+    const ws = [...line.items].sort((a, b) => a.x - b.x);
+    if (ws.length) registerCluster(allLeadClusters, ws[0].x, ws[0].text, tol);
+  }
 
-  for (const line of rowLines) {
-    const sorted = [...line.items].sort((a, b) => a.x - b.x);
-    registerX(sorted[0].x); // column-0 edge
+  // column-0: leftmost cluster with ≥2 DIGIT-LED lines (S.No values "1","2",…,
+  // while a body margin like "1. Purpose" counts 1) → any leftmost leading ≥2
+  const leadn = allLeadClusters
+    .filter(c => c.count >= 2 && c.x > 8 && c.x <= pageWidth - 20)
+    .map(c => {
+      c.digitCount = (c.firsts || []).filter(t => /^\d/.test(t)).length;
+      return c;
+    });
+  const digitLed = leadn
+    .filter(c => c.digitCount >= 2)
+    .sort((a, b) => a.x - b.x);
+  const col0 = digitLed[0] || leadn.sort((a, b) => a.x - b.x)[0];
+  if (!col0) return [];
+
+  const voidClusters = [];   // ROW-ISH lines ONLY (anchored to the col0 band)
+  const bandMin = col0.x - Math.max(6, em * 0.5);
+  const bandMax = col0.x + em * 1.2;
+  for (const line of lines) {
+    if (line._isPageNumber) continue;
+    const ws = [...line.items].sort((a, b) => a.x - b.x);
+    if (!ws.length || !isRowishLine(line, em)) continue;
+    if (ws[0].x < bandMin || ws[0].x > bandMax) continue; // ref/span wrap lines skipped
     let prevEnd = null;
-    for (const w of sorted) {
-      if (prevEnd !== null) {
-        const gap = w.x - prevEnd;
-        if (gap > em * 0.55) registerX(w.x); // cell boundary edges
-      }
+    for (const w of ws) {
+      if (prevEnd !== null && w.x - prevEnd >= voidMin) registerCluster(voidClusters, w.x, tol);
       prevEnd = Math.max(prevEnd, w.x1);
     }
   }
+  const byX = new Map();
+  for (const c of allLeadClusters) byX.set(c.x, { x: c.x, count: c.count, voidCount: 0 });
+  for (const c of voidClusters) {
+    let hit = null;
+    for (const k of byX.values()) { if (Math.abs(k.x - c.x) <= tol) { hit = k; break; } }
+    if (hit) hit.voidCount += c.count;
+    else byX.set(c.x, { x: c.x, count: 0, voidCount: c.count });
+  }
 
-  const threshold = Math.max(2, Math.ceil(rowLines.length * 0.4));
-  const candidates = clusters
-    .filter(c => c.count >= threshold)
+  const candidates = [...byX.values()]
+    .filter(c => {
+      if (c.x <= 8 || c.x > pageWidth - 20) return false;
+      if (c.count >= 2) return true;              // recurring LEFT EDGE
+      return c.voidCount >= 3;                    // solid anchor-void evidence only
+    })
     .sort((a, b) => a.x - b.x);
 
-  const columns = [];
+  const cols = [col0.x];
   for (const c of candidates) {
-    if (columns.length && Math.abs(columns[columns.length - 1] - c.x) <= tol) continue;
-    if (stdev(c.xs) <= tol * 1.5) columns.push(c.x);
+    if (c.x - cols[cols.length - 1] < minColGap) {
+      if (cols.length === 1) continue;               // column-0 stays leftmost
+      if (c.count + c.voidCount > candidateCount(cols[cols.length - 1], candidates)) cols[cols.length - 1] = c.x;
+      continue;
+    }
+    cols.push(c.x);
   }
-  return columns.length >= 2 ? columns : [];
+  return cols.length >= 2 ? cols : [];
 }
 
-function registerCluster(clusters, x, tol) {
+function candidateCount(x, cands) {
+  for (const c of cands) if (Math.abs(c.x - x) <= 0.5) return c.count + c.voidCount;
+  return 0;
+}
+
+function registerCluster(clusters, x, first, tol) {
   for (const c of clusters) {
     if (Math.abs(c.x - x) <= tol) {
       c.x = (c.x * c.count + x) / (c.count + 1);
       c.count += 1;
       c.xs.push(x);
+      if (first !== undefined) c.firsts.push(first);
       return;
     }
   }
-  clusters.push({ x, count: 1, xs: [x] });
+  clusters.push({ x, count: 1, xs: [x], firsts: first !== undefined ? [first] : null });
 }
 
 function stdev(arr) {
@@ -475,130 +530,29 @@ function analyzePage(page) {
   const pageWidth = dims.width;
   const emPage = median(lines.map(l => l.size)) || 10;
 
-  function filledCount(line, boundaries) {
-    const cells = assignRunsToColumns(line.items, boundaries);
-    return cells.filter(c => c && c.trim().length > 0).length;
-  }
+  // 1) COLUMN GRID from alignment evidence (line-leading + void-reached starts)
+  const columns = detectColumnGrid(lines, pageWidth, emPage);
+  let boundaries = null;
+  if (columns.length >= 2) boundaries = columnBoundaries(columns, pageWidth, emPage);
 
-  // 1) columns come from ROW-LIKE lines only (≥2 wide gutters on the line):
-  //    paragraph word spaces are ~0.3em, real cell gutters ≥1.5em.
-  const columns = findTableColumns(lines);
-  const boundaries = columns.length >= 2 ? columnBoundaries(columns, pageWidth) : null;
-
-  // 2) row-like lines are the table's backbone rows
-  const rowLines = lines.filter(l => boundaries && isRowLikeLine(l, emPage));
-
-  // 3) vertical anchor zones: contiguous runs of row-like lines, extended to
-  //    swallow the wrap/continuation region between rows (tall cells)
-  const anchorZones = [];
-  if (rowLines.length) {
-    const sortedRows = [...rowLines].sort((a, b) => b.y - a.y);
-    let zTop = sortedRows[0].y, zBottom = sortedRows[0].y;
-    for (let i = 1; i < sortedRows.length; i++) {
-      if (zBottom - sortedRows[i].y <= emPage * 7) { zBottom = sortedRows[i].y; }
-      else { anchorZones.push([zTop, zBottom]); zTop = sortedRows[i].y; zBottom = sortedRows[i].y; }
-    }
-    anchorZones.push([zTop, zBottom]);
-  }
-  const inZone = (y) => anchorZones.some(([t, b]) => y <= t + emPage * 1.3 && y >= b - emPage * 1.3);
-  const lineStartsAtColumn = (line) => {
-    const first = [...line.items].sort((a, b) => a.x - b.x)[0];
-    if (!first) return false;
-    return columns.some(x => Math.abs(first.x - x) <= Math.max(4, emPage * 0.5));
-  };
-  const isContinuation = (line) => {
-    if (!boundaries) return false;
-    if (rowLines.includes(line)) return false;
-    return filledCount(line, boundaries) === 1 && inZone(line.y) && lineStartsAtColumn(line);
-  };
-
-  // 4) rotate everything against the final grid
-  const tableLines = new Map();
-  const consumedLines = new Set();
-  if (boundaries) {
-    for (const line of lines) {
-      const cells = assignRunsToColumns(line.items, boundaries);
-      const filled = cells.filter(c => c && c.trim().length > 0).length;
-      if (rowLines.includes(line)) {
-        const isHeader = filled === columns.length && (line.isBold || line.size >= 13);
-        tableLines.set(line, { cells, isHeader, y: line.y, size: line.size, font: line.font, rowLike: true });
-      } else if (isContinuation(line)) {
-        tableLines.set(line, { cells, isHeader: false, y: line.y, size: line.size, font: line.font, rowLike: false });
-      }
-    }
-  }
-
-  /**
-   * Table block = maximal vertical region containing row lines plus their
-   * continuation lines (wrapped cell text that only fills one column).
-   */
-  const blocks = [];
-  let current = null;
   for (const line of lines) {
-    const row = tableLines.get(line);
-    if (row) {
-      if (!current) { current = []; blocks.push(current); }
-      current.push(row);
-      consumedLines.add(line);
-    } else if (current && current.length && (!line.text || isSeparatorText(line.text))) {
-      current.push({
-        cells: columns.map((_, i) => (i === 0 ? line.text : '')),
-        isHeader: false, y: line.y, size: line.size, font: line.font, blank: true, rowLike: false,
-      });
-      consumedLines.add(line);
-    } else {
-      current = null;
-    }
+    line._cells = boundaries ? assignRunsToColumns(line.items, boundaries) : [];
+    line._filled = columns.length >= 2 ? line._cells.filter(c => c && c.trim()).length : 0;
   }
-  const tableBlocks = blocks
-    .filter(b => b.length >= 2 || (b.length === 1 && b[0].isHeader))
-    .map(b => ({ rows: mergeLogicalRows(b), columns, boundaries }));
 
-/**
- * Merge a table block's line-records into LOGICAL rows (wrapped cell text stays
- * in ONE row). Every ROW-LIKE record starts a new row; continuation/wrap lines
- * (single-column cell text) append to the current row (gap guard ~1.5em).
- */
-function mergeLogicalRows(rows) {
-  if (!rows.length) return [];
-  const em = median(rows.map(r => r.size)) || 10;
-  const thresh = em * 1.5;
-  const groups = [];
-  let cur = null;
-  for (const r of rows) {
-    if (r.rowLike) {
-      if (cur) groups.push(cur);
-      cur = [r];
-    } else if (cur) {
-      const g = cur[cur.length - 1].y - r.y;
-      if (g <= thresh) cur.push(r);
-      else { groups.push(cur); cur = [r]; }
-    } else {
-      cur = [r];
-    }
-  }
-  if (cur) groups.push(cur);
-  return groups.map(lines => toLogicalRow(lines));
-}
+  // 2) TABLE ROWS: every line whose FIRST CELL has content is a row anchor
+  //    (S.No column); col0-absent lines are wrap/continuation content absorbed
+  //    by the nearest open row (vertically-centred S.No rows reconstruct whole).
+  //    A line whose col0 starts at the true body MARGIN (left of the table's
+  //    col0) is body text, not a cell — it must not seed a row.
+  const tableRows = buildTableRows(lines, boundaries, emPage, columns);
+  const consumedLines = new Set();
+  for (const row of tableRows) for (const l of row.lines) consumedLines.add(l);
+  const tableBlocks = boundaries && tableRows.length
+    ? [{ rows: tableRows, columns, boundaries }]
+    : [];
 
-function toLogicalRow(lines) {
-  const cols = lines[0].cells.length;
-  const cells = [];
-  for (let c = 0; c < cols; c++) {
-    const cellLines = lines.map(l => (l.cells[c] || '')).filter(t => t && t.trim());
-    cells.push(cellLines.length ? cellLines : ['']);
-  }
-  return {
-    cells,
-    isHeader: lines.some(l => l.isHeader),
-    y: lines[0].y,
-    size: median(lines.map(l => l.size)) || 10,
-    font: lines[0].font || 'Arial',
-    nLines: lines.length,
-  };
-}
-
-  // content box (body only — lines consumed by a table block are excluded)
+  // content box (body only — lines consumed by the table are excluded)
   const bodyLines = lines.filter(l => !consumedLines.has(l));
   let contentBox = null;
   if (bodyLines.length) {
@@ -640,6 +594,120 @@ function toLogicalRow(lines) {
     contentBox,
     pageWidthPts: dims.width,
     pageHeightPts: dims.height,
+  };
+}
+
+/**
+ * Assemble LOGICAL rows from the per-line cell mapping.
+ *  - A line whose cell[0] is non-empty is an ANCHOR (the row's S.No line).
+ *    Adjacent anchors within 1.5em belong to one cell (wrapped S.No text).
+ *  - col0-absent lines are wrap/continuation content: post-anchor lines attach
+ *    while their gap stays ≤1.9em; pre-anchor lines buffer then flush into the
+ *    next anchor (they sit ABOVE the S.No yet belong to the same row, e.g.
+ *    vertically-centred S.No in a tall cell). A big gap (>2.2em) clears the
+ *    pre-anchor buffer so body text above a table never leaks into it.
+ */
+function buildTableRows(lines, boundaries, emPage, columns) {
+  if (!boundaries) return [];
+  const col0X = columns[0] || 0;
+  const col0Min = col0X - 1;
+  const alignTol = Math.max(4, emPage * 0.3);
+  const HEADER_TOKEN = /^(S\.?N|No\.?|Item|#\.?|o\.)$/i;
+
+  const order = [...lines].sort((a, b) => b.y - a.y);
+  const result = [];
+  let pending = [];
+  let open = null;
+
+  const closeRow = () => {
+    if (open && open.lines.length) result.push(open);
+    open = null;
+  };
+
+  const col0Span = (line) => {
+    const ws = [...line.items].sort((a, b) => a.x - b.x);
+    return ws.length && ws[0].x >= col0Min;
+  };
+
+  // ≥2 of the trailing cells (c1..) start FLUSH at the grid's column left
+  // edges — body text spread across the grid never aligns; real cells do.
+  const rowAligned = (line) => {
+    const ws = [...line.items].sort((a, b) => a.x - b.x);
+    const firsts = new Map();
+    for (const w of ws) {
+      const c = (w.x + w.x1) / 2;
+      let idx = boundaries.length - 1;
+      for (let i = 0; i < boundaries.length; i++) { if (c < boundaries[i]) { idx = i; break; } }
+      if (!firsts.has(idx) || w.x < firsts.get(idx)) firsts.set(idx, w.x);
+    }
+    let aligned = 0;
+    for (let i = 1; i < columns.length; i++) {
+      if (firsts.has(i) && Math.abs(firsts.get(i) - columns[i]) <= alignTol) aligned += 1;
+    }
+    return aligned >= 2;
+  };
+
+  const isAnchor = (line) => {
+    if (line._cells[0].trim().length === 0 || !col0Span(line)) return false;
+    const c0 = line._cells[0].trim();
+    if (/^\d+[\.:]?\s*$/.test(c0)) return true;          // S.No number ("1", "9.")
+    if (HEADER_TOKEN.test(c0)) return true;             // S.N / o. header cell
+    return rowAligned(line);                            // RACI-style: activity col0 + flush codes
+  };
+
+  for (const line of order) {
+    if (!line._cells || line._cells.length !== boundaries.length) {
+      closeRow(); pending = []; continue;
+    }
+    const anchor = isAnchor(line);
+    if (anchor) {
+      if (open && open.hasCol0 && open.y - line.y <= emPage * 1.2 && !pending.length) {
+        open.lines.push(line); open.lastY = line.y; // wrapped col0 cell continuation
+      } else {
+        // pre-anchor content more than 2.2em above the anchor belongs to the
+        // block ABOVE, not to this row → discard the stale buffer.
+        if (pending.length && pending[pending.length - 1].y - line.y > emPage * 2.2) pending = [];
+        const rowLines = [...pending, line];
+        closeRow();
+        open = { lines: rowLines, hasCol0: true, y: line.y, lastY: line.y };
+      }
+      pending = [];
+    } else if (open && open.lastY - line.y <= emPage * 1.9) {
+      open.lines.push(line); open.lastY = line.y;
+    } else {
+      pending.push(line);
+      if (pending.length >= 2 && pending[pending.length - 2].y - line.y > emPage * 2.2) {
+        pending = [line];
+      }
+    }
+  }
+  closeRow();
+  // trailing pending lines are post-table body text, NOT a phantom row
+  return result.map(rec => toLogicalRow(rec.lines, boundaries));
+}
+
+function toLogicalRow(lines, boundaries) {
+  const cols = boundaries.length;
+  const sorted = [...lines].sort((a, b) => b.y - a.y);
+  const cells = [];
+  for (let c = 0; c < cols; c++) {
+    const cellLines = sorted
+      .map(l => (l._cells[c] || '').trim())
+      .filter(t => t && !isSeparatorText(t));
+    cells.push(cellLines.length ? cellLines : ['']);
+  }
+  const c0Text = (cells[0] || ['']).join(' ').trim();
+  const ys = sorted.map(l => l.y);
+  return {
+    cells,
+    isHeader: /^\s*\d/.test(c0Text) ? false : (c0Text.length > 0 || lines.some(l => l.isBold || l.size >= 13)),
+    y: lines[0].y,
+    maxY: Math.max(...ys),
+    minY: Math.min(...ys),
+    size: median(lines.map(l => l.size)) || 10,
+    font: lines[0].font || 'Arial',
+    nLines: sorted.length,
+    lines: sorted,
   };
 }
 
@@ -707,43 +775,45 @@ function cellFromText(linesOrText, isHeader, columnSpan, font) {
   });
 }
 
-function rowHeightTwips(row, prevY, nLines = 1) {
-  const gapPts = prevY ? Math.max(4, Math.min(36, prevY - row.y)) : 13;
-  return Math.round(gapPts * PT_TO_TWIP * Math.max(1, Math.min(4, nLines)));
+function rowHeightTwips(row, prevY) {
+  const extent = row.nLines || 1;
+  const pts = row.maxY && row.minY ? Math.min(180, Math.max(13, row.maxY - row.minY)) : 20;
+  return Math.round(pts * PT_TO_TWIP * Math.max(0.7, Math.min(2.5, extent / 8)));
 }
 
 function buildTableElement(cluster, isCarriedHeader) {
-  const columns = cluster.columns;
-  const n = columns.length;
+  const n = cluster.columns.length;
   const rows = [];
   let prevY = null;
   for (let ri = 0; ri < cluster.rows.length; ri++) {
     const row = cluster.rows[ri];
     const cellsHtml = [];
     const cellText = t => (Array.isArray(t) ? t.join(' ') : String(t || ''));
-    const filledIdx = row.cells.findIndex(c => cellText(c).trim().length > 0 && !isSeparatorText(cellText(c)));
+    const filledIdx = row.cells.findIndex(c => cellText(c).trim().length > 0);
     const totalFilled = row.cells.filter(c => cellText(c).trim().length > 0).length;
     let singleMerged = filledIdx >= 0 && totalFilled === 1;
 
     if (singleMerged) {
       cellsHtml.push(cellFromText(row.cells[filledIdx], row.isHeader, n, row.font));
     } else {
-      for (let i = 0; i < n; i++) cellsHtml.push(cellFromText(row.cells[i] || '', row.isHeader, 1, row.font));
+      for (let i = 0; i < n; i++) cellsHtml.push(cellFromText(row.cells[i], row.isHeader, 1, row.font));
     }
-    const rowOpts = { children: cellsHtml, height: { value: rowHeightTwips(row, prevY, row.nLines || 1), rule: HeightRule.ATLEAST } };
+    const rowOpts = { children: cellsHtml, height: { value: rowHeightTwips(row, prevY), rule: HeightRule.ATLEAST } };
     if (row.isHeader || (isCarriedHeader && ri === 0)) rowOpts.tableHeader = true;
     rows.push(new TableRow(rowOpts));
     prevY = row.y;
   }
 
-  // proportional column widths from column x spacing
+  // column widths proportional to the detected grid (not equal-width):
+  // boundary[i] is the RIGHT edge of column i (last boundary = page width)
+  const rights = cluster.boundaries || columnBoundaries(cluster.columns, cluster.columns[cluster.columns.length - 1] + 150, 10);
   const colPts = [];
   for (let i = 0; i < n; i++) {
-    const left = i === 0 ? columns[i] : (columns[i - 1] + columns[i]) / 2;
-    const right = i + 1 < n ? (columns[i] + columns[i + 1]) / 2 : columns[i] + 150;
+    const left = i === 0 ? cluster.columns[0] : rights[i - 1];
+    const right = rights[i] || (cluster.columns[i] + 150);
     colPts.push(Math.max(20, right - left));
   }
-  const sum = colPts.reduce((a, b) => a + b, 0) || 1;
+  const sum = colPts.reduce((a, c) => a + c, 0) || 1;
   const colWidths = colPts.map(w => Math.round((w / sum) * 10000) / 100);
 
   return new Table({
@@ -780,8 +850,13 @@ function clusterTables(models) {
 
   for (const m of models) {
     for (const block of m.tableBlocks) {
+      // continued block: same column grid → append rows to the open cluster
       if (lastOpen && sameColumns(lastOpen.columns, block.columns)) {
-        lastOpen.rows.push(...block.rows);
+        const rows = [...block.rows];
+        // the source repeats its header row on each page; Word repeats a
+        // header via tableHeader, so drop the repeated copies.
+        if (rows.length && rows[0].isHeader) rows.shift();
+        lastOpen.rows.push(...rows);
         lastOpen.spansPages = true;
         flag.set(block, lastOpen.id);
       } else {
@@ -953,6 +1028,30 @@ function makeHeaderFooter(hf, isFooter) {
  * PHASE 5 — VALIDATE / REPORT
  * ================================================================== */
 function buildReport(models, clusters, buffer, info) {
+  const zip = require('adm-zip')(buffer);
+  const entry = zip.getEntry('word/document.xml');
+  const xml = entry ? entry.getData().toString('latin1') : '';
+  const xmlTables = (xml.match(/<w:tbl\b/g) || []).length;
+
+  // text integrity: distinct source words vs distinct words in the DOCX XML
+  const srcWords = new Set();
+  for (const m of models) {
+    for (const l of m.lines) {
+      for (const t of l.text.split(/\s+/)) { const w = t.replace(/[^\w.-]/g, ''); if (w) srcWords.add(w.toLowerCase()); }
+    }
+  }
+  const docxWords = new Set();
+  const tRe = /<w:t[^>]*>([^<]*)<\/w:t>/g;
+  let mm; while ((mm = tRe.exec(xml))) {
+    for (const t of mm[1].split(/\s+/)) { const w = t.replace(/[^\w.-]/g, ''); if (w) docxWords.add(w.toLowerCase()); }
+  }
+  const coverage = srcWords.size ? Math.round((1000 * [...srcWords].filter(w => docxWords.has(w)).length) / srcWords.size) / 10 : 100;
+
+  const blankPages = models.filter(m => {
+    const nonFooter = m.lines.filter(l => !(l._isBottomZone && l._isPageNumber));
+    return nonFooter.length === 0;
+  }).map(m => m.pageNumber);
+
   return {
     mode: info.mode,
     sourcePages: models.length,
@@ -969,6 +1068,10 @@ function buildReport(models, clusters, buffer, info) {
     pageNumbersPreserved: info.pageNumbers,
     unifiedPageSize: info.unified,
     docxBytes: buffer.length,
+    xmlTables: xmlTables,
+    tableValid: info.tableStats.count === 0 || xmlTables > 0,
+    textCoveragePct: coverage,
+    blankPages,
     pageStats: models.map(m => ({
       page: m.pageNumber,
       words: m.wordCount,
@@ -1002,5 +1105,6 @@ module.exports = {
   dedupItems,
   reconstructWords,
   expandToChars,
+  detectColumnGrid,
   isLandscape: (page) => effectivePageDims(page).landscape,
 };
