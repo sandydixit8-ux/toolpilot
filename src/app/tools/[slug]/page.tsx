@@ -11,6 +11,7 @@ import { ToolRenderer } from "@/components/tools/tool-renderer";
 import { TrustBadges } from "@/components/tools/trust-badges";
 import { Card, CardContent } from "@/components/ui/card";
 import { SidebarAd, InArticleAd, BannerAd } from "@/components/ads/ad-banner";
+import { ADS } from "@/config/ads";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
 import { getAffiliatesForCategory } from "@/lib/affiliates";
@@ -58,7 +59,7 @@ export default async function SlugPage({ params }: Props) {
         <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: cat.name }]} />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{cat.name}</h1>
         <p className="text-gray-500 dark:text-gray-400 mb-8">{cat.description}</p>
-        <BannerAd slotId="0000000005" />
+        <BannerAd slotId={ADS.toolCategory.banner} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
           {tools.map((tool) => (
             <Link key={tool.slug} href={`/tools/${tool.slug}`}>
@@ -82,7 +83,7 @@ export default async function SlugPage({ params }: Props) {
             </Link>
           ))}
         </div>
-        <InArticleAd slotId="0000000006" />
+        <InArticleAd slotId={ADS.toolCategory.inArticle} />
       </div>
     );
   }
@@ -130,7 +131,7 @@ export default async function SlugPage({ params }: Props) {
                 ))}
               </ol>
             </section>
-            <InArticleAd slotId="0000000002" />
+            <InArticleAd slotId={ADS.toolDetail.inArticle} />
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Features</h2>
               <ul className="space-y-2">
@@ -173,7 +174,7 @@ export default async function SlugPage({ params }: Props) {
             />
           </div>
           <aside className="space-y-6">
-            <SidebarAd slotId="0000000003" />
+            <SidebarAd slotId={ADS.toolDetail.sidebar} />
             <Card>
               <CardContent className="p-5">
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Quick Info</h3>

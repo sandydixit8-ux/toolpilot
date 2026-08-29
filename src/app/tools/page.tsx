@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { BannerAd } from "@/components/ads/ad-banner";
+import { ADS } from "@/config/ads";
 import { getToolsByCategory } from "@/config/tools";
 import { categories } from "@/config/categories";
 import { allTools } from "@/config/tools";
@@ -32,6 +34,8 @@ export default function ToolsPage() {
       <p className="text-gray-500 dark:text-gray-400 mb-8">
         Browse {allTools.length}+ free online tools organized by category
       </p>
+
+      <BannerAd slotId={ADS.toolsList} className="mb-8" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((cat) => {

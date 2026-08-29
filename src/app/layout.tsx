@@ -9,13 +9,10 @@ import { TipJar } from "@/components/revenue/tip-jar";
 import { AnchorAd } from "@/components/ads/ad-banner";
 import { OrganizationSchema, WebsiteSchema } from "@/components/seo/structured-data";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/constants";
+import { ADS, ADS_ENABLED, ADSENSE_PUBLISHER_ID } from "@/config/ads";
 import "./globals.css";
 
-const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
-const ADS_ENABLED = process.env.NEXT_PUBLIC_ADS_ENABLED === "true";
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-
-const ANCHOR_AD_SLOT = process.env.NEXT_PUBLIC_ANCHOR_AD_SLOT || "";
 
 export const metadata: Metadata = {
   title: {
@@ -46,10 +43,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {ADS_ENABLED && ADSENSE_ID && (
+        {ADS_ENABLED && ADSENSE_PUBLISHER_ID && (
           <Script
             async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_ID}`}
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`}
             crossOrigin="anonymous"
             strategy="afterInteractive"
           />
@@ -113,7 +110,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
             <CookieConsent />
             <TipJar />
-            {ADS_ENABLED && ANCHOR_AD_SLOT && <AnchorAd slotId={ANCHOR_AD_SLOT} />}
+            {ADS_ENABLED && ADS.anchor && <AnchorAd slotId={ADS.anchor} />}
           </I18nProvider>
         </Providers>
       </body>

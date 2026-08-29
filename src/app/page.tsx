@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getFeaturedTools, getPopularTools } from "@/config/tools";
 import { CATEGORIES, SITE_NAME, SITE_URL } from "@/lib/constants";
 import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
+import { ADS } from "@/config/ads";
 import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -96,7 +97,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <BannerAd slotId="0000000001" />
+      <BannerAd slotId={ADS.home.topBanner} />
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
@@ -154,7 +155,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <InArticleAd slotId="0000000008" />
+      <InArticleAd slotId={ADS.home.midArticle} />
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8 flex items-center gap-2">
@@ -200,7 +201,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <BannerAd slotId="0000000009" />
+      <BannerAd slotId={ADS.home.bottomBanner} />
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Ready to get started?</h2>
