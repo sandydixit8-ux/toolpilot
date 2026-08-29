@@ -157,8 +157,8 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
   }
 });
 
-// PDF to DOCX — uses pdfjs-dist structure extraction + docx library
-// Preserves tables, page orientation, and heading structure.
+// PDF to DOCX — v3 engine: spatial reconstruction (tables, orientation, headers/footers, word spacing)
+// Modes: editable | highfidelity (default)
 app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
   const jobId = uuidv4();
   const jobDir = `/tmp/toolpilotpro/jobs/${jobId}`;
@@ -175,18 +175,20 @@ app.post('/convert/pdf-to-docx', upload.single('file'), async (req, res) => {
 
     console.log('[PDF-to-DOCX] Input file size:', req.file.size);
 
-    const { extractStructure, buildDocxFromPages } = require('./pdf-to-docx.js');
+    const { convertPdfToDocx } = require('./pdf-to-docx.js');
 
-    const pages = await extractStructure(inputPath);
-    console.log('[PDF-to-DOCX] Pages:', pages.length);
-
-    const docxBuffer = await buildDocxFromPages(pages);
+    const mode = req.body && req.body.mode === 'editable' ? 'editable' : 'highfidelity';
+    const { buffer: docxBuffer, report } = await convertPdfToDocx(inputPath, { mode });
     const outputFilename = req.file.originalname.replace(/\.pdf$/i, '.docx');
 
-    console.log('[PDF-to-DOCX] DOCX created, size:', docxBuffer.length);
+    console.log('[PDF-to-DOCX] DOCX created, size:', docxBuffer.length, 'report:', JSON.stringify(report));
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Disposition', `attachment; filename="${outputFilename}"`);
+    res.setHeader('X-Pages', String(report.sourcePages));
+    res.setHeader('X-Tables', String(report.tables));
+    res.setHeader('X-Table-Rows', String(report.tableRowsTotal));
+    res.setHeader('X-Layout-Fidelity', 'high');
     res.send(docxBuffer);
   } catch (err) {
     console.error('[PDF-to-DOCX] FATAL:', err.message, err.stack);

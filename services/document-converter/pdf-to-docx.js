@@ -1,13 +1,45 @@
+/**
+ * pdf-to-docx.js v3 — Production-grade PDF → DOCX engine
+ *
+ * Pipeline: EXTRACT → DEDUP → LAYOUT ANALYZE → ELEMENT DETECT → RECONSTRUCT → RENDER → VALIDATE
+ *
+ * Principles (per Master Prompt):
+ *  - Spatial reconstruction, NOT raw extraction order.
+ *  - Never "extract all text → dump into paragraphs".
+ *  - Tables detected from geometry (repeated column x-positions).
+ *  - Word spacing reconstructed from run gaps (font-scale aware).
+ *  - Page size + orientation read from real PDF page dims.
+ *  - Headers/footers/page numbers promoted to Word header/footer.
+ *  - Multi-page tables continue as ONE logical Word table (clustered by column structure).
+ *  - Page count preserved via explicit PageBreaks / flowing tables.
+ */
+
 const { getDocument } = require('pdfjs-dist/build/pdf.mjs');
 
-const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, PageOrientation } = require('docx');
+const {
+  Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
+  Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
+  PageOrientation, PageBreak, HeightRule, VerticalAlign, PageNumber,
+  Header, Footer,
+} = require('docx');
 
 async function loadPdfish() {
   return import('pdfjs-dist/build/pdf.mjs');
 }
 
-const TY_TOLERANCE = 3.5;
+/* ------------------------------------------------------------------ *
+ * Tunables (scale-aware — keyed by em/font size, not pixels)
+ * ------------------------------------------------------------------ */
+const WORD_GAP_FACTOR = 0.11;   // gap > 0.11em between runs ⇒ word boundary
+const WORD_GAP_MIN = 0.6;       // pt; floor to ignore float noise
+const LINE_GROUP_FACTOR = 0.22; // baselines within 0.22em share a line
+const PARA_GAP_FACTOR = 1.7;    // vertical gap > 1.7em ⇒ paragraph break
+const PT_TO_TWIP = 20;
+const PT_TO_HALF_PT = 2;
 
+/* ================================================================== *
+ * PHASE 1 — EXTRACT
+ * ================================================================== */
 async function extractStructure(pdfPath) {
   const pdfjs = await loadPdfish();
   const fsModule = require('fs');
@@ -23,13 +55,15 @@ async function extractStructure(pdfPath) {
     const items = [];
     for (const item of content.items) {
       if (!item.str || !item.str.trim()) continue;
-      // item.transform[4] = x, [5] = y (y goes UP from bottom in pdfjs)
+      const a = item.transform;
+      const size = a && a[0] ? Math.abs(a[0]) : (item.height || 10);
       items.push({
-        x: item.transform[4],
-        y: item.transform[5],
+        x: a ? a[4] : 0,
+        y: a ? a[5] : 0,
         w: item.width || 0,
         h: item.height || 0,
-        fontSize: (item.transform[0] && item.transform[0] !== 0) ? Math.abs(item.transform[0]) : 10,
+        size,
+        font: item.fontName || 'Helvetica',
         str: item.str,
       });
     }
@@ -38,8 +72,8 @@ async function extractStructure(pdfPath) {
       pageNumber: p,
       width: viewport.width,
       height: viewport.height,
-      rotate: page.rotate,
-      items,
+      rotate: page.rotate || 0,
+      items: dedupItems(items),
     });
   }
 
@@ -47,277 +81,680 @@ async function extractStructure(pdfPath) {
   return pages;
 }
 
-function isLandscape(page) {
-  const effectiveRotate = page.rotate ? ((page.rotate % 360) + 360) % 360 : 0;
-  const rotated = effectiveRotate === 90 || effectiveRotate === 270;
-  const w = rotated ? page.height : page.width;
-  const h = rotated ? page.width : page.height;
-  return w > h;
+/** Remove exact-duplicate extraction artifacts (same text + same box). Never removes legit repeats. */
+function dedupItems(items) {
+  const kept = [];
+  const TOL_X = 2, TOL_Y = 2.5;
+  for (const it of items) {
+    const key = normalizeSpace(it.str);
+    if (!key) continue;
+    const dup = kept.find(k =>
+      Math.abs(k.x - it.x) <= TOL_X &&
+      Math.abs(k.y - it.y) <= TOL_Y &&
+      normalizeSpace(k.str) === key &&
+      Math.abs(k.w - it.w) <= Math.max(4, it.size)
+    );
+    if (dup) continue;
+    kept.push(it);
+  }
+  return kept;
 }
 
+function normalizeSpace(s) {
+  return (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function median(list) {
+  if (!list.length) return 0;
+  const s = [...list].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+function medianSize(items) {
+  return median(items.map(i => i.size).filter(Boolean)) || 10;
+}
+
+/* ================================================================== *
+ * PHASE 2 — LAYOUT ANALYZE
+ * ================================================================== */
+function effectivePageDims(page) {
+  const rot = ((page.rotate % 360) + 360) % 360;
+  const rotated = rot === 90 || rot === 270;
+  return {
+    rot,
+    landscape: rotated ? page.height > page.width : page.width > page.height,
+    width: rotated ? page.height : page.width,
+    height: rotated ? page.width : page.height,
+  };
+}
+
+const FONT_MAP = [
+  [/\b(courier)\b/i, 'Courier New'],
+  [/\b(times|timesnewroman|times-roman)\b/i, 'Times New Roman'],
+  [/\b(helvetica|arial|liberationsans|dejavusans)\b/i, 'Arial'],
+  [/\bsymbol\b/i, 'Symbol'],
+  [/\bzapfdingbats\b/i, 'Wingdings'],
+];
+const FALLBACK_FONT = 'Arial';
+
+function mapFont(fontName) {
+  for (const [re, name] of FONT_MAP) {
+    if (re.test(fontName)) return name;
+  }
+  return FALLBACK_FONT;
+}
+
+/**
+ * Reconstruct text from run geometry.
+ *  - Interior spaces already present in runs are preserved.
+ *  - Missing space glyphs (producers emitting per-word runs with no space) are
+ *    repaired from the horizontal gap.
+ *  - Runs inside one word (tiny gaps) are never split.
+ */
+function joinRunsWithSpacing(runs) {
+  let text = '';
+  let prevEndX = null;
+  let prevSize = 10;
+  for (const r of [...runs].sort((a, b) => a.x - b.x)) {
+    const s = (r.str || '').replace(/\s+/g, ' ').trim();
+    if (!s) { if (prevEndX === null) continue; prevEndX = null; continue; }
+    if (prevEndX !== null) {
+      const gap = r.x - prevEndX;
+      const em = Math.max(prevSize, r.size, 1);
+      let sep = '';
+      if (gap > Math.max(em * WORD_GAP_FACTOR, WORD_GAP_MIN)) sep = ' ';
+      // never a space before closing punctuation
+      if (sep && /^[.,;:!?)\]%]/.test(s)) sep = '';
+      text += sep;
+    }
+    text += s;
+    prevEndX = r.x + r.w;
+    prevSize = r.size;
+  }
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+/** Baseline-proximity grouping into visual lines (font-scale aware). */
 function groupLines(items) {
   const sorted = [...items].sort((a, b) => b.y - a.y);
+  const em = medianSize(items);
+  const tol = Math.max(2, em * LINE_GROUP_FACTOR);
   const lines = [];
-  let currentLine = null;
+  let current = null;
 
   for (const item of sorted) {
-    if (currentLine && Math.abs(item.y - currentLine.y) <= TY_TOLERANCE) {
-      currentLine.items.push(item);
-      currentLine.y = (currentLine.y + item.y) / 2;
+    if (current && Math.abs(item.y - current.y) <= tol) {
+      current.items.push(item);
+      current.y = (current.y + item.y) / 2;
     } else {
-      currentLine = { y: item.y, items: [item] };
-      lines.push(currentLine);
+      current = { y: item.y, items: [item] };
+      lines.push(current);
     }
   }
 
   for (const line of lines) {
     line.items.sort((a, b) => a.x - b.x);
-    const avgSize = line.items.reduce((s, i) => s + i.fontSize, 0) / line.items.length;
-    line.fontSize = avgSize;
-    line.text = line.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+    line.size = median(line.items.map(i => i.size)) || 10;
+    line.isBold = line.items.some(i => /\b(Bold|Black|Demi|Semibold|Heavy)\b/i.test(i.font));
+    line.isItalic = line.items.some(i => /\b(Italic|Oblique)\b/i.test(i.font));
+    line.font = mapFont(line.items.map(i => i.font)[0] || '');
+    line.x = line.items[0].x;
+    line.xEnd = line.items[line.items.length - 1].x + line.items[line.items.length - 1].w;
+    line.text = joinRunsWithSpacing(line.items);
   }
-
   return lines;
 }
 
-const CELL_GAP_MULTIPLIER = 1.8;
-
-function splitCells(lineItems) {
-  const cells = [];
-  let currentWords = [lineItems[0]];
-
-  for (let i = 1; i < lineItems.length; i++) {
-    const prev = lineItems[i - 1];
-    const cur = lineItems[i];
-    const gap = cur.x - (prev.x + prev.w);
-    const avgWordGapEstimate = currentWords.reduce((s, w) => s + (w.w || 10), 0) / Math.max(1, currentWords.length) * 0.15;
-    const threshold = Math.max(avgWordGapEstimate * CELL_GAP_MULTIPLIER, 12);
-
-    if (gap > threshold) {
-      cells.push(currentWords);
-      currentWords = [cur];
-    } else {
-      currentWords.push(cur);
-    }
-  }
-  cells.push(currentWords);
-
-  return cells.map(words => ({
-    x: words[0].x,
-    text: words.map(w => w.str).join('').replace(/\s+/g, ' '),
-  }));
+/** Column boundaries = midpoints between column start-x positions. Deterministic cell assignment. */
+function columnBoundaries(columns, pageWidth) {
+  const pts = [0];
+  for (let i = 0; i < columns.length - 1; i++) pts.push((columns[i] + columns[i + 1]) / 2);
+  pts.push(pageWidth);
+  return pts;
 }
 
-function buildPageModel(page) {
+/** Assign runs to columns by run-center within [boundary_i, boundary_{i+1}). */
+function assignRunsToColumns(runs, boundaries) {
+  const n = boundaries.length - 1;
+  const cells = Array.from({ length: n }, () => []);
+  for (const r of [...runs].sort((a, b) => a.x - b.x)) {
+    const c = r.x + r.w / 2;
+    for (let i = 0; i < n; i++) {
+      if (c >= boundaries[i] && c < boundaries[i + 1]) { cells[i].push(r); break; }
+    }
+  }
+  return cells.map(rs => joinRunsWithSpacing(rs));
+}
+
+/** Cluster column start-x candidates across lines; returns sorted column x positions. */
+function findTableColumns(lines, minSupport = 3) {
+  const em = median(lines.map(l => l.size)) || 10;
+  const tol = Math.max(3, em * 0.35);
+  const clusters = [];
+  // column candidate: gap within a line that separates its words into cells
+  for (const line of lines) {
+    const sorted = [...line.items].sort((a, b) => a.x - b.x);
+    let prevEnd = null;
+    for (const r of sorted) {
+      if (prevEnd !== null) {
+        const gap = r.x - prevEnd;
+        if (gap > em * 0.55) {
+          registerCluster(clusters, r.x, tol);
+        }
+      }
+      prevEnd = r.x + r.w;
+    }
+  }
+  // real columns are ALIGNED across many lines; phantom columns (in-row word gaps)
+  // show high variance in x and low support
+  const candidates = clusters
+    .filter(c => c.count >= minSupport)
+    .sort((a, b) => a.x - b.x);
+
+  const columns = [];
+  for (const c of candidates) {
+    if (columns.length && Math.abs(columns[columns.length - 1] - c.x) <= tol) continue;
+    const highSupport = c.count >= 4;
+    const lowVariance = stdev(c.xs) <= tol * 1.5;
+    if (highSupport || lowVariance) columns.push(c.x);
+  }
+  return columns.length >= 2 ? columns : [];
+}
+
+function registerCluster(clusters, x, tol) {
+  for (const c of clusters) {
+    if (Math.abs(c.x - x) <= tol) {
+      c.x = (c.x * c.count + x) / (c.count + 1);
+      c.count += 1;
+      c.xs.push(x);
+      return;
+    }
+  }
+  clusters.push({ x, count: 1, xs: [x] });
+}
+
+function stdev(arr) {
+  if (arr.length < 2) return 0;
+  const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+  return Math.sqrt(arr.reduce((s, v) => s + (v - mean) ** 2, 0) / arr.length);
+}
+
+const PAGE_NUM_RE = /^\s*(page\s*)?[-\d]+\s*$/i;
+const SEPARATOR_RE = /^[\-\=\_\.\*\s·∙]+$/;
+
+function isSeparatorText(t) {
+  return SEPARATOR_RE.test(t) && t.trim().length >= 2;
+}
+
+function isHeadingLike(line) {
+  if (line.size >= 13) return true;      // big type = heading regardless of bold glyph naming
+  return line.isBold && line.size >= 11.5;
+}
+
+/** Paragraph must be dropped from body when it is really a repeated header/footer/page-number. */
+function isHeaderFooterParagraph(para, hf) {
+  if (para.lines.length !== 1) return false;
+  const line = para.lines[0];
+  const text = line.text.trim();
+  if (line._isPageNumber && line._isBottomZone) return true;
+  if (line._isTopZone && hf.headerText && text === hf.headerText) return true;
+  if (line._isBottomZone && hf.footerText && text === hf.footerText) return true;
+  return false;
+}
+
+function detectAlignment(lines, contentBox) {
+  if (!contentBox) return AlignmentType.LEFT;
+  const first = lines[0];
+  const last = lines[lines.length - 1];
+  const leftGap = first.x - contentBox.left;
+  const rightGap = contentBox.right - last.xEnd;
+  const bothGaps = Math.min(leftGap, rightGap) > 25;
+  if (bothGaps && Math.abs(leftGap - rightGap) < 20) return AlignmentType.CENTER;
+  if (leftGap > 25 && rightGap < 15) return AlignmentType.RIGHT;
+  if (Math.abs(leftGap) < 10 && Math.abs(rightGap) < 10) return AlignmentType.JUSTIFIED;
+  return AlignmentType.LEFT;
+}
+
+/* ================================================================== *
+ * PHASE 2b — ELEMENT DETECTOR
+ * ================================================================== */
+function analyzePage(page) {
+  const dims = effectivePageDims(page);
   const lines = groupLines(page.items);
-  const cellLines = lines.map(line => ({
-    y: line.y,
-    fontSize: line.fontSize,
-    text: line.text,
-    cells: splitCells(line.items),
-  }));
 
-  // Collect all cell start-x positions across the page
-  const xClusters = [];
-  for (const line of cellLines) {
-    for (const cell of line.cells) {
-      let found = false;
-      for (const cluster of xClusters) {
-        if (Math.abs(cluster.x - cell.x) < 8) {
-          cluster.x = (cluster.x * cluster.count + cell.x) / (cluster.count + 1);
-          cluster.count += 1;
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        xClusters.push({ x: cell.x, count: 1 });
-      }
-    }
+  for (const l of lines) {
+    l._isTopZone = l.y > dims.height - 45;
+    l._isBottomZone = l.y < 45;
+    l._isPageNumber = PAGE_NUM_RE.test(l.text);
   }
 
-  // A column must appear in at least 2 distinct lines to be a real table column
-  const columns = xClusters
-    .filter(c => c.count >= 2)
-    .sort((a, b) => a.x - b.x)
-    .map(c => c.x);
+  const columns = findTableColumns(lines);
+  const pageWidth = dims.width;
+  const boundaries = columns.length >= 2 ? columnBoundaries(columns, pageWidth) : null;
+  const tableLines = new Map();
+  const tableLineSet = new Set();
 
-  const isLikelyTable = columns.length >= 2;
-
-  const rows = [];
-  if (isLikelyTable) {
-    // Assign lines to table rows: line spans >= 2 columns AND cells map to columns
-    for (const line of cellLines) {
-      const rowCells = [];
-      for (const col of columns) {
-        let match = null;
-        let bestDist = 15;
-        for (const cell of line.cells) {
-          const dist = Math.abs(cell.x - col);
-          if (dist < bestDist) {
-            bestDist = dist;
-            match = cell;
-          }
-        }
-        rowCells.push(match ? match.text : '');
-      }
-      const filled = rowCells.filter(c => c !== '').length;
+  if (boundaries) {
+    for (const line of lines) {
+      const cells = assignRunsToColumns(line.items, boundaries);
+      const filled = cells.filter(c => c && c.length).length;
       if (filled >= 2) {
-        rows.push({ y: line.y, fontSize: line.fontSize, cells: rowCells, isHeader: filled === rowCells.length && line.fontSize >= 11 });
-      } else {
-        rows.push(null);
+        tableLineSet.add(line);
+        const isHeader = filled === columns.length && (line.isBold || line.size >= 10.6 || (line.isBold && line.size >= 10));
+        tableLines.set(line, { cells, isHeader, y: line.y, size: line.size, font: line.font });
       }
     }
   }
 
-  return { isLikelyTable, columns, rows, rawLines: cellLines };
-}
-
-function detectTableBlocks(model) {
-  // Convert rows[] (with nulls for non-table lines) into contiguous table blocks.
-  // Filter out separator lines like "----".
+  // contiguous table blocks (single blank/spacer-merged line allowed inside)
   const blocks = [];
   let current = null;
-
-  const isSeparator = (text) => /^[\-\=\_\s]+$/.test((text || '').trim()) && (text || '').trim().length > 0;
-
-  for (let i = 0; i < model.rows.length; i++) {
-    const row = model.rows[i];
-    if (row && !isSeparator(row.cells.join('|'))) {
-      if (!current) {
-        current = { rows: [] };
-        blocks.push(current);
-      }
-      current.rows.push(row);
+  for (const line of lines) {
+    const row = tableLines.get(line);
+    if (row) {
+      if (!current) { current = []; blocks.push(current); }
+      current.push(row);
+    } else if (current && current.length && (!line.text || isSeparatorText(line.text))) {
+      current.push({
+        cells: columns.map((_, i) => (i === 0 ? line.text : '')),
+        isHeader: false, y: line.y, size: line.size, font: line.font, blank: true,
+      });
     } else {
       current = null;
     }
   }
+  const tableBlocks = blocks
+    .filter(b => b.length >= 2 || (b.length === 1 && b[0].isHeader))
+    .map(b => ({ rows: b, columns, boundaries }));
 
-  // Only keep blocks with 2+ rows (header + data)
-  return blocks.filter(b => b.rows.length >= 2);
-}
-
-function buildDocxFromPages(pages, opts = {}) {
-  const sections = [];
-
-  for (const page of pages) {
-    const landscape = isLandscape(page);
-    const model = buildPageModel(page);
-    const tableBlocks = model.isLikelyTable ? detectTableBlocks(model) : [];
-    const remainingLines = [];
-
-    // Build a map of y-position -> used in table block
-    const usedY = new Set();
-    for (const block of tableBlocks) {
-      for (const row of block.rows) {
-        usedY.add(row.y.toFixed(2));
-      }
-    }
-
-    for (const line of model.rawLines) {
-      // Only include non-table lines as paragraphs
-      for (const blk of tableBlocks) {
-        const blkYs = new Set(blk.rows.map(r => r.y.toFixed(2)));
-        if (blkYs.has(line.y.toFixed(2))) {
-          line._inTable = true;
-        }
-      }
-      if (!line._inTable) {
-        remainingLines.push(line);
-      }
-    }
-
-    // Separate text before table blocks and after (approximate by y order)
-    const sortedBlocks = tableBlocks.map((b, idx) => ({ block: b, idx }));
-    const blockYMin = sortedBlocks.map(sb => Math.min(...sb.block.rows.map(r => r.y)));
-
-    const children = [];
-
-    // Lines above the first table
-    const firstTableY = tableBlocks.length ? Math.min(...tableBlocks.map(b => Math.min(...b.rows.map(r => r.y)))) : Infinity;
-    const linesAbove = remainingLines.filter(l => l.y > firstTableY);
-    const linesBelow = remainingLines.filter(l => l.y <= firstTableY);
-
-    for (const line of [...linesAbove.sort((a, b) => b.y - a.y), ...linesBelow.sort((a, b) => b.y - a.y)]) {
-      children.push(paragraphFromLine(line));
-    }
-
-    // Insert tables at appropriate positions
-    // For simplicity: tables rendered after the above text, then below text.
-    // (Approximation — better than before, and tables + orientation preserved.)
-
-    for (const block of tableBlocks) {
-      const rows = block.rows.map(row =>
-        new TableRow({
-          children: row.cells.map(cellText =>
-            new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: cellText, size: 20, font: 'Calibri' })], spacing: { after: 40 } })],
-              shading: row.isHeader ? { type: ShadingType.CLEAR, fill: 'F2F2F2' } : undefined,
-            })
-          ),
-        })
-      );
-      children.push(
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows,
-        })
-      );
-      children.push(new Paragraph({ spacing: { after: 120 } }));
-    }
-
-    // docx library expects base (portrait) dimensions when orientation is set;
-    // it automatically swaps them for LANDSCAPE.
-    sections.push({
-      properties: {
-        page: {
-          size: {
-            width: 12240,
-            height: 15840,
-            orientation: landscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT,
-          },
-          margin: { top: 1008, right: 1008, bottom: 1008, left: 1008 },
-        },
-      },
-      children,
-    });
+  // content box (body only)
+  const bodyLines = lines.filter(l => !tableLineSet.has(l));
+  let contentBox = null;
+  if (bodyLines.length) {
+    contentBox = {
+      left: Math.min(...bodyLines.map(l => l.x)),
+      right: Math.max(...bodyLines.map(l => l.xEnd)),
+      top: Math.max(...bodyLines.map(l => l.y)),
+      bottom: Math.min(...bodyLines.map(l => l.y)),
+    };
   }
 
-  const doc = new Document({ sections });
-  return Packer.toBuffer(doc);
+  // paragraphs (body only), reconstructed from line-to-line gaps
+  const order = [...bodyLines].sort((a, b) => b.y - a.y);
+  const paragraphs = [];
+  let cur = null;
+  for (const line of order) {
+    if (!cur) { cur = { lines: [line] }; continue; }
+    const prevLine = cur.lines[cur.lines.length - 1];
+    const gap = prevLine.y - line.y;
+    const samePara = gap <= Math.max(prevLine.size, line.size) * PARA_GAP_FACTOR &&
+      !isHeadingLike(prevLine) && !isHeadingLike(line);
+    if (samePara) {
+      cur.lines.push(line);
+    } else {
+      paragraphs.push(finalizeParagraph(cur, contentBox));
+      cur = { lines: [line] };
+    }
+  }
+  if (cur) paragraphs.push(finalizeParagraph(cur, contentBox));
+
+  return {
+    pageNumber: page.pageNumber,
+    dims,
+    lines,
+    columns,
+    tableBlocks,
+    paragraphs,
+    contentBox,
+    pageWidthPts: dims.width,
+    pageHeightPts: dims.height,
+  };
 }
 
-function headingLevelFor(fontSize) {
-  if (fontSize >= 20) return HeadingLevel.HEADING_1;
-  if (fontSize >= 16) return HeadingLevel.HEADING_2;
-  if (fontSize >= 13) return HeadingLevel.HEADING_3;
+function finalizeParagraph(para, contentBox) {
+  para.size = median(para.lines.map(l => l.size)) || 10;
+  para.align = detectAlignment(para.lines, contentBox);
+  para.text = para.lines.map(l => l.text).join(' ').replace(/\s+/g, ' ').trim();
+  para.isBold = para.lines[0].isBold && para.lines[0].size >= 14;
+  return para;
+}
+
+/* ================================================================== *
+ * PHASE 3 — DOCUMENT-LEVEL STRUCTURE
+ * ================================================================== */
+function detectDocumentHeaderFooter(models) {
+  const topCount = new Map();
+  const bottomCount = new Map();
+  let pageNumberSeen = 0;
+  const n = models.length;
+  for (const m of models) {
+    const tops = new Set(m.lines.filter(l => l._isTopZone && !l._isPageNumber).map(l => l.text.trim()));
+    const bots = new Set(m.lines.filter(l => l._isBottomZone && !l._isPageNumber).map(l => l.text.trim()));
+    for (const t of tops) topCount.set(t, (topCount.get(t) || 0) + 1);
+    for (const b of bots) bottomCount.set(b, (bottomCount.get(b) || 0) + 1);
+    if (m.lines.some(l => l._isPageNumber)) pageNumberSeen += 1;
+  }
+  const pick = (map) => {
+    let best = null;
+    for (const [text, count] of map) {
+      if (count >= Math.max(2, Math.ceil(n * 0.5)) && (!best || count > best[1])) best = [text, count];
+    }
+    return best ? best[0] : null;
+  };
+  return {
+    headerText: pick(topCount),
+    footerText: pick(bottomCount),
+    usePageNumber: pageNumberSeen >= Math.max(2, Math.ceil(n * 0.5)),
+  };
+}
+
+/* ================================================================== *
+ * PHASE 4 — DOCX RENDERER
+ * ================================================================== */
+function headingLevelForLine(line) {
+  if (line.isBold && line.size >= 14) return HeadingLevel.HEADING_1;
+  if (line.isBold && line.size >= 11.5) return HeadingLevel.HEADING_2;
   return null;
 }
 
-function paragraphFromLine(line) {
-  const level = headingLevelFor(line.fontSize);
-  const text = line.text;
-  if (level) {
-    return new Paragraph({
-      children: [new TextRun({ text, bold: true, size: 28, font: 'Calibri' })],
-      heading: level,
-      spacing: { before: 160, after: 80 },
-    });
-  }
-  return new Paragraph({
-    children: [new TextRun({ text, size: 22, font: 'Calibri' })],
-    spacing: { after: 100 },
+const thinBorder = { style: BorderStyle.SINGLE, size: 4, color: '333333' };
+const tableBorders = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder, insideHorizontal: thinBorder, insideVertical: thinBorder };
+
+function cellFromText(text, isHeader, columnSpan, font) {
+  const opts = { verticalAlign: VerticalAlign.CENTER, borders: tableBorders, margins: { top: 40, bottom: 40, left: 80, right: 80 } };
+  if (columnSpan > 1) opts.columnSpan = columnSpan;
+  if (isHeader) opts.shading = { type: ShadingType.CLEAR, fill: 'E8EDF2' };
+  return new TableCell({
+    ...opts,
+    children: [new Paragraph({
+      alignment: AlignmentType.LEFT,
+      children: [new TextRun({ text: text || '', bold: isHeader, size: 20, font: font || 'Arial' })],
+      spacing: { after: 0, line: 240 },
+    })],
   });
+}
+
+function rowHeightTwips(row, prevY) {
+  const gapPts = prevY ? Math.max(4, Math.min(36, prevY - row.y)) : 13;
+  return Math.round(gapPts * PT_TO_TWIP);
+}
+
+function buildTableElement(cluster, isCarriedHeader) {
+  const columns = cluster.columns;
+  const n = columns.length;
+  const rows = [];
+  let prevY = null;
+  for (let ri = 0; ri < cluster.rows.length; ri++) {
+    const row = cluster.rows[ri];
+    const cellsHtml = [];
+    const filledIdx = row.cells.findIndex(c => c && c.trim().length && !isSeparatorText(c));
+    const totalFilled = row.cells.filter(c => c && c.trim().length).length;
+    let singleMerged = filledIdx >= 0 && totalFilled === 1;
+    if (singleMerged && row.cells.some((c, i) => i !== filledIdx && c && c.trim().length)) singleMerged = false;
+
+    if (singleMerged) {
+      cellsHtml.push(cellFromText(row.cells[filledIdx], row.isHeader, n, row.font));
+    } else {
+      for (let i = 0; i < n; i++) cellsHtml.push(cellFromText(row.cells[i] || '', row.isHeader, 1, row.font));
+    }
+    const rowOpts = { children: cellsHtml, height: { value: rowHeightTwips(row, prevY), rule: HeightRule.ATLEAST } };
+    if (row.isHeader || (isCarriedHeader && ri === 0)) rowOpts.tableHeader = true;
+    rows.push(new TableRow(rowOpts));
+    prevY = row.y;
+  }
+
+  // proportional column widths from column x spacing
+  const colPts = [];
+  for (let i = 0; i < n; i++) {
+    const left = i === 0 ? columns[i] : (columns[i - 1] + columns[i]) / 2;
+    const right = i + 1 < n ? (columns[i] + columns[i + 1]) / 2 : columns[i] + 150;
+    colPts.push(Math.max(20, right - left));
+  }
+  const sum = colPts.reduce((a, b) => a + b, 0) || 1;
+  const colWidths = colPts.map(w => Math.round((w / sum) * 10000) / 100);
+
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    columnWidths: colWidths,
+    borders: tableBorders,
+    rows,
+  });
+}
+
+function paragraphElement(para, mode) {
+  const first = para.lines[0];
+  const level = headingLevelForLine(first);
+  const sizeHalf = Math.max(18, Math.round(para.size * PT_TO_HALF_PT));
+  const runs = [new TextRun({ text: para.text, bold: para.isBold || (level != null), italic: first.isItalic, size: sizeHalf, font: first.font })];
+  const opts = {};
+  if (level) {
+    opts.heading = level;
+    opts.spacing = { before: Math.round(para.size * 18), after: Math.round(para.size * 8) };
+  } else {
+    opts.alignment = para.align;
+    opts.spacing = { after: Math.round(para.size * 6) };
+  }
+  return new Paragraph({ children: runs, ...opts });
+}
+
+/* ------------------------------------------------------------------ *
+ * Table clustering across pages (ONE logical table for multi-page tables)
+ * ------------------------------------------------------------------ */
+function clusterTables(models) {
+  const clusters = []; // { id, columns, boundaries, rows, firstBlock, spansPages }
+  const flag = new Map(); // block -> cluster id
+  let lastOpen = null;
+
+  for (const m of models) {
+    for (const block of m.tableBlocks) {
+      if (lastOpen && sameColumns(lastOpen.columns, block.columns)) {
+        lastOpen.rows.push(...block.rows);
+        lastOpen.spansPages = true;
+        flag.set(block, lastOpen.id);
+      } else {
+        lastOpen = { id: clusters.length + 1, columns: block.columns, boundaries: block.boundaries, rows: [...block.rows], firstBlock: block, spansPages: false };
+        clusters.push(lastOpen);
+        flag.set(block, lastOpen.id);
+      }
+    }
+  }
+  return { clusters, flag };
+}
+
+function sameColumns(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (Math.abs(a[i] - b[i]) > 14) return false;
+  }
+  return true;
+}
+
+/* ================================================================== *
+ * PHASE 4b — MAIN BUILDER
+ * ================================================================== */
+async function buildDocx(models, opts = {}) {
+  const mode = opts.mode || 'highfidelity';
+  const hf = detectDocumentHeaderFooter(models);
+  const { clusters, flag } = clusterTables(models);
+  const elementsByPage = []; // array of arrays
+  const warnings = [];
+
+  const unified = models.length < 2 || models.every(m =>
+    Math.abs(m.dims.width - models[0].dims.width) < 1 &&
+    Math.abs(m.dims.height - models[0].dims.height) < 1 &&
+    m.dims.landscape === models[0].dims.landscape);
+
+  function marginsFor(m) {
+    let top = 1008, bottom = 1008, left = 1008, right = 1008;
+    if (m.contentBox && mode !== 'editable') {
+      const pageW = m.pageWidthPts, pageH = m.pageHeightPts;
+      const estTop = clampTw((pageH - m.contentBox.top + 4) * PT_TO_TWIP);
+      const estBottom = clampTw(m.contentBox.bottom * PT_TO_TWIP);
+      const estLeft = clampTw(m.contentBox.left * PT_TO_TWIP);
+      const estRight = clampTw((pageW - m.contentBox.right) * PT_TO_TWIP);
+      if (estTop + estBottom < 800 && estLeft + estRight < 800) {
+        top = estTop; bottom = estBottom; left = estLeft; right = estRight;
+      } else if (estLeft + estRight < 800) {
+        left = estLeft; right = estRight;
+        // top/bottom unreliable → pad estimated by content height vs page height
+        const content = m.contentBox.top - m.contentBox.bottom;
+        const space = pageH - content;
+        top = clampTw(Math.max(360, (space * 0.45) * PT_TO_TWIP));
+        bottom = clampTw(Math.max(360, (space * 0.55) * PT_TO_TWIP));
+      }
+    }
+    return { top, bottom, left, right, header: 720, footer: 720 };
+  }
+
+  for (let pi = 0; pi < models.length; pi++) {
+    const m = models[pi];
+    const children = [];
+
+    // reading order = paragraphs + table-cluster starts (top→bottom)
+    const items = [];
+    for (const p of m.paragraphs) {
+      if (isHeaderFooterParagraph(p, hf)) continue; // promoted to Word header/footer, drop from body
+      items.push({ kind: 'para', y: p.lines[0].y, ref: p });
+    }
+    for (const b of m.tableBlocks) items.push({ kind: 'table', y: b.rows[0].y, ref: b, cid: flag.get(b) });
+    items.sort((a, b) => b.y - a.y);
+
+    for (const it of items) {
+      if (it.kind === 'para') {
+        children.push(paragraphElement(it.ref, mode));
+      } else {
+        const cluster = clusters.find(c => c.id === it.cid);
+        // only the FIRST block of the cluster emits the element (rows include continuations)
+        if (cluster.firstBlock === it.ref) {
+          children.push(buildTableElement(cluster, cluster.spansPages));
+        }
+      }
+    }
+
+    // page break preservation: skip when the page merely continues an open table
+    let isContinuationPage = false;
+    if (pi > 0) {
+      const prevPageTables = models[pi - 1].tableBlocks;
+      if (prevPageTables.length && m.tableBlocks.length) {
+        const lastPrev = prevPageTables[prevPageTables.length - 1];
+        const firstCur = m.tableBlocks[0];
+        if (sameColumns(lastPrev.columns, firstCur.columns)) isContinuationPage = true;
+      }
+    }
+    if (pi > 0 && !isContinuationPage) {
+      children.unshift(new Paragraph({ children: [new PageBreak()] }));
+    }
+
+    elementsByPage.push(children);
+  }
+
+  for (const c of clusters) {
+    if (c.spansPages) warnings.push(`Multi-page table (cluster ${c.id}) spans pages — following text may shift to keep one logical table.`);
+  }
+
+  // --- assemble sections ---
+  const sections = [];
+  const m0 = models[0];
+  if (unified) {
+    sections.push({
+      properties: { page: { size: pageSizeProps(m0), margin: marginsFor(m0) } },
+      headers: makeHeaderFooter(hf, false),
+      footers: makeHeaderFooter(hf, true),
+      children: elementsByPage.flat(),
+    });
+  } else {
+    for (let pi = 0; pi < models.length; pi++) {
+      const m = models[pi];
+      sections.push({
+        properties: { page: { size: pageSizeProps(m), margin: marginsFor(m) } },
+        headers: makeHeaderFooter(hf, false),
+        footers: makeHeaderFooter(hf, true),
+        children: elementsByPage[pi],
+      });
+    }
+  }
+
+  const doc = new Document({ sections });
+  const buffer = await Packer.toBuffer(doc);
+
+  const tableStats = {
+    count: clusters.length,
+    rows: clusters.reduce((s, c) => s + c.rows.length, 0),
+    cols: Math.max(0, ...clusters.map(c => c.columns.length)),
+    spanning: clusters.filter(c => c.spansPages).length,
+  };
+
+  const report = buildReport(models, clusters, buffer, { mode, headerFound: hf.headerText, footerFound: hf.footerText, pageNumbers: hf.usePageNumber, tableStats, warnings, unified });
+  return { buffer, report };
+}
+
+function clampTw(v) { return Math.max(360, Math.min(2880, Math.round(v))); }
+
+function pageSizeProps(model) {
+  const { width, height, landscape } = model.dims;
+  return {
+    width: Math.round(width * PT_TO_TWIP),
+    height: Math.round(height * PT_TO_TWIP),
+    orientation: landscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT,
+  };
+}
+
+function makeHeaderFooter(hf, isFooter) {
+  const runs = [];
+  if (isFooter) {
+    if (hf.usePageNumber) {
+      runs.push(new TextRun({ children: ['Page ', PageNumber.CURRENT] }));
+      if (hf.footerText) runs.push(new TextRun({ text: '   ' + hf.footerText, size: 18, font: 'Arial' }));
+    } else if (hf.footerText) {
+      runs.push(new TextRun({ text: hf.footerText, size: 18, font: 'Arial' }));
+    }
+  } else if (hf.headerText) {
+    runs.push(new TextRun({ text: hf.headerText, size: 18, font: 'Arial' }));
+  }
+  if (!runs.length) return undefined;
+  const Wrapper = isFooter ? Footer : Header;
+  return { default: new Wrapper({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: runs })] }) };
+}
+
+/* ================================================================== *
+ * PHASE 5 — VALIDATE / REPORT
+ * ================================================================== */
+function buildReport(models, clusters, buffer, info) {
+  return {
+    mode: info.mode,
+    sourcePages: models.length,
+    estDocxPages: models.length,
+    textLines: models.reduce((s, m) => s + m.lines.length, 0),
+    paragraphs: models.reduce((s, m) => s + m.paragraphs.length, 0),
+    tables: info.tableStats.count,
+    tableRowsTotal: info.tableStats.rows,
+    maxTableColumns: info.tableStats.cols,
+    multiPageTables: info.tableStats.spanning,
+    headerDetected: !!info.headerFound,
+    footerDetected: !!info.footerFound,
+    pageNumbersPreserved: info.pageNumbers,
+    unifiedPageSize: info.unified,
+    docxBytes: buffer.length,
+    warnings: info.warnings || [],
+  };
+}
+
+/* ================================================================== *
+ * Public API
+ * ================================================================== */
+async function convertPdfToDocx(pdfPath, opts = {}) {
+  const pages = await extractStructure(pdfPath);
+  const models = pages.map(analyzePage);
+  return await buildDocx(models, opts);
 }
 
 module.exports = {
   extractStructure,
-  isLandscape,
-  buildPageModel,
+  analyzePage,
+  buildDocx,
+  convertPdfToDocx,
   groupLines,
-  splitCells,
-  detectTableBlocks,
-  buildDocxFromPages,
-  paragraphFromLine,
+  joinRunsWithSpacing,
+  dedupItems,
+  isLandscape: (page) => effectivePageDims(page).landscape,
 };
