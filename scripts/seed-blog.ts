@@ -2,282 +2,326 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const posts = [
+const SITE = "https://www.toolpilotpro.in";
+
+interface PostSeed {
+  title: string;
+  slug: string;
+  categoryName: string;
+  categorySlug: string;
+  excerpt: string;
+  seoTitle: string;
+  seoDescription: string;
+  content: string;
+}
+
+const posts: PostSeed[] = [
   {
-    title: "How to Convert PDF to Word Without Losing Formatting",
-    slug: "how-to-convert-pdf-to-word",
-    excerpt: "Learn how to convert PDF files to editable Word documents while preserving formatting, fonts, and layout.",
-    content: `# How to Convert PDF to Word Without Losing Formatting
+    title: "Income Tax Calculator FY 2025-26: Old vs New Regime – Which One Saves You More?",
+    slug: "income-tax-calculator-fy-2025-26-old-vs-new-regime",
+    categoryName: "Money & Finance",
+    categorySlug: "money",
+    excerpt:
+      "Every salaried employee asks the same question at the start of the year – old regime or new regime? Here is how to compare them and the fastest way to find your tax.",
+    seoTitle: "Income Tax Calculator FY 2025-26: Old vs New Regime Guide",
+    seoDescription:
+      "Old or new tax regime for FY 2025-26? Learn how tax slabs, standard deduction, and rebates differ, and use our free income tax calculator to compare.",
+    content: `Choosing between the old and new income tax regime is one of the most common money decisions for Indian salaried employees. The right choice can save you thousands of rupees every year.
 
-Converting PDF files to editable Word documents is one of the most common document tasks. Whether you need to edit a contract, update a resume, or modify a report, here's how to do it right.
+## How the two regimes differ
 
-## Why Convert PDF to Word?
+The **new regime**, which is now the default, offers lower slab rates and a higher standard deduction, but removes most deductions like Section 80C, 80D, and HRA. The **old regime** keeps those deductions but taxes you at higher slab rates above the first ₹5,00,000.
 
-PDFs are great for sharing but hard to edit. Word documents let you:
-- Edit text and formatting
-- Track changes and comments
-- Collaborate with team members
-- Update content without redesigning
+For FY 2025-26 the new regime tax slabs start at 0% up to ₹4,00,000 and rise to 30% above ₹24,00,000. There is also a rebate under Section 87A that makes tax nil for taxable income up to ₹12,00,000 in the new regime.
 
-## Method 1: Use ToolPilot's Free PDF to Word Converter
+## Why guessing is expensive
 
-Our [PDF to Word converter](/tools/pdf-to-word) processes your file entirely in your browser:
+Most people choose a regime based on their friends or their HR team. But the correct answer depends on your own income, rent, home loan interest, insurance premium, and investments. Because deductions only work in the old regime, employees with large Section 80C and HRA claims often save more there — while everyone else usually wins with the new regime.
 
-1. **Upload your PDF** — drag and drop or click to browse
-2. **Wait for conversion** — the tool extracts text, images, and formatting
-3. **Download your Word file** — edit it in Microsoft Word or Google Docs
+## Use a calculator, not a guess
 
-### Tips for Best Results:
-- **Text-heavy PDFs** convert best (scanned PDFs may need OCR)
-- **Simple layouts** preserve formatting better than complex multi-column designs
-- **Fonts** may shift slightly if the destination system doesn't have the same fonts
+The fastest way to compare is to run your numbers through both regimes.
 
-## Method 2: Online Alternatives
+> Enter your income once and our free [Income Tax Calculator (FY 2025-26)](/tools/income-tax-calculator) shows your tax under both regimes and tells you which one saves more.
 
-Several online tools offer PDF to Word conversion:
-- **Smallpdf** — good quality, limited free conversions
-- **iLovePDF** — batch conversion available
-- **Adobe Acrobat** — highest quality but requires subscription
+If you also want your exact monthly take-home after PF, professional tax, and income tax, pair it with the [Salary Calculator](/tools/salary-calculator) to see the full breakdown of your CTC.
 
-## Preserving Formatting
+## A quick rule of thumb
 
-To maintain formatting during conversion:
+- If you claim 80C, 80D, or HRA deductions, always check the old regime.
+- If you have few deductions, the new regime is usually cheaper.
+- Recheck every year — your income and loans change.
 
-1. **Use high-quality source PDFs** — avoid heavily compressed files
-2. **Check fonts** — if the PDF uses custom fonts, install them on your system
-3. **Review the output** — always compare the Word doc against the original PDF
-4. **Fix tables** — complex tables may need manual adjustment after conversion
-
-## Common Issues and Fixes
-
-| Issue | Solution |
-|-------|----------|
-| Missing images | Re-upload and try again, or use a different converter |
-| Wrong text encoding | Ensure the PDF uses Unicode encoding |
-| Tables misaligned | Manually adjust table properties in Word |
-| Headers/footers missing | These may be embedded as page elements, not text |
-
-## When to Use PDF vs Word
-
-| Use PDF when... | Use Word when... |
-|-----------------|------------------|
-| Sharing final documents | Collaborating on drafts |
-| Legal/official documents | Editing and reviewing |
-| Printing | Tracking changes |
-| Web publishing | Commenting and feedback |
-
-## Conclusion
-
-The best free tool for PDF to Word conversion is one that processes locally in your browser — no upload to servers, no privacy concerns. Try ToolPilot's [PDF to Word converter](/tools/pdf-to-word) for instant, private conversion.`,
-    author: "ToolPilot Team",
-    seoTitle: "How to Convert PDF to Word Without Losing Formatting | ToolPilot",
-    seoDescription: "Step-by-step guide to convert PDF files to Word documents while preserving formatting. Free online tool with no upload required.",
-    status: "PUBLISHED" as const,
+Knowing your tax before the year starts means you can plan investments early instead of selling investments at the last minute. Start with the calculator, then confirm with a tax professional if your situation is complex.`,
   },
   {
-    title: "GST Calculator Guide: How to Calculate GST in India (2026)",
-    slug: "gst-calculator-guide-india-2026",
-    excerpt: "Complete guide to calculating GST in India. Learn about GST rates, CGST, SGST, IGST, and how to use our free GST calculator.",
-    content: `# GST Calculator Guide: How to Calculate GST in India (2026)
+    title: "How to Calculate Your Home Loan EMI Before You Apply",
+    slug: "how-to-calculate-home-loan-emi",
+    categoryName: "Money & Finance",
+    categorySlug: "money",
+    excerpt:
+      "Your EMI decides your monthly budget for the next 10–25 years. Here is how EMI works, why amortization matters, and how to compare lenders in minutes.",
+    seoTitle: "Home Loan EMI Calculator: How EMI and Amortization Work",
+    seoDescription:
+      "Learn how home loan EMI is calculated, what an amortization schedule shows, and how to compare lenders and tenures with a free EMI calculator.",
+    content: `A home loan is likely the biggest monthly commitment you will ever make. Before you sign anything, you should know your exact EMI and how much of it goes toward interest.
 
-Goods and Services Tax (GST) is India's unified indirect tax system. Whether you're a business owner, accountant, or consumer, understanding GST calculations is essential.
+## What is EMI?
 
-## What is GST?
+EMI stands for **Equated Monthly Installment** — a fixed amount you pay every month until the loan is repaid. Every EMI has two parts: a portion of the **principal** (the amount you borrowed) and the **interest** charged on the remaining balance.
 
-GST is a destination-based tax levied on every value addition in the supply chain. It replaced multiple indirect taxes like VAT, service tax, and excise duty.
+## The formula behind it
 
-## GST Rates in India (2026)
+EMI is calculated from three inputs: the loan amount, the interest rate, and the tenure.
 
-| Rate | Category Examples |
-|------|-------------------|
-| 0% | Essential items — fresh fruits, vegetables, milk, bread |
-| 5% | Packaged food, footwear under ₹1000, fuel |
-| 12% | Processed food, business class air tickets, gym memberships |
-| 18% | Most goods and services — electronics, restaurants, financial services |
-| 28% | Luxury items — cars, tobacco, aerated drinks, hotels above ₹7500 |
+> EMI = P x r x (1 + r)^n divided by ((1 + r)^n – 1)
 
-## How to Calculate GST
+where P is the principal, r is the monthly interest rate, and n is the tenure in months. You do not need to remember this — a free tool does it in a second.
 
-### Adding GST (Forward Calculation)
+## Why the amortization schedule matters
 
-**Formula:** GST Amount = Original Price × GST Rate / 100
+Early EMIs are mostly interest; later EMIs are mostly principal. An amortization schedule shows this month by month, so you can see exactly how much you will pay in total interest over the whole loan. This is the number most people never check before buying a house.
 
-**Example:** A product costs ₹500 with 18% GST
-- GST = 500 × 18 / 100 = ₹90
-- Total = 500 + 90 = ₹590
+## Compare before you decide
 
-### Removing GST (Reverse Calculation)
+A difference of just 0.25% on a 20-year loan can change your total interest by lakhs of rupees. That is why you should compare the same loan amount and tenure across banks and housing finance companies.
 
-**Formula:** Original Price = GST-Inclusive Price × 100 / (100 + GST Rate)
+> Use the free [EMI Calculator](/tools/emi-calculator) to check your monthly installment and full amortization table instantly.
 
-**Example:** A product costs ₹590 (including 18% GST)
-- Original Price = 590 × 100 / 118 = ₹500
-- GST = 590 - 500 = ₹90
+If your salary situation changes and you want to find your current in-hand income after tax, the [Salary Calculator](/tools/salary-calculator) gives you a clear monthly breakdown.
 
-## CGST vs SGST vs IGST
+## A few practical tips
 
-| Type | When Applied | Split |
-|------|-------------|-------|
-| CGST + SGST | Intra-state (within same state) | Half each |
-| IGST | Inter-state (between different states) | Full amount |
+- Keep total EMIs under about 40% of your monthly income.
+- A longer tenure lowers the EMI but increases total interest.
+- A shorter tenure increases the EMI but saves interest.
+- Part-prepayment anywhere you can, it reduces the principal faster.
 
-**Example:** 18% GST on ₹1000 product
-- Intra-state: CGST = ₹90, SGST = ₹90
-- Inter-state: IGST = ₹180
-
-## Using ToolPilot's GST Calculator
-
-Our [GST Calculator](/tools/gst-calculator) supports:
-- All GST rates (0%, 5%, 12%, 18%, 28%)
-- Forward calculation (add GST)
-- Reverse calculation (remove GST)
-- CGST + SGST or IGST split
-
-### Step-by-Step:
-1. Enter the amount
-2. Select the GST rate
-3. Choose Add or Remove GST
-4. View CGST/SGST or IGST breakdown
-
-## Common GST Mistakes to Avoid
-
-1. **Using wrong GST rate** — always verify the applicable rate for your product/service
-2. **Mixing up CGST/SGST and IGST** — check if the transaction is intra-state or inter-state
-3. **Forgetting composition scheme** — small businesses under ₹1.5 crore may use composition scheme
-4. **Ignoring input tax credit** — claim ITC on purchases to reduce tax liability
-
-## Conclusion
-
-Use ToolPilot's free [GST Calculator](/tools/gst-calculator) for instant, accurate GST calculations. All processing happens in your browser — your financial data stays private.`,
-    author: "ToolPilot Team",
-    seoTitle: "GST Calculator Guide: How to Calculate GST in India 2026 | ToolPilot",
-    seoDescription: "Learn how to calculate GST in India with our complete guide. Covers all rates, CGST, SGST, IGST with free calculator tool.",
-    status: "PUBLISHED" as const,
+Calculate before you negotiate, not after. A few minutes with a calculator can save you years of unnecessary interest.`,
   },
   {
-    title: "10 Best Free Productivity Tools for Freelancers in 2026",
-    slug: "best-free-productivity-tools-freelancers",
-    excerpt: "Discover the best free online tools for freelancers. Invoice generators, resume builders, calculators, and more — all free.",
-    content: `# 10 Best Free Productivity Tools for Freelancers in 2026
+    title: "GST Calculator India: How CGST, SGST, and IGST Work",
+    slug: "gst-calculator-india-cgst-sgst-igst",
+    categoryName: "Money & Finance",
+    categorySlug: "money",
+    excerpt:
+      "GST is split into CGST, SGST, or IGST depending on whether a sale happens within a state or between states. Here is how to get the math right.",
+    seoTitle: "GST Calculator: Understanding CGST, SGST, and IGST in India",
+    seoDescription:
+      "What is GST and how do CGST, SGST, and IGST work? Learn the GST rates in India and use our free GST calculator for forward and reverse calculation.",
+    content: `Goods and Services Tax (GST) replaced a web of older indirect taxes in India. For shopkeepers, freelancers, and small businesses, getting the GST amount right on every invoice is essential.
 
-Freelancing requires wearing many hats — writer, accountant, marketer, and project manager. Here are 10 free tools that make the business side easier.
+## The three parts of GST
 
-## 1. Invoice Generator
+GST is split depending on where the transaction happens:
 
-Every freelancer needs professional invoices. ToolPilot's [Invoice Generator](/tools/invoice-generator) creates clean, professional invoices with:
-- Company details and logo
-- Line items with quantities and rates
-- Tax calculations (GST support)
-- PDF download
+- **CGST** — Central GST, goes to the central government.
+- **SGST** — State GST, goes to the state government.
+- **IGST** — Integrated GST, applies to inter-state sales and imports.
 
-**Why it matters:** Getting paid faster starts with professional invoicing.
+An intra-state sale of ₹10,000 at 18% GST splits into 9% CGST + 9% SGST. The same sale between two states attracts 18% IGST instead.
 
-## 2. Resume Builder
+## The GST rates in India
 
-Whether you're updating your portfolio site or applying for a long-term contract, a polished resume helps. Use ToolPilot's [Resume Builder](/tools/resume-builder) to:
-- Choose from multiple templates
-- Fill in details step by step
-- Download as PDF
+Most goods and services fall into one of four slabs: **5%, 12%, 18%, or 28%**. Some essentials are fully exempt at 0%. Knowing which rate applies matters because it changes what you charge your customer.
 
-## 3. GST Calculator
+## Forward and reverse calculation
 
-Freelancers earning above ₹20 lakh must register for GST in India. ToolPilot's [GST Calculator](/tools/gst-calculator) helps you:
-- Calculate GST on your invoices
-- Determine CGST/SGST or IGST
-- Verify client payments
+Two calculations are used every day:
 
-## 4. Salary Calculator
+1. **Forward** – adding GST to a base price to find the invoice total.
+2. **Reverse** – removing the GST already included in a bill to find the actual price before tax.
 
-If you're transitioning from employment to freelancing, use the [Salary Calculator](/tools/salary-calculator) to understand what CTC you need to match your freelance income.
+Both are common when negotiating prices or auditing old invoices.
 
-## 5. Image Compressor
+> Our free [GST Calculator](/tools/gst-calculator) does forward and reverse GST instantly, auto-splits CGST + SGST, and supports all Indian rates.
 
-Clients love fast-loading websites. Compress your portfolio images with ToolPilot's [Image Compressor](/tools/image-compressor) to:
-- Reduce file sizes by 60-80%
-- Maintain visual quality
-- Improve website speed
+## Where this shows up daily
 
-## 6. Word Counter
+Freelancers add GST on invoices for Indian clients, shopkeepers verify prices after a rate change, and students solve GST problems for exams. In every case, small math mistakes cost money.
 
-When writing proposals, blog posts, or client deliverables, the [Word Counter](/tools/word-counter) helps you:
-- Track word counts for deliverables
-- Meet content length requirements
-- Estimate reading time
+Get the calculation right with a tool, keep your records clean, and you will never overcharge your customers or under-report your tax again.`,
+  },
+  {
+    title: "How to Pass ATS Screening: 7 Resume Tips That Actually Work",
+    slug: "how-to-pass-ats-screening-resume-tips",
+    categoryName: "Career",
+    categorySlug: "career",
+    excerpt:
+      "Most resumes are rejected by software, not by people. Here are the exact changes that help your resume get past ATS filters and into human hands.",
+    seoTitle: "ATS Resume Checker: How to Pass ATS Screening in 2026",
+    seoDescription:
+      "Applicant Tracking Systems filter out most resumes before a human sees them. Learn how to structure an ATS-friendly resume and check your score for free.",
+    content: `When you apply for a job online, your resume is often read by an **Applicant Tracking System (ATS)** before any human sees it. The ATS scans for relevant keywords, clean formatting, and standard sections. If it cannot read your resume, it rejects it automatically.
 
-## 7. JSON Formatter
+## Why most resumes fail ATS
 
-If you work with APIs or data, the [JSON Formatter](/tools/json-formatter) is essential:
-- Format messy JSON data
-- Validate API responses
-- Debug data issues
+The biggest reasons are:
 
-## 8. Base64 Encoder/Decoder
+- **Fancy formatting** – tables, text boxes, and graphics that the parser cannot read.
+- **Missing keywords** – your resume does not include the exact skills and titles in the job description.
+- **Unusual section names** – the ATS cannot find "Work History" because it was renamed.
+- **Scanning issues** – photos and decorative headers break text extraction.
 
-Many APIs and email systems use Base64 encoding. Use the [Base64 Encoder](/tools/base64-encoder) and [Base64 Decoder](/tools/base64-decoder) for:
-- Encoding credentials for API authentication
-- Embedding images in HTML emails
-- Debugging encoded data
+## Seven fixes that help
 
-## 9. PDF Tools
+- 1. Use a standard, single-column layout.
+- 2. Save your final file as a clean, machine-readable PDF.
+- 3. Put the job title, skills, and key terms from the job description in your resume.
+- 4. Name sections clearly: Summary, Skills, Experience, Education.
+- 5. Use standard job titles instead of creative ones.
+- 6. Skip graphics, tables, and columns.
+- 7. Quantify achievements with numbers wherever you can.
 
-Freelancers deal with contracts, proposals, and documents daily. ToolPilot's PDF suite includes:
-- [PDF to Word](/tools/pdf-to-word) — edit contracts
-- [Word to PDF](/tools/word-to-pdf) — share proposals professionally
-- [PDF Merger](/tools/pdf-merger) — combine multiple documents
-- [PDF Compressor](/tools/pdf-compressor) — reduce file sizes for email
+## Check your score before you apply
 
-## 10. Cover Letter Generator
+Uploading your resume into a free checker is the fastest way to catch these problems.
 
-Standing out in proposals matters. ToolPilot's AI [Cover Letter Generator](/tools/cover-letter-generator) creates personalized cover letters that:
-- Match your resume content
-- Address the specific role
-- Highlight relevant experience
+> Our free [Resume ATS Checker](/tools/resume-ats-checker) scores your resume against the job description and points out what to fix. Pair it with the [Resume Builder](/tools/resume-builder) to rebuild your resume with an ATS-friendly structure in minutes.
 
-## Freelancer Toolkit Summary
+## One more thing
 
-| Tool | Use Case | Category |
-|------|----------|----------|
-| Invoice Generator | Get paid professionally | Business |
-| Resume Builder | Update your portfolio | Career |
-| GST Calculator | Tax compliance | Calculators |
-| Image Compressor | Optimize portfolio | Image |
-| Word Counter | Meet content specs | Developer |
-| JSON Formatter | API work | Developer |
-| Base64 Tools | Data encoding | Developer |
-| PDF Tools | Document management | PDF |
-| Cover Letter Generator | Win more clients | AI |
+ATS scores are a screen, not the final word. A resume that scores well still needs real achievements and clear, specific results. Fix the technical issues first, then invest time in making each bullet point stronger.
 
-## Conclusion
+Apply smart, apply fast, and let a checked resume do the talking.`,
+  },
+  {
+    title: "Notice Period and Experience: How to Calculate Both Correctly",
+    slug: "how-to-calculate-notice-period-and-experience",
+    categoryName: "Career",
+    categorySlug: "career",
+    excerpt:
+      "Getting your notice period and total experience wrong can cost you interviews. Here is the simple, correct way to calculate both.",
+    seoTitle: "Notice Period & Experience Calculator: The Complete Guide",
+    seoDescription:
+      "How notice period affects your next job, and how to calculate total work experience correctly for resumes and interviews. Use our free calculators.",
+    content: `When you resign from a job, two numbers decide a lot: your **notice period** and your **total experience**. Getting either wrong in an interview can filter you out.
 
-All these tools are free and process data in your browser. No sign-ups, no hidden costs. Start with ToolPilot's [free tools](/tools) and focus on what matters — your clients.`,
-    author: "ToolPilot Team",
-    seoTitle: "10 Best Free Productivity Tools for Freelancers 2026 | ToolPilot",
-    seoDescription: "Discover the best free online tools for freelancers in 2026. Invoice generators, calculators, PDF tools, and more — all free.",
-    status: "PUBLISHED" as const,
+## What is a notice period?
+
+The notice period is the time you must work after resigning before your current employer releases you. In India this is usually **30, 45, 60, or 90 days**, depending on your company and role.
+
+Your joining date at the next job depends on the notice period, buyout options, and how fast the current employer relieves you.
+
+## How to calculate it
+
+- Note the date you submitted your resignation.
+- Add the notice period in days to find your earliest release date.
+- Factor in weekends, holidays, and any pending leaves the company wants you to clear.
+
+> Use the [Notice Period Calculator](/tools/notice-period-calculator) to get your possible release and joining dates without manually counting days.
+
+## Total experience: the number recruiters check
+
+Recruiters compare the number on your resume to what they verify through your offers and relieving letters. Small rounding differences are common, but a resume that says **6 years** and a background check that shows **5 years 8 months** raises questions.
+
+## Calculate it the right way
+
+- 1. Count from your first day of employment to the current date.
+- 2. Use exact dates, not months of the year.
+- 3. Combine all tenures if you switched jobs.
+- 4. Express it as years and months (for example, 5 years 8 months).
+
+> Our [Experience Calculator](/tools/experience-calculator) does the exact math for any date range in seconds.
+
+## Why it matters for your next offer
+
+Your experience level determines the roles you can apply for, the salary band conversation, and sometimes even the interview stages you skip. Keep the number accurate, keep it easy to verify, and you remove one more reason for a recruiter to move on.
+
+Start with a fact-check of your own resume today, using the two tools above, before your next application.`,
+  },
+  {
+    title: "Compress and Resize Images for WhatsApp in Seconds",
+    slug: "compress-resize-images-for-whatsapp",
+    categoryName: "Productivity",
+    categorySlug: "productivity",
+    excerpt:
+      "Sending heavy images, especially videos and photos from phone cameras, is painful. Here is how to compress and resize pictures quickly without installing an app.",
+    seoTitle: "How to Compress and Resize Images for WhatsApp",
+    seoDescription:
+      "Send photos on WhatsApp without quality loss. Learn how to compress and resize images in your browser with free tools, including passport-size cropping tips.",
+    content: `A single photo from a modern phone camera can be 5 MB or more. Forward a few of those on WhatsApp and the app slows down, the recipient runs out of storage, and the file sometimes refuses to send.
+
+## Why file size matters
+
+- **Storage** – photos eat up phone and cloud storage quickly.
+- **Sharing** – large files are slower to upload and download.
+- **Websites** – heavy images slow down page loading and affect SEO.
+
+## The right tool for the job
+
+Two quick fixes solve most image problems:
+
+1. **Compress** to reduce file size while keeping visible quality.
+2. **Resize** to change width and height, for example to a WhatsApp-friendly 1280px width.
+
+> Our [Image Compressor](/tools/image-compressor) shrinks JPG, PNG, and WebP images in your browser with a live before-and-after preview. Use the [Image Resizer](/tools/image-resizer) when you need exact dimensions.
+
+## Compress or resize first?
+
+- If you only need a smaller file, **compress**.
+- If the image will go on a website or needs specific dimensions, **resize**.
+- For profile pictures and passport photos, **crop** to a square or the exact required ratio.
+
+## Keeping quality while shrinking
+
+The biggest mistake people make is dropping quality too low. A good balance for WhatsApp photos is quality around **70–80%** — small file, still sharp on a phone screen. You should never notice the difference when you look at the photo normally.
+
+## For passport photos and documents
+
+Government forms and visa applications often need specific pixel sizes. Cropping to the exact ratio first, then resizing, keeps the photo readable inside the form.
+
+Fix your workflow today: compress once, share everywhere, and stop fighting with "file too large" errors.
+
+Try the [Image Quality Optimizer](/tools/image-quality-optimizer) when you need to balance size and clarity.`,
   },
 ];
 
 async function main() {
+  const catMap = new Map<string, string>();
   for (const post of posts) {
-    const existing = await prisma.blogPost.findUnique({ where: { slug: post.slug } });
-    if (existing) {
-      console.log(`Skip (exists): ${post.slug}`);
-      continue;
+    let category = await prisma.blogCategory.findUnique({ where: { slug: post.categorySlug } });
+    if (!category) {
+      category = await prisma.blogCategory.create({ data: { name: post.categoryName, slug: post.categorySlug } });
     }
+    catMap.set(post.slug, category.id);
 
-    const created = await prisma.blogPost.create({
-      data: {
-        ...post,
+    await prisma.blogPost.upsert({
+      where: { slug: post.slug },
+      update: {
+        title: post.title,
+        content: post.content,
+        excerpt: post.excerpt,
+        seoTitle: post.seoTitle,
+        seoDescription: post.seoDescription,
+        status: "PUBLISHED",
         publishedAt: new Date(),
+        author: "ToolPilot Team",
+        categoryId: category.id,
+      },
+      create: {
+        title: post.title,
+        slug: post.slug,
+        content: post.content,
+        excerpt: post.excerpt,
+        seoTitle: post.seoTitle,
+        seoDescription: post.seoDescription,
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+        author: "ToolPilot Team",
+        categoryId: category.id,
       },
     });
-    console.log(`Created: ${created.title}`);
+    console.log(`OK  ${post.slug}`);
   }
-
-  await prisma.$disconnect();
+  console.log(`Done. ${posts.length} posts seeded under ${SITE}/blog`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

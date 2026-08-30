@@ -1,11 +1,11 @@
 import { ToolCategory } from "@/types/tool";
 
 export const categories: ToolCategory[] = [
-  { name: "PDF Tools", slug: "pdf", icon: "FileText", description: "Convert, merge, split, and compress PDF files" },
-  { name: "Image Tools", slug: "image", icon: "Image", description: "Compress, resize, and convert images" },
-  { name: "Calculators", slug: "calculators", icon: "Calculator", description: "Financial, health, and math calculators" },
-  { name: "Career Tools", slug: "career", icon: "Briefcase", description: "Resume builder, ATS checker, and career utilities" },
-  { name: "Business Tools", slug: "business", icon: "Building2", description: "Invoice, quotation, and business calculators" },
-  { name: "Developer Tools", slug: "developer", icon: "Code2", description: "JSON, Base64, URL encoding, and more" },
-  { name: "AI Tools", slug: "ai", icon: "Sparkles", description: "AI-powered text humanizer, summarizer, and more" },
+  { name: "PDF Tools", slug: "pdf", icon: "FileText", description: "Convert, merge, split, compress, and rotate PDF files online for free" },
+  { name: "Image Tools", slug: "image", icon: "Image", description: "Compress, resize, crop, and convert images in your browser" },
+  { name: "Calculators", slug: "calculators", icon: "Calculator", description: "Free Indian tax, EMI, GST, SIP, and health calculators" },
+  { name: "Career Tools", slug: "career", icon: "Briefcase", description: "Build resumes, check ATS scores, and prepare for job interviews" },
+  { name: "Business Tools", slug: "business", icon: "Building2", description: "Create invoices, quotations, and estimate project costs online" },
+  { name: "Developer Tools", slug: "developer", icon: "Code2", description: "Format JSON, encode Base64 and URLs, and generate UUIDs" },
+  { name: "AI Tools", slug: "ai", icon: "Sparkles", description: "AI tools to humanize, summarize, and rewrite text fast" },
 ];

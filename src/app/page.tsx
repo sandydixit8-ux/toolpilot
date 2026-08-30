@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getFeaturedTools, getPopularTools } from "@/config/tools";
+import { getFeaturedTools, getPopularTools, allTools } from "@/config/tools";
 import { CATEGORIES, SITE_NAME, SITE_URL } from "@/lib/constants";
 import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
 import { ADS } from "@/config/ads";
@@ -11,6 +11,7 @@ import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileTe
 export const metadata: Metadata = {
   alternates: { canonical: SITE_URL },
   title: `${SITE_NAME} – Free Online Tools for Work, Money, Career & Everyday Life`,
+  description: "60+ free online tools — PDF converters and compressors, image resizers, income tax and EMI calculators, resume and ATS checkers, and more. Free, no signup, no install.",
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -59,9 +60,9 @@ export default function HomePage() {
               Free Online Tools for{" "}
               <span className="text-blue-600 dark:text-blue-400">Work, Money, Career & Everyday Life</span>
             </h1>
-            <p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Fast, simple and privacy-friendly tools — no complicated software required.
-            </p>
+<p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          Free online tools for PDF, images, money & career — no signup, no install, just fast results in your browser.
+        </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="xl" asChild>
                 <Link href="/tools">Explore All Tools</Link>
@@ -125,6 +126,30 @@ export default function HomePage() {
                   </div>
                 </CardContent>
               </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section id="top-tools" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Most Popular Free Tools</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">Ready-to-use tools for everyday tasks</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[
+            { href: "/tools/income-tax-calculator", text: "Income Tax Calculator", desc: "Compare old vs new regime and find your FY 2025-26 tax" },
+            { href: "/tools/emi-calculator", text: "Home Loan EMI Calculator", desc: "Know your monthly EMI and total interest before you apply" },
+            { href: "/tools/resume-ats-checker", text: "Resume ATS Checker", desc: "Score your resume for ATS before you apply" },
+            { href: "/tools/gst-calculator", text: "GST Calculator", desc: "Add or remove GST with CGST, SGST & IGST split" },
+            { href: "/tools/pdf-compressor", text: "PDF Compressor", desc: "Reduce PDF size without losing quality" },
+            { href: "/tools/jpg-to-pdf", text: "JPG to PDF", desc: "Merge multiple photos into one PDF" },
+            { href: "/tools/image-compressor", text: "Image Compressor", desc: "Shrink images for WhatsApp and email" },
+            { href: "/tools/resume-builder", text: "Resume Builder", desc: "Create an ATS-friendly resume in minutes" },
+          ].map((t) => (
+            <Link key={t.href} href={t.href} className="group flex items-start gap-3 rounded-xl border border-gray-200 dark:border-gray-800 p-4 hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">{t.text}</p>
+                <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{t.desc}</p>
+              </div>
             </Link>
           ))}
         </div>
@@ -205,7 +230,7 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Ready to get started?</h2>
-        <p className="mt-2 text-gray-500 dark:text-gray-400">Explore 68+ free online tools</p>
+        <p className="mt-2 text-gray-500 dark:text-gray-400">Explore {allTools.length} free online tools</p>
         <Button size="xl" className="mt-6" asChild>
           <Link href="/tools">Explore All Tools</Link>
         </Button>
