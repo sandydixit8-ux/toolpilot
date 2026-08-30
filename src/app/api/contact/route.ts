@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       data: { name, email, subject, message },
     });
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://toolpilotpro.in";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpilotpro.in";
 
     // Auto-reply to user
     await sendEmail({

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       data: { token, email: normalizedEmail, expiresAt },
     });
 
-    const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://toolpilotpro.in"}/auth/reset-password?token=${token}`;
+    const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpilotpro.in"}/auth/reset-password?token=${token}`;
 
     const emailContent = passwordResetEmail(resetUrl);
     const emailSent = await sendEmail({

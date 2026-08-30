@@ -31,7 +31,7 @@ export function truncate(text: string, length: number): string {
 }
 
 export function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || "https://toolpilotpro.in";
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpilotpro.in";
 }
 
 export function formatBytes(bytes: number, decimals = 2): string {
