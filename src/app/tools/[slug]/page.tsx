@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: cat.name,
       description: cat.description,
+      alternates: { canonical: `${getSiteUrl()}/tools/${cat.slug}` },
     };
   }
   const tool = getToolBySlug(slug);
