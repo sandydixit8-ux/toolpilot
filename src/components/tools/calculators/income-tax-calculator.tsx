@@ -11,13 +11,14 @@ const formatINR = (value: number) =>
 
 function calculateNewRegimeTax(taxable: number) {
   let slabTax = 0;
-  if (taxable > 1500000) slabTax = 140000 + (taxable - 1500000) * 0.3;
-  else if (taxable > 1200000) slabTax = 80000 + (taxable - 1200000) * 0.2;
-  else if (taxable > 1000000) slabTax = 50000 + (taxable - 1000000) * 0.15;
-  else if (taxable > 700000) slabTax = 20000 + (taxable - 700000) * 0.1;
-  else if (taxable > 300000) slabTax = (taxable - 300000) * 0.05;
+  if (taxable > 2400000) slabTax = 300000 + (taxable - 2400000) * 0.3;
+  else if (taxable > 2000000) slabTax = 200000 + (taxable - 2000000) * 0.25;
+  else if (taxable > 1600000) slabTax = 120000 + (taxable - 1600000) * 0.2;
+  else if (taxable > 1200000) slabTax = 60000 + (taxable - 1200000) * 0.15;
+  else if (taxable > 800000) slabTax = 20000 + (taxable - 800000) * 0.1;
+  else if (taxable > 400000) slabTax = (taxable - 400000) * 0.05;
 
-  const rebate = taxable <= 700000 ? slabTax : 0;
+  const rebate = taxable <= 1200000 ? slabTax : 0;
   const afterRebate = slabTax - rebate;
   const cess = afterRebate * CESS_RATE;
   return { slabTax, rebate, cess, total: afterRebate + cess };
@@ -121,7 +122,7 @@ export function IncomeTaxCalculatorTool() {
 
         {annualIncome > 0 && (
           <div className="rounded-xl bg-gray-50 p-5 dark:bg-gray-800/50">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Old vs New Regime — FY 2024-25</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Old vs New Regime — FY 2025-26</h3>
 
             <div className={`mt-4 rounded-lg p-3 text-sm font-medium ${savings === 0 ? 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300' : better === 'new' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'}`}>
               {savings === 0
@@ -151,13 +152,13 @@ export function IncomeTaxCalculatorTool() {
             </div>
 
             <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-              Section 87A rebate makes tax nil for taxable income up to ₹5,00,000 (Old Regime) or ₹7,00,000 (New Regime).
+              Section 87A rebate makes tax nil for taxable income up to ₹5,00,000 (Old Regime) or ₹12,00,000 (New Regime).
             </p>
           </div>
         )}
 
         <div className="rounded-lg bg-blue-50 p-4 text-xs text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-          This calculator provides estimates for FY 2024-25. Please consult a tax professional for actual tax planning.
+          This calculator provides estimates for FY 2025-26. Please consult a tax professional for actual tax planning.
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 const STANDARD_DEDUCTION_NEW = 75000;
 const STANDARD_DEDUCTION_OLD = 50000;
-const REBATE_LIMIT_NEW = 700000;
+const REBATE_LIMIT_NEW = 1200000;
 const REBATE_LIMIT_OLD = 500000;
 const ESI_ANNUAL_WAGE_LIMIT = 252000;
 const PROF_TAX = 2400;
@@ -17,11 +17,12 @@ type Regime = 'new' | 'old';
 
 const TAX_SLABS: Record<Regime, Array<{ upto: number; rate: number }>> = {
   new: [
-    { upto: 300000, rate: 0 },
-    { upto: 700000, rate: 0.05 },
-    { upto: 1000000, rate: 0.1 },
-    { upto: 1200000, rate: 0.15 },
-    { upto: 1500000, rate: 0.2 },
+    { upto: 400000, rate: 0 },
+    { upto: 800000, rate: 0.05 },
+    { upto: 1200000, rate: 0.1 },
+    { upto: 1600000, rate: 0.15 },
+    { upto: 2000000, rate: 0.2 },
+    { upto: 2400000, rate: 0.25 },
     { upto: Infinity, rate: 0.3 },
   ],
   old: [
@@ -139,7 +140,7 @@ export function SalaryCalculatorTool() {
         )}
 
         <div className="rounded-lg bg-blue-50 p-4 text-xs text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-          This calculator provides estimates for FY 2024-25. Actual salary may vary based on company policies, additional deductions, and investment declarations.
+          This calculator provides estimates for FY 2025-26. Actual salary may vary based on company policies, additional deductions, and investment declarations.
         </div>
       </div>
     </div>
