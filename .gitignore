@@ -6,4 +6,5 @@ prisma/dev.db
 prisma/dev.db-journal
 *.log
 *.txt
+!public/ads.txt
 .DS_Store
