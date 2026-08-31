@@ -13,6 +13,21 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
     { slug: "income-tax-calculator-fy-2025-26-old-vs-new-regime", title: "Income Tax FY 2025-26: Old vs New Regime" },
     { slug: "salary-calculator-take-home-pay-india", title: "Salary Calculator: Take-Home Pay in India" },
     { slug: "how-to-calculate-take-home-salary-from-ctc-india", title: "How to Calculate Take-Home from CTC" },
+    { slug: "check-monthly-budget-salary-calculator", title: "Check Monthly Budget with Salary Calculator" },
+  ],
+  "invoice-generator": [
+    { slug: "how-to-create-invoices-online", title: "How to Create Invoices Online" },
+  ],
+  "gst-invoice-generator": [
+    { slug: "how-to-create-invoices-online", title: "How to Create Invoices Online" },
+    { slug: "create-gst-invoice-legally-compliant-india", title: "Create GST Invoice Legally Compliant" },
+  ],
+  "word-to-pdf": [
+    { slug: "how-to-convert-word-to-pdf", title: "How to Convert Word to PDF" },
+    { slug: "convert-pdf-to-word-edit-without-losing-formatting", title: "Convert PDF to Word" },
+  ],
+  "pdf-to-word": [
+    { slug: "convert-pdf-to-word-edit-without-losing-formatting", title: "Convert PDF to Word" },
   ],
   "emi-calculator": [
     { slug: "how-to-calculate-home-loan-emi", title: "How to Calculate Your Home Loan EMI" },
@@ -44,31 +59,30 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
     { slug: "image-compressor-reduce-file-size", title: "Image Compressor: Reduce File Size" },
     { slug: "compress-images-web-no-quality-loss", title: "Compress Images for Web: No Quality Loss" },
     { slug: "online-image-compressor-whatsapp-send-photos", title: "Online Image Compressor for WhatsApp" },
+    { slug: "resize-compress-images-email-attachments", title: "Resize & Compress Images for Email" },
+    { slug: "compress-images-website-cut-page-load-time", title: "Compress Images for Website" },
   ],
   "image-resizer": [
     { slug: "compress-resize-images-for-whatsapp", title: "Compress & Resize Images for WhatsApp" },
     { slug: "how-to-resize-images-without-losing-quality", title: "How to Resize Images Without Losing Quality" },
     { slug: "image-resizer-resize-images-different-platforms", title: "Image Resizer for Different Platforms" },
+    { slug: "resize-compress-images-email-attachments", title: "Resize & Compress Images for Email" },
   ],
   "pdf-compressor": [
     { slug: "how-to-compress-pdf-for-email", title: "How to Compress PDF for Email" },
     { slug: "compress-pdf-under-5mb-email-free", title: "Compress PDF Under 5MB for Email" },
     { slug: "free-pdf-compressor-no-watermark-online", title: "Free PDF Compressor No Watermark" },
+    { slug: "reduce-pdf-size-government-portal-upload", title: "Reduce PDF Size for Government Portals" },
   ],
   "pdf-merger": [
     { slug: "how-to-merge-multiple-pdfs", title: "How to Merge Multiple PDFs" },
+    { slug: "merge-pdfs-college-assignments-projects", title: "Merge PDFs for College Assignments" },
   ],
   "pdf-splitter": [
     { slug: "how-to-split-pdf-files", title: "How to Split a PDF" },
   ],
   "jpg-to-pdf": [
     { slug: "how-to-convert-jpg-to-pdf-online", title: "How to Convert JPG to PDF" },
-  ],
-  "invoice-generator": [
-    { slug: "how-to-create-invoices-online", title: "How to Create Invoices Online" },
-  ],
-  "gst-invoice-generator": [
-    { slug: "how-to-create-invoices-online", title: "How to Create Invoices Online" },
   ],
   "percentage-calculator": [
     { slug: "percentage-calculator-complete-guide", title: "Percentage Calculator: All Calculations" },
@@ -101,9 +115,6 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
   "unit-converter": [
     { slug: "unit-converter-quick-guide", title: "Unit Converter: Convert Any Unit" },
   ],
-  "word-to-pdf": [
-    { slug: "how-to-convert-word-to-pdf", title: "How to Convert Word to PDF" },
-  ],
   "markdown-preview": [
     { slug: "markdown-editor-why-developers-love", title: "Markdown Editor: Why Developers Love It" },
   ],
@@ -118,9 +129,14 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
   ],
   "sip-calculator": [
     { slug: "sip-calculator-guide-india", title: "SIP Calculator: Plan Mutual Fund Investments" },
+    { slug: "sip-vs-lump-sum-investment-strategy-2026", title: "SIP vs Lump Sum: Which Is Better?" },
   ],
   "compound-interest-calculator": [
     { slug: "compound-interest-calculator-grow-wealth", title: "Compound Interest Calculator" },
+    { slug: "simple-interest-vs-compound-interest-calculator", title: "Simple vs Compound Interest" },
+  ],
+  "simple-interest-calculator": [
+    { slug: "simple-interest-vs-compound-interest-calculator", title: "Simple vs Compound Interest" },
   ],
   "roi-calculator": [
     { slug: "roi-calculator-measure-investment-returns", title: "ROI Calculator: Measure Returns" },
