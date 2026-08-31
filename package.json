@@ -18,6 +18,11 @@
     "db:migrate:prod": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "seed:blog": "tsx scripts/seed-blog.ts",
+    "seed:blog:2": "tsx scripts/seed-blog-2.ts",
+    "seed:blog:3": "tsx scripts/seed-blog-3.ts",
+    "seed:blog:4": "tsx scripts/seed-blog-4.ts",
+    "seed:blog:5": "tsx scripts/seed-blog-5.ts",
+    "seed:blog:6": "tsx scripts/seed-blog-6.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },
