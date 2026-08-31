@@ -15,6 +15,7 @@ interface Analytics {
   subscribers: { total: number; confirmed: number };
   leads: { total: number };
   topTools: { slug: string; count: number }[];
+  totalUsage: number;
   recentActivity: Record<string, number>;
 }
 
@@ -107,6 +108,10 @@ export default function AdminAnalyticsPage() {
                     </div>
                   );
                 })}
+                <div className="pt-3 mt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-sm">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">Total Tool Uses</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{data.totalUsage}</span>
+                </div>
               </div>
             )}
           </CardContent>

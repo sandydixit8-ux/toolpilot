@@ -22,6 +22,7 @@ export async function GET() {
       totalLeads,
       recentUsages,
       topTools,
+      totalUsage,
       contactsByDay,
     ] = await Promise.all([
       prisma.tool.count(),
@@ -47,6 +48,7 @@ export async function GET() {
         orderBy: { _count: { id: "desc" } },
         take: 10,
       }),
+      prisma.toolUsage.count(),
       prisma.contactSubmission.groupBy({
         by: ["createdAt"],
         _count: { id: true },
@@ -67,6 +69,7 @@ export async function GET() {
       subscribers: { total: totalSubscribers, confirmed: confirmedSubscribers },
       leads: { total: totalLeads },
       topTools: topTools.map((t) => ({ slug: t.toolSlug, count: t._count.id })),
+      totalUsage,
       recentActivity,
       contactsByDay: contactsByDay.length,
     });
