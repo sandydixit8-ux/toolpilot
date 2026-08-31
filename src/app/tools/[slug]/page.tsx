@@ -9,6 +9,7 @@ import { RelatedTools } from "@/components/tools/related-tools";
 import { WebAppSchema, BreadcrumbListSchema } from "@/components/seo/structured-data";
 import { ToolRenderer } from "@/components/tools/tool-renderer";
 import { TrustBadges } from "@/components/tools/trust-badges";
+import { RelatedArticles } from "@/components/seo/related-articles";
 import { Card, CardContent } from "@/components/ui/card";
 import { SidebarAd, InArticleAd, BannerAd } from "@/components/ads/ad-banner";
 import { ADS } from "@/config/ads";
@@ -173,6 +174,7 @@ export default async function SlugPage({ params }: Props) {
                 badge: a.badge,
               }))}
             />
+            <RelatedArticles slug={tool.slug} />
           </div>
           <aside className="space-y-6">
             <SidebarAd slotId={ADS.toolDetail.sidebar} />
