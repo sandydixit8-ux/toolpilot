@@ -74,6 +74,7 @@ const toolComponents: Record<string, () => Promise<{ default: ComponentType }>> 
   "pdf-page-extractor": lazyNamed(() => import("@/components/tools/pdf/pdf-page-extractor"), "PdfPageExtractorTool"),
   "pdf-rotator": lazyNamed(() => import("@/components/tools/pdf/pdf-rotator"), "PdfRotatorTool"),
   "pdf-page-counter": lazyNamed(() => import("@/components/tools/pdf/pdf-page-counter"), "PdfPageCounterTool"),
+  "pdf-to-excel": lazyNamed(() => import("@/components/tools/pdf/pdf-to-excel"), "PdfToExcelTool"),
   "image-compressor": lazyNamed(() => import("@/components/tools/image/image-compressor"), "ImageCompressor"),
   "image-resizer": lazyNamed(() => import("@/components/tools/image/image-resizer"), "ImageResizer"),
   "jpg-to-png": lazyNamed(() => import("@/components/tools/image/jpg-to-png"), "JpgToPng"),

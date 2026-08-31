@@ -171,6 +171,9 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
     { slug: "compress-pdf-under-5mb-email-free", title: "Compress PDF Under 5MB for Email" },
     { slug: "reduce-pdf-size-government-portal-upload", title: "Reduce PDF Size for Government Portal Uploads" },
   ],
+  "pdf-to-excel": [
+    { slug: "convert-pdf-to-word-edit-without-losing-formatting", title: "Convert PDF to Word" },
+  ],
 };
 
 export function getRelatedArticles(toolSlug: string): RelatedArticle[] {
