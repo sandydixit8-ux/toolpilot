@@ -159,6 +159,18 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
   "image-cropper": [
     { slug: "image-optimization-for-web-guide", title: "Image Optimization for Web Guide" },
   ],
+  "gratuity-calculator": [
+    { slug: "how-to-calculate-take-home-salary-from-ctc-india", title: "How to Calculate Take-Home Salary from CTC" },
+    { slug: "salary-calculator-take-home-pay-india", title: "Salary Calculator: Take-Home Pay" },
+  ],
+  "epf-interest-calculator": [
+    { slug: "salary-calculator-take-home-pay-india", title: "Salary Calculator: Take-Home Pay" },
+    { slug: "how-to-calculate-take-home-salary-from-ctc-india", title: "How to Calculate Take-Home Salary from CTC" },
+  ],
+  "pdf-page-counter": [
+    { slug: "compress-pdf-under-5mb-email-free", title: "Compress PDF Under 5MB for Email" },
+    { slug: "reduce-pdf-size-government-portal-upload", title: "Reduce PDF Size for Government Portal Uploads" },
+  ],
 };
 
 export function getRelatedArticles(toolSlug: string): RelatedArticle[] {
