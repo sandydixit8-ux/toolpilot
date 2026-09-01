@@ -53,7 +53,6 @@ export function ImageToTextTool() {
         workerPath: WORKER_PATH,
         corePath: CORE_PATH,
         langPath: LANG_PATH,
-        workerBlobURL: false,
         logger: (m: { status: string; progress: number }) => {
           if (m.status === 'recognizing text') {
             setProgress(`Recognizing text... ${Math.round(m.progress * 100)}%`);
