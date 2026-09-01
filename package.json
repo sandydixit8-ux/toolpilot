@@ -25,6 +25,7 @@
     "seed:blog:6": "tsx scripts/seed-blog-6.ts",
     "seed:blog:7": "tsx scripts/seed-blog-7.ts",
     "seed:blog:7b": "tsx scripts/seed-blog-7b.ts",
+    "seed:blog:8": "tsx scripts/seed-blog-8.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },
