@@ -83,6 +83,7 @@ const toolComponents: Record<string, () => Promise<{ default: ComponentType }>> 
   "image-cropper": lazyNamed(() => import("@/components/tools/image/image-cropper"), "ImageCropper"),
   "image-rotator": lazyNamed(() => import("@/components/tools/image/image-rotator"), "ImageRotator"),
   "image-quality-optimizer": lazyNamed(() => import("@/components/tools/image/image-quality-optimizer"), "ImageQualityOptimizer"),
+  "image-to-text": lazyNamed(() => import("@/components/tools/image/image-to-text"), "ImageToTextTool"),
 };
 
 const lazyCache: Record<string, ComponentType> = {};
