@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 type Locale = 'en' | 'hi';
 
@@ -208,13 +209,36 @@ export function LanguageSwitcher() {
   const { locale, setLocale } = useI18n();
 
   return (
-    <button
-      onClick={() => setLocale(locale === 'en' ? 'hi' : 'en')}
-      className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+    <div
+      role="group"
+      aria-label="Language"
       title={locale === 'en' ? 'हिंदी में बदलें' : 'Switch to English'}
+      className="flex items-center rounded-lg border border-gray-200 bg-white p-0.5 text-sm font-medium dark:border-gray-700 dark:bg-gray-800"
     >
-      <span className="text-base">{locale === 'en' ? '🇮🇳' : '🌐'}</span>
-      {locale === 'en' ? 'हिंदी' : 'English'}
-    </button>
+      <button
+        onClick={() => setLocale('en')}
+        aria-pressed={locale === 'en'}
+        className={cn(
+          'rounded-md px-2.5 py-1 transition-colors',
+          locale === 'en'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+        )}
+      >
+        English
+      </button>
+      <button
+        onClick={() => setLocale('hi')}
+        aria-pressed={locale === 'hi'}
+        className={cn(
+          'rounded-md px-2.5 py-1 transition-colors',
+          locale === 'hi'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+        )}
+      >
+        हिंदी
+      </button>
+    </div>
   );
 }
