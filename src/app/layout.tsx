@@ -45,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {ADS_ENABLED && ADSENSE_PUBLISHER_ID && (
           <>
+            <meta name="google-adsense-account" content={ADSENSE_PUBLISHER_ID} />
             <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
             <link rel="preconnect" href="https://adservice.google.com" crossOrigin="anonymous" />
             <Script
