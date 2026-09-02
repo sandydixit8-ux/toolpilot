@@ -84,6 +84,8 @@ const toolComponents: Record<string, () => Promise<{ default: ComponentType }>> 
   "image-rotator": lazyNamed(() => import("@/components/tools/image/image-rotator"), "ImageRotator"),
   "image-quality-optimizer": lazyNamed(() => import("@/components/tools/image/image-quality-optimizer"), "ImageQualityOptimizer"),
   "image-to-text": lazyNamed(() => import("@/components/tools/image/image-to-text"), "ImageToTextTool"),
+  "text-translator": lazyNamed(() => import("@/components/tools/translation/text-translator"), "TextTranslatorTool"),
+  "transliteration": lazyNamed(() => import("@/components/tools/translation/transliteration"), "TransliterationTool"),
 };
 
 const lazyCache: Record<string, ComponentType> = {};

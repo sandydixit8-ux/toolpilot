@@ -8,4 +8,5 @@ export const categories: ToolCategory[] = [
   { name: "Business Tools", slug: "business", icon: "Building2", description: "Create invoices, quotations, and estimate project costs online" },
   { name: "Developer Tools", slug: "developer", icon: "Code2", description: "Format JSON, encode Base64 and URLs, and generate UUIDs" },
   { name: "AI Tools", slug: "ai", icon: "Sparkles", description: "AI tools to humanize, summarize, and rewrite text fast" },
+  { name: "Translation Tools", slug: "translation", icon: "Languages", description: "Translate text and convert Hindi between Roman and Devanagari scripts" },
 ];

@@ -1,0 +1,55 @@
+import { ToolConfig } from "@/types/tool";
+
+export const translationTools: ToolConfig[] = [
+  {
+    name: "Text Translator",
+    slug: "text-translator",
+    category: "Translation Tools",
+    categorySlug: "translation",
+    description: "Translate text between 20+ languages online for free",
+    longDescription: "Translate any text between Hindi, English, Tamil, Telugu, Bengali, and 20+ other languages instantly. Type or paste your text, pick the source and target language, and get a clean translation you can copy. Ideal for translating quick phrases, messages, documents snippets, and learning materials without switching apps. Free, works in the browser, with both Indian and international language support.",
+    instructions: [
+      "Select the source and target language",
+      "Type or paste your text",
+      "Click Translate",
+      "Copy the translated text",
+    ],
+    processingType: "server",
+    seoTitle: "Text Translator - Free Online Language Translator | ToolPilot",
+    seoDescription: "Translate text between 20+ languages online for free. Hindi to English, English to Hindi, and more. Fast and easy.",
+    keywords: ["text translator", "language translator", "hindi to english translator", "translate text", "hindi english translation"],
+    icon: "Languages",
+    faqs: [
+      { question: "How many languages are supported?", answer: "The translator supports 20+ languages including Hindi, English, Tamil, Telugu, Bengali, Gujarati, and several international languages like Spanish, French, and German." },
+      { question: "How long can the text be?", answer: "Each request supports up to 5,000 characters. For longer documents, break the text into smaller parts." },
+      { question: "Is the translation free?", answer: "Yes. The free translator covers most everyday phrases and sentences. It uses a free translation service, so very long or highly technical text may be less accurate." },
+      { question: "Can I translate Hindi to English?", answer: "Absolutely. Hindi to English and English to Hindi are among the most common pairs and are fully supported." },
+    ],
+    relatedTools: ["transliteration", "word-counter", "ai-text-summarizer"],
+  },
+  {
+    name: "Transliteration (Hindi)",
+    slug: "transliteration",
+    category: "Translation Tools",
+    categorySlug: "translation",
+    description: "Convert Roman English Hindi to Devanagari script",
+    longDescription: "Type Hindi using English (Roman) letters and convert it instantly to the Devanagari script used in Hindi. For example, type \"namaste dosto\" and get \"नमस्ते दोस्तों\". This is perfect for people who are more comfortable typing Hindi in English letters but want the proper Devanagari output for documents, messages, and social media. Everything runs in your browser — no upload, fully private.",
+    instructions: [
+      "Type Hindi using English letters (e.g. namaste)",
+      "Click Convert",
+      "Copy the Devanagari output",
+    ],
+    processingType: "browser",
+    seoTitle: "Hindi Transliteration - Convert Roman Hindi to Devanagari | ToolPilot",
+    seoDescription: "Convert Roman English Hindi to Devanagari script online for free. Type Hindi in English letters and get Devanagari output instantly.",
+    keywords: ["hindi transliteration", "roman to devanagari", "english to hindi typing", "hindi transliteration tool", "type hindi in english"],
+    icon: "Type",
+    faqs: [
+      { question: "What is transliteration?", answer: "Transliteration converts the sound of one script into another. Here we convert Hindi typed in Roman (English) letters into the Devanagari script, so \"namaste\" becomes \"नमस्ते\"." },
+      { question: "Is this different from translation?", answer: "Yes. Transliteration keeps the same Hindi words but changes the script. It does not translate meaning — it just writes the Hindi word in Devanagari." },
+      { question: "Is my text uploaded anywhere?", answer: "No. Transliteration runs fully in your browser, so your text never leaves your device." },
+      { question: "How do I type sounds like 'kh' or 'sh'?", answer: "Use two letters for aspirated sounds: kha → ख, cha → च, and sha → श. The tool handles common Hindi sound combinations." },
+    ],
+    relatedTools: ["text-translator", "word-counter", "ai-paraphraser"],
+  },
+];
