@@ -62,6 +62,7 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2 font-bold text-xl mb-4">
               <span className="text-blue-600 dark:text-blue-400">Tool</span>
               <span>Pilot</span>
+              <span className="text-blue-600 dark:text-blue-400">Pro</span>
             </Link>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Free online tools for work, money, career & everyday life.
