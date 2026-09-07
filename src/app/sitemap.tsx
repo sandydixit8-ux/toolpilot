@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { allTools } from "@/config/tools";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpilotpro.in";
@@ -23,22 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  const toolSlugs = [
-    "pdf-to-word","word-to-pdf","jpg-to-pdf","pdf-to-jpg","pdf-compressor","pdf-merger","pdf-splitter","pdf-page-extractor","pdf-rotator",
-    "image-compressor","image-resizer","jpg-to-png","png-to-jpg","webp-converter","image-cropper","image-rotator","image-quality-optimizer",
-    "gst-calculator","emi-calculator","salary-calculator","income-tax-calculator","sip-calculator","percentage-calculator","age-calculator",
-    "discount-calculator","compound-interest-calculator","simple-interest-calculator","bmi-calculator","unit-converter","time-calculator","date-calculator",
-    "resume-builder","resume-ats-checker","resume-jd-matcher","cover-letter-generator","salary-negotiation","notice-period-calculator",
-    "experience-calculator","interview-question-generator","job-description-analyzer",
-    "invoice-generator","quotation-generator","gst-invoice-generator","profit-margin-calculator","markup-calculator",
-    "break-even-calculator","project-cost-calculator","construction-cost-calculator","boq-calculator","roi-calculator",
-    "json-formatter","json-validator","json-minifier","base64-encoder","base64-decoder","url-encoder","url-decoder",
-    "uuid-generator","timestamp-converter","regex-tester","word-counter","lorem-ipsum-generator",
-    "ai-text-humanizer","ai-text-summarizer","ai-paraphraser","ai-cover-letter-generator","ai-resume-summary-generator","ai-email-generator",
-  ];
-
-  const toolPages = toolSlugs.map((slug) => ({
-    url: `${baseUrl}/tools/${slug}`,
+  const toolPages = allTools.map((tool) => ({
+    url: `${baseUrl}/tools/${tool.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.7,
