@@ -22,6 +22,32 @@ function renderInline(text: string): string {
   return result;
 }
 
+function isTableSeparator(cells: string[]): boolean {
+  return cells.length > 0 && cells.every((c) => /^:?-{2,}:?$/.test(c.trim()));
+}
+
+function renderTable(paragraph: string): string {
+  const rows = paragraph
+    .split("\n")
+    .filter((l) => l.trim().startsWith("|"))
+    .map((line) =>
+      line
+        .trim()
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split("|")
+        .map((cell) => renderInline(cell.trim()))
+    )
+    .filter((row) => !isTableSeparator(row));
+
+  if (rows.length < 2) return "";
+
+  const [header, ...body] = rows;
+  const thead = `<thead><tr>${header.map((h) => `<th>${h}</th>`).join("")}</tr></thead>`;
+  const tbody = `<tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  return `<table>${thead}${tbody}</table>`;
+}
+
 export function renderBlogContent(content: string): string {
   const paragraphs = content.split("\n\n");
   const htmlParts: string[] = [];
@@ -45,6 +71,8 @@ export function renderBlogContent(content: string): string {
       htmlParts.push(`<ol>${lis}</ol>`);
     } else if (paragraph.startsWith("> ")) {
       htmlParts.push(`<blockquote>${renderInline(paragraph.replace(/^> /gm, ""))}</blockquote>`);
+    } else if (paragraph.trim().startsWith("|") && paragraph.split("\n").filter((l) => l.trim().startsWith("|")).length >= 2) {
+      htmlParts.push(renderTable(paragraph));
     } else {
       htmlParts.push(`<p>${renderInline(paragraph).replace(/\n/g, "<br/>")}</p>`);
     }
