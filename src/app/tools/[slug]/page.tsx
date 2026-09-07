@@ -21,6 +21,8 @@ import { CheckCircle, Lock, ArrowRight } from "lucide-react";
 
 type Props = { params: Promise<{ slug: string }> };
 
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   const categoryParams = categories.map((c) => ({ slug: c.slug }));
   const toolParams = allTools.map((t) => ({ slug: t.slug }));
