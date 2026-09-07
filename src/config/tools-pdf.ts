@@ -86,7 +86,7 @@ export const pdfTools: ToolConfig[] = [
       { question: "Where would I use JPG to PDF?", answer: "Common uses include submitting scanned documents and resumes, creating photo albums, and emailing receipts as one file." },
       { question: "Can I change the orientation?", answer: "Yes, you can set pages to portrait or landscape before converting." },
     ],
-    relatedTools: ["pdf-to-jpg", "png-to-pdf", "image-compressor"],
+    relatedTools: ["pdf-to-jpg", "png-to-jpg", "image-compressor"],
   },
   {
     name: "PDF to JPG",
