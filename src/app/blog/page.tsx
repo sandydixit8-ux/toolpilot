@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { BannerAd } from "@/components/ads/ad-banner";
 import { ADS } from "@/config/ads";
+import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
+import { getGeneralAffiliates } from "@/lib/affiliates";
 import { SITE_URL } from "@/lib/constants";
 
 export const revalidate = 3600;
@@ -65,6 +67,17 @@ export default async function BlogPage() {
         </div>
 
         <BannerAd slotId={ADS.blogList} className="mb-8" />
+        <AffiliatePromo
+          title="Tools to level up your work"
+          items={getGeneralAffiliates().map((a) => ({
+            name: a.name,
+            description: a.description,
+            url: a.url,
+            ctaText: a.ctaText,
+            rating: a.rating,
+            badge: a.badge,
+          }))}
+        />
 
         {categories.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-8">

@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getFeaturedTools, getPopularTools, allTools } from "@/config/tools";
 import { CATEGORIES, SITE_NAME, SITE_URL } from "@/lib/constants";
 import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
+import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
+import { getGeneralAffiliates } from "@/lib/affiliates";
 import { ADS } from "@/config/ads";
 import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2 } from "lucide-react";
 
@@ -225,6 +227,20 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <AffiliatePromo
+          title="Free tools we use every day"
+          items={getGeneralAffiliates().map((a) => ({
+            name: a.name,
+            description: a.description,
+            url: a.url,
+            ctaText: a.ctaText,
+            rating: a.rating,
+            badge: a.badge,
+          }))}
+        />
+      </div>
 
       <BannerAd slotId={ADS.home.bottomBanner} />
 
