@@ -88,6 +88,17 @@ export default async function SlugPage({ params }: Props) {
           ))}
         </div>
         <InArticleAd slotId={ADS.toolCategory.inArticle} />
+        <AffiliatePromo
+          title="Recommended for this category"
+          items={getAffiliatesForCategory(slug).map((a) => ({
+            name: a.name,
+            description: a.description,
+            url: a.url,
+            ctaText: a.ctaText,
+            rating: a.rating,
+            badge: a.badge,
+          }))}
+        />
       </div>
     );
   }

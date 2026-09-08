@@ -7,6 +7,8 @@ import { renderBlogContent } from "@/lib/blog-renderer";
 import { InArticleAd } from "@/components/ads/ad-banner";
 import { ADS } from "@/config/ads";
 import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
+import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
+import { getGeneralAffiliates } from "@/lib/affiliates";
 import { getSiteUrl } from "@/lib/utils";
 import { BreadcrumbListSchema } from "@/components/seo/structured-data";
 
@@ -96,6 +98,17 @@ export default async function BlogPostPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
       <InArticleAd slotId={ADS.blogPost.afterContent} />
+      <AffiliatePromo
+        title="Tools We Recommend"
+        items={getGeneralAffiliates().map((a) => ({
+          name: a.name,
+          description: a.description,
+          url: a.url,
+          ctaText: a.ctaText,
+          rating: a.rating,
+          badge: a.badge,
+        }))}
+      />
       <InArticleAd slotId={ADS.blogPost.beforeCta} />
       <NewsletterCTA />
       <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-800">
