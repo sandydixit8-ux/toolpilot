@@ -104,9 +104,9 @@ export const calculatorTools: ToolConfig[] = [
       "Compare both regimes to pick the cheaper option",
     ],
     processingType: "browser",
-    seoTitle: "Income Tax Calculator India – Free Online Tax Calculator | ToolPilot",
-    seoDescription: "Calculate income tax online for free. Compare old and new tax regime. All deductions supported. FY 2025-26.",
-    keywords: ["income tax calculator", "tax calculator india", "old vs new tax regime", "section 80c"],
+    seoTitle: "Income Tax Calculator India – Compare New vs Old Regime (FY 2025-26) | ToolPilot",
+    seoDescription: "Calculate income tax online for free. Compare new vs old regime with 80C, 80D, HRA deductions and preview your tax for FY 2025-26.",
+    keywords: ["income tax calculator", "tax calculator india", "old vs new tax regime", "income tax calculator india fy 2025-26", "new regime rebate 12 lakh", "section 80c", "new vs old regime calculator"],
     icon: "Calculator",
     popular: true,
     faqs: [
