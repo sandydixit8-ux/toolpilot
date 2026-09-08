@@ -72,6 +72,8 @@ export async function GET() {
       totalUsage,
       recentActivity,
       contactsByDay: contactsByDay.length,
+    }, {
+      headers: { "Cache-Control": "no-store, max-age=0" },
     });
   } catch (error) {
     console.error("[Admin Analytics]", error);
