@@ -62,6 +62,30 @@ function isBot(request: Request): boolean {
   return secChUa.includes("HeadlessChrome");
 }
 
+function getClientIp(request: Request): string {
+  const fwd = request.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  const real = request.headers.get("x-real-ip");
+  if (real) return real.trim();
+  return "unknown";
+}
+
+const burstTracker = new Map<string, { start: number; count: number }>();
+const BURST_WINDOW_MS = 60_000;
+const BURST_MAX = 12;
+
+function isBurst(ip: string): boolean {
+  const now = Date.now();
+  const track = burstTracker.get(ip);
+  if (!track || now - track.start > BURST_WINDOW_MS) {
+    burstTracker.set(ip, { start: now, count: 1 });
+    return false;
+  }
+  track.count += 1;
+  if (burstTracker.size > 50_000) burstTracker.clear();
+  return track.count > BURST_MAX;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -80,10 +104,17 @@ export async function POST(request: Request) {
 
     const { event, page, metadata } = result.data;
 
+    const ua = request.headers.get("user-agent") || "unknown";
+    const ip = getClientIp(request);
+
+    if (isBurst(ip)) {
+      return NextResponse.json({ success: true, data: { recorded: false } });
+    }
+
     await prisma.toolUsage.create({
       data: {
         toolSlug: page,
-        metadata: JSON.stringify({ event, ...metadata }),
+        metadata: JSON.stringify({ event, ...metadata, ua, ip }),
       },
     });
 
