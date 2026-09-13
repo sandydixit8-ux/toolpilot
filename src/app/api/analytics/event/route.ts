@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { analyticsEventSchema } from "@/lib/validations";
 
@@ -112,12 +113,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, data: { recorded: false } });
     }
 
-    await prisma.toolUsage.create({
-      data: {
-        toolSlug: page,
-        metadata: JSON.stringify({ event, ...metadata, ua, ip }),
-      },
-    });
+    try {
+      await prisma.toolUsage.create({
+        data: {
+          toolSlug: page,
+          metadata: JSON.stringify({ event, ...metadata, ua, ip }),
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+        return NextResponse.json({ success: true, data: { recorded: false } });
+      }
+      throw error;
+    }
 
     return NextResponse.json({ success: true, data: { recorded: true } });
   } catch (error) {
