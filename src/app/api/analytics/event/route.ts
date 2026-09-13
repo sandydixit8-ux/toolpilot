@@ -19,6 +19,7 @@ const BOT_PATTERNS = [
   /baiduspider/i,
   /duckduckbot/i,
   /facebookexternalhit/i,
+  /meta-externalagent/i,
   /linkedinbot/i,
   /twitterbot/i,
   /whatsapp/i,
