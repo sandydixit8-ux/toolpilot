@@ -8,12 +8,12 @@ import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { getGeneralAffiliates } from "@/lib/affiliates";
 import { ADS } from "@/config/ads";
-import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2 } from "lucide-react";
+import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2, Languages } from "lucide-react";
 
 export const metadata: Metadata = {
   alternates: { canonical: SITE_URL },
   title: `${SITE_NAME} – Free Online Tools for Work, Money, Career & Everyday Life`,
-  description: "60+ free online tools — PDF converters and compressors, image resizers, income tax and EMI calculators, resume and ATS checkers, and more. Free, no signup, no install.",
+  description: "88+ free online tools — PDF converters and compressors, image resizers, income tax and EMI calculators, resume and ATS checkers, and more. Free, no signup, no install.",
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -24,6 +24,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
   business: <Building2 className="h-6 w-6" />,
   developer: <Code2 className="h-6 w-6" />,
   ai: <Sparkles className="h-6 w-6" />,
+  translation: <Languages className="h-6 w-6" />,
 };
 
 export default function HomePage() {

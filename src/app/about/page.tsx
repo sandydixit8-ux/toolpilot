@@ -29,8 +29,8 @@ export default function AboutPage() {
         — without creating an account or entering credit card details.
       </p>
       <p>
-        So we built it. ToolPilot launched with a handful of tools and has grown to over 68 free
-        online tools across 7 categories. Every tool runs directly in your browser whenever possible,
+        So we built it. ToolPilot launched with a handful of tools and has grown to over 88 free
+        online tools across 8 categories. Every tool runs directly in your browser whenever possible,
         meaning your files never leave your device.
       </p>
 
@@ -45,7 +45,7 @@ export default function AboutPage() {
 
       <h2>Our Tools</h2>
       <p>
-        We offer 68+ tools across 7 categories:
+        We offer 88+ tools across 8 categories:
       </p>
       <ul>
         <li><strong>PDF Tools</strong> — Merge, split, compress, convert, and edit PDFs</li>
@@ -55,6 +55,7 @@ export default function AboutPage() {
         <li><strong>Business Tools</strong> — Invoice generator, GST calculator, business name ideas</li>
         <li><strong>Developer Tools</strong> — JSON formatter, Base64 encoder, HTML preview, API tester</li>
         <li><strong>AI Tools</strong> — AI-powered productivity tools for writing, analysis, and more</li>
+        <li><strong>Translation Tools</strong> — Text translator and Hindi Roman-to-Devanagari converter</li>
       </ul>
 
       <h2>Who Uses ToolPilot?</h2>

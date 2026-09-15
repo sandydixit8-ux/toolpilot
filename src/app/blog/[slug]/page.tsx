@@ -10,7 +10,6 @@ import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { getGeneralAffiliates } from "@/lib/affiliates";
 import { getSiteUrl } from "@/lib/utils";
-import { BreadcrumbListSchema } from "@/components/seo/structured-data";
 
 export const dynamic = "force-dynamic";
 
@@ -59,12 +58,7 @@ export default async function BlogPostPage({ params }: Props) {
           }).replace(/</g, "\\u003c").replace(/>/g, "\\u003e"),
         }}
       />
-      <BreadcrumbListSchema items={[
-        { name: "Home", url: getSiteUrl() },
-        { name: "Blog", url: `${getSiteUrl()}/blog` },
-        { name: post.title, url: `${getSiteUrl()}/blog/${post.slug}` },
-      ]} />
-    <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+      <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <Breadcrumbs items={[
         { label: "Blog", href: "/blog" },
         { label: post.title },

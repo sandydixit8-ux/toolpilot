@@ -15,6 +15,7 @@ export const CATEGORIES = [
   { name: "Business Tools", slug: "business", icon: "Building2", description: "Invoice, quotation, and business calculators" },
   { name: "Developer Tools", slug: "developer", icon: "Code2", description: "JSON, Base64, URL encoding, and more" },
   { name: "AI Tools", slug: "ai", icon: "Sparkles", description: "AI-powered text humanizer, summarizer, and more" },
+  { name: "Translation Tools", slug: "translation", icon: "Languages", description: "Translate text and convert Hindi between Roman and Devanagari scripts" },
 ] as const;
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
