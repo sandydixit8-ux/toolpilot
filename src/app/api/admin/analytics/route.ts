@@ -44,6 +44,7 @@ export async function GET() {
       monthRows,
       topTools,
       totalUsage,
+      countries,
     ] = await Promise.all([
       prisma.tool.count(),
       prisma.tool.count({ where: { status: "PUBLISHED" } }),
@@ -77,6 +78,14 @@ export async function GET() {
         orderBy: { _count: { id: "desc" } },
       }),
       prisma.toolUsage.count(),
+      prisma.$queryRaw<{ country: string; count: bigint }[]>`
+        SELECT metadata::jsonb->>'country' AS country, COUNT(*)::bigint AS count
+        FROM "ToolUsage"
+        WHERE metadata IS NOT NULL AND metadata LIKE '{%'
+        AND metadata::jsonb->>'country' IS NOT NULL
+        AND metadata::jsonb->>'country' <> 'UNKNOWN'
+        GROUP BY 1 ORDER BY 2 DESC LIMIT 10
+      `,
     ]);
 
     const dayBuckets = new Map<string, number>();
@@ -135,6 +144,7 @@ export async function GET() {
         topTools: toolsWithCounts,
         events: eventList,
         recentActivity,
+        countries: countries.map((c) => ({ country: c.country, count: Number(c.count) })),
       },
       {
         headers: { "Cache-Control": "no-store, max-age=0" },

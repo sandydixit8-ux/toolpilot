@@ -266,10 +266,15 @@ model ContactSubmission {
 }
 
 model NewsletterSubscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  confirmed Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  email       String    @unique
+  confirmed   Boolean   @default(false)
+  token       String?
+  tokenSentAt DateTime?
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([token])
 }
 
 model FileProcessingJob {

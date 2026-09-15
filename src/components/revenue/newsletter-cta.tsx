@@ -48,12 +48,12 @@ export function NewsletterCTA({ className }: { className?: string }) {
         <h3 className="font-semibold text-gray-900 dark:text-gray-100">Get tool tips & updates</h3>
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        Join 2,000+ users getting weekly tips on free tools, shortcuts & productivity hacks.
+        Get weekly tips on free tools, shortcuts &amp; productivity hacks. Confirm your email to subscribe — it only takes a second.
       </p>
       {status === "success" ? (
         <div role="status" className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
           <CheckCircle className="h-4 w-4" />
-          You&apos;re subscribed! Check your inbox.
+          Check your inbox to confirm your subscription.
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex gap-2">

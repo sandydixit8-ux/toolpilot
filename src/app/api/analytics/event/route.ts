@@ -108,6 +108,11 @@ export async function POST(request: Request) {
 
     const ua = request.headers.get("user-agent") || "unknown";
     const ip = getClientIp(request);
+    const country = (
+      request.headers.get("x-vercel-country") ||
+      request.headers.get("cf-ipcountry") ||
+      "unknown"
+    ).toUpperCase();
 
     if (isBurst(ip)) {
       return NextResponse.json({ success: true, data: { recorded: false } });
@@ -117,7 +122,7 @@ export async function POST(request: Request) {
       await prisma.toolUsage.create({
         data: {
           toolSlug: page,
-          metadata: JSON.stringify({ event, ...metadata, ua, ip }),
+          metadata: JSON.stringify({ event, ...metadata, ua, ip, country }),
         },
       });
     } catch (error) {

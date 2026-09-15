@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Wrench, FileText, Mail, Users, TrendingUp,
   BarChart3, ArrowLeft, RefreshCw, Activity,
-  CalendarDays, MousePointerClick,
+  CalendarDays, MousePointerClick, Globe,
 } from "lucide-react";
 
 interface ToolStat {
@@ -27,6 +27,11 @@ interface DailyCount {
   count: number;
 }
 
+interface CountryCount {
+  country: string;
+  count: number;
+}
+
 interface Analytics {
   tools: { total: number; published: number; draft: number };
   blog: { total: number; published: number };
@@ -38,6 +43,7 @@ interface Analytics {
   topTools: ToolStat[];
   events: RecentEvent[];
   recentActivity: Record<string, number>;
+  countries: CountryCount[];
 }
 
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -352,6 +358,39 @@ export default function AdminAnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Globe className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Top Countries</h2>
+            <span className="ml-auto text-xs text-gray-400">all-time</span>
+          </div>
+          {(data.countries || []).length === 0 ? (
+            <p className="text-sm text-gray-400">No country data yet — records start as new visits come in.</p>
+          ) : (
+            <div className="space-y-3">
+              {(data.countries || []).map((c) => {
+                const maxC = Math.max(1, ...(data.countries || []).map((x) => x.count));
+                const pct = Math.round((c.count / maxC) * 100);
+                return (
+                  <div key={c.country}>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {c.country === "UNKNOWN" ? "Unknown" : c.country}
+                      </span>
+                      <span className="text-gray-500 dark:text-gray-400">{c.count}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                      <div className="h-full rounded-full bg-sky-500 transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="p-6">
