@@ -110,6 +110,7 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const country = (
       request.headers.get("x-vercel-country") ||
+      request.headers.get("x-vercel-ip-country") ||
       request.headers.get("cf-ipcountry") ||
       "unknown"
     ).toUpperCase();
