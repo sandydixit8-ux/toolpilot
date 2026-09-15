@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFeaturedTools, getPopularTools, allTools } from "@/config/tools";
 import { CATEGORIES, SITE_NAME, SITE_URL } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { getGeneralAffiliates } from "@/lib/affiliates";
@@ -27,9 +28,23 @@ const categoryIcons: Record<string, React.ReactNode> = {
   translation: <Languages className="h-6 w-6" />,
 };
 
-export default function HomePage() {
+export const revalidate = 900;
+
+export default async function HomePage() {
   const featured = getFeaturedTools();
   const popular = getPopularTools();
+
+  let latestPosts: { slug: string; title: string; excerpt: string | null; category: { name: string } | null }[] = [];
+  try {
+    latestPosts = await prisma.blogPost.findMany({
+      where: { status: "PUBLISHED", publishedAt: { not: null } },
+      orderBy: { publishedAt: "desc" },
+      take: 4,
+      select: { slug: true, title: true, excerpt: true, category: { select: { name: true } } },
+    });
+  } catch {
+    latestPosts = [];
+  }
 
   const faqs = [
     { q: "Are all tools really free?", a: "Yes, all our tools are completely free to use. No hidden charges or premium plans required." },
@@ -227,6 +242,39 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Latest from the Blog</h2>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">Guides and tips for getting more done with free tools</p>
+          </div>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/blog">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
+          </Button>
+        </div>
+        {latestPosts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {latestPosts.map((post) => (
+              <Link key={post.slug} href={`/blog/${post.slug}`}>
+                <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="p-5">
+                    {post.category?.name && (
+                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">{post.category.name}</p>
+                    )}
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{post.title}</h3>
+                    {post.excerpt && (
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{post.excerpt}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 dark:text-gray-400">New guides are on the way.</p>
+        )}
       </section>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

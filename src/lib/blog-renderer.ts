@@ -48,15 +48,38 @@ function renderTable(paragraph: string): string {
   return `<table>${thead}${tbody}</table>`;
 }
 
+function slugifyText(text: string): string {
+  const clean = text.replace(/\*\*/g, "").replace(/`/g, "");
+  return clean
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+export function getBlogToc(content: string): { id: string; text: string; level: 2 | 3 }[] {
+  const toc: { id: string; text: string; level: 2 | 3 }[] = [];
+  for (const paragraph of content.split("\n\n")) {
+    if (paragraph.startsWith("## ")) {
+      const text = paragraph.replace("## ", "").trim().replace(/\*\*/g, "").replace(/`/g, "");
+      toc.push({ id: slugifyText(text), text, level: 2 });
+    } else if (paragraph.startsWith("### ")) {
+      const text = paragraph.replace("### ", "").trim().replace(/\*\*/g, "").replace(/`/g, "");
+      toc.push({ id: slugifyText(text), text, level: 3 });
+    }
+  }
+  return toc;
+}
+
 export function renderBlogContent(content: string): string {
   const paragraphs = content.split("\n\n");
   const htmlParts: string[] = [];
 
   for (const paragraph of paragraphs) {
     if (paragraph.startsWith("## ")) {
-      htmlParts.push(`<h2>${renderInline(paragraph.replace("## ", ""))}</h2>`);
+      htmlParts.push(`<h2 id="${slugifyText(paragraph.replace("## ", "").trim())}" class="scroll-mt-24">${renderInline(paragraph.replace("## ", ""))}</h2>`);
     } else if (paragraph.startsWith("### ")) {
-      htmlParts.push(`<h3>${renderInline(paragraph.replace("### ", ""))}</h3>`);
+      htmlParts.push(`<h3 id="${slugifyText(paragraph.replace("### ", "").trim())}" class="scroll-mt-24">${renderInline(paragraph.replace("### ", ""))}</h3>`);
     } else if (paragraph.startsWith("- ")) {
       const items = paragraph.split("\n").filter((l) => l.startsWith("- "));
       const lis = items
