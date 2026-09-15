@@ -97,3 +97,25 @@ export function BreadcrumbListSchema({ items }: { items: { name: string; url: st
     />
   );
 }
+
+export function ItemListSchema({ items }: { items: { name: string; url: string }[] }) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      url: item.url,
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e"),
+      }}
+    />
+  );
+}

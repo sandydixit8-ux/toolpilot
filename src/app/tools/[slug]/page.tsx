@@ -6,7 +6,7 @@ import { categories } from "@/config/categories";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { FAQSection } from "@/components/tools/faq-section";
 import { RelatedTools } from "@/components/tools/related-tools";
-import { WebAppSchema } from "@/components/seo/structured-data";
+import { WebAppSchema, ItemListSchema } from "@/components/seo/structured-data";
 import { ToolRenderer } from "@/components/tools/tool-renderer";
 import { TrustBadges } from "@/components/tools/trust-badges";
 import { RelatedArticles } from "@/components/seo/related-articles";
@@ -16,8 +16,10 @@ import { ADS } from "@/config/ads";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
 import { getAffiliatesForCategory } from "@/lib/affiliates";
+import { CATEGORY_SEO } from "@/config/category-seo";
+import { getProsCons } from "@/config/pros-cons";
 import { getSiteUrl } from "@/lib/utils";
-import { CheckCircle, Lock, ArrowRight } from "lucide-react";
+import { CheckCircle, Lock, ArrowRight, XCircle } from "lucide-react";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -58,9 +60,11 @@ export default async function SlugPage({ params }: Props) {
   const cat = categories.find((c) => c.slug === slug);
   if (cat) {
     const tools = getToolsByCategory(slug);
+    const seo = CATEGORY_SEO[slug];
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: cat.name }]} />
+        <ItemListSchema items={tools.map((t) => ({ name: t.name, url: `${getSiteUrl()}/tools/${t.slug}` }))} />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{cat.name}</h1>
         <p className="text-gray-500 dark:text-gray-400 mb-8">{cat.description}</p>
         <BannerAd slotId={ADS.toolCategory.banner} />
@@ -88,6 +92,19 @@ export default async function SlugPage({ params }: Props) {
           ))}
         </div>
         <InArticleAd slotId={ADS.toolCategory.inArticle} />
+        {seo && (
+          <>
+            <section className="mt-10">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{seo.introTitle}</h2>
+              {seo.intro.map((p, i) => (
+                <p key={i} className="text-gray-600 dark:text-gray-400 leading-relaxed mb-3">{p}</p>
+              ))}
+            </section>
+            <section className="mt-10">
+              <FAQSection faqs={seo.faqs} title={`${cat.name} — Frequently Asked Questions`} />
+            </section>
+          </>
+        )}
         <AffiliatePromo
           title="Recommended for this category"
           items={getAffiliatesForCategory(slug).map((a) => ({
@@ -107,6 +124,7 @@ export default async function SlugPage({ params }: Props) {
   if (!tool) notFound();
 
   const toolCat = categories.find((c) => c.slug === tool.categorySlug);
+  const prosCons = getProsCons(tool.slug);
 
   return (
     <>
@@ -140,6 +158,33 @@ export default async function SlugPage({ params }: Props) {
                 ))}
               </ol>
             </section>
+            {prosCons && (
+              <section>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Pros &amp; Cons</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Pros</h3>
+                    <ul className="space-y-2">
+                      {prosCons.pros.map((p, i) => (
+                        <li key={i} className="flex items-start gap-2 text-gray-600 dark:text-gray-400">
+                          <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" /> {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Cons</h3>
+                    <ul className="space-y-2">
+                      {prosCons.cons.map((c, i) => (
+                        <li key={i} className="flex items-start gap-2 text-gray-600 dark:text-gray-400">
+                          <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" /> {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </section>
+            )}
             <InArticleAd slotId={ADS.toolDetail.inArticle} />
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Features</h2>

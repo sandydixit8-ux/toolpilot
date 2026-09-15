@@ -10,6 +10,8 @@ import { NewsletterCTA } from "@/components/revenue/newsletter-cta";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { getGeneralAffiliates } from "@/lib/affiliates";
 import { getSiteUrl } from "@/lib/utils";
+import { FAQSection } from "@/components/tools/faq-section";
+import { ArticleRelatedTools } from "@/components/seo/article-related-tools";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +34,7 @@ export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = await prisma.blogPost.findUnique({
     where: { slug },
-    include: { category: true },
+    include: { category: true, faqs: { orderBy: { order: "asc" } } },
   });
 
   if (!post || post.status !== "PUBLISHED") notFound();
@@ -82,6 +84,15 @@ export default async function BlogPostPage({ params }: Props) {
         className="prose dark:prose-invert mt-8 max-w-none"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
+      <ArticleRelatedTools title={post.title} />
+      {post.faqs.length > 0 && (
+        <div className="mt-10">
+          <FAQSection
+            faqs={post.faqs.map((f) => ({ question: f.question, answer: f.answer }))}
+            title="Frequently Asked Questions"
+          />
+        </div>
+      )}
       <InArticleAd slotId={ADS.blogPost.afterContent} />
       <AffiliatePromo
         title="Tools We Recommend"

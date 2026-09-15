@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Star, TrendingUp } from "lucide-react";
+import { ExternalLink, TrendingUp } from "lucide-react";
 
 interface AffiliateItem {
   name: string;
@@ -42,13 +42,6 @@ export function AffiliatePromo({ title = "Recommended Tools", items, className }
                       </span>
                     )}
                   </div>
-                  {item.rating && (
-                    <div className="flex items-center gap-0.5 mt-0.5">
-                      {Array.from({ length: 5 }).map((_, j) => (
-                        <Star key={j} className={`h-3 w-3 ${j < item.rating! ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
-                      ))}
-                    </div>
-                  )}
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{item.description}</p>
                 </div>
                 <Button size="sm" variant="outline" className="shrink-0 text-xs" asChild>
