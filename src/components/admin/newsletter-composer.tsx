@@ -35,7 +35,7 @@ export function NewsletterComposer({
     setMessage(null);
     try {
       const body: Record<string, string> = { subject: subject.trim(), content: content.trim() };
-      if (mode === "test") body.testEmail = testEmail.trim() || (initial as { adminEmail?: string } & typeof initial).adminEmail || "";
+      if (mode === "test") body.testEmail = testEmail.trim();
       const res = await fetch("/api/admin/newsletter/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

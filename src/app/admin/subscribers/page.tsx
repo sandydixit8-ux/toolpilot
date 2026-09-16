@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdminPage } from "@/lib/admin-page-auth";
 
@@ -9,15 +10,27 @@ export const metadata: Metadata = {
 
 export default async function AdminSubscribersPage() {
   await requireAdminPage();
-  const subscribers = await prisma.newsletterSubscriber.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  const [subscribers, confirmed] = await Promise.all([
+    prisma.newsletterSubscriber.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+    prisma.newsletterSubscriber.count({ where: { confirmed: true } }),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Newsletter Subscribers</h1>
-      <p className="text-gray-500 dark:text-gray-400 mb-8">{subscribers.length} total subscribers</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Newsletter Subscribers</h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            {subscribers.length} total · {confirmed} confirmed
+          </p>
+        </div>
+        <Link
+          href="/admin/newsletter"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Compose &amp; send newsletter
+        </Link>
+      </div>
 
       {subscribers.length === 0 ? (
         <p className="text-gray-400 dark:text-gray-500">No subscribers yet.</p>
