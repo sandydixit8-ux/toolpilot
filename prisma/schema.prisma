@@ -277,6 +277,15 @@ model NewsletterSubscriber {
   @@index([token])
 }
 
+model NewsletterCampaign {
+  id          String   @id @default(cuid())
+  subject     String
+  content     String
+  sentCount   Int      @default(0)
+  failedCount Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
 model FileProcessingJob {
   id          String    @id @default(cuid())
   status      String    @default("PENDING")

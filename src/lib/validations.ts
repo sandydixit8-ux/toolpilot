@@ -25,6 +25,12 @@ export const newsletterSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 });
 
+export const newsletterCampaignSchema = z.object({
+  subject: z.string().min(1, "Subject is required").max(200),
+  content: z.string().min(1, "Content is required").max(20000),
+  testEmail: z.string().email().optional().or(z.literal("")),
+});
+
 export const adminToolSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
