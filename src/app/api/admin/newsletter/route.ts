@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
+import { isConfigured } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export async function GET() {
     ]);
 
     return NextResponse.json({
+      emailConfigured: isConfigured(),
       subscribers: { total, confirmed, pending: total - confirmed },
       campaigns: campaigns.map((c) => ({
         id: c.id,

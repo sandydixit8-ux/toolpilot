@@ -28,11 +28,12 @@ interface SendEmailOptions {
   html: string;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boolean> {
+export async function sendEmailDetailed({ to, subject, html }: SendEmailOptions): Promise<{ ok: boolean; error?: string }> {
   const transport = getTransport();
   if (!transport || !isConfigured()) {
+    const reason = "SMTP is not configured. Add SMTP_HOST, SMTP_USER and SMTP_PASS as Vercel env vars.";
     console.log(`[EMAIL SKIPPED - no SMTP config] To: ${to} | Subject: ${subject}`);
-    return false;
+    return { ok: false, error: reason };
   }
 
   try {
@@ -42,11 +43,16 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions): Promis
       subject,
       html,
     });
-    return true;
+    return { ok: true };
   } catch (error) {
-    console.error("[EMAIL ERROR]", error);
-    return false;
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[EMAIL ERROR]", message);
+    return { ok: false, error: message };
   }
+}
+
+export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
+  return (await sendEmailDetailed(options)).ok;
 }
 
 export function passwordResetEmail(resetUrl: string): { subject: string; html: string } {
