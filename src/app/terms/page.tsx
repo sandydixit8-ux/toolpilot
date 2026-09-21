@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | ToolPilot",
+  title: "Terms of Service",
   description: "ToolPilot's terms of service. Read the rules and guidelines for using our free online tools and services.",
   alternates: { canonical: "/terms" },
 };

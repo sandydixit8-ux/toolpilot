@@ -11,11 +11,11 @@ import { SITE_URL } from "@/lib/constants";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Blog – Free Tool Guides, Tutorials & Tips | ToolPilot",
+  title: "Blog – Free Tool Guides, Tutorials & Tips",
   description: "Free guides on income tax calculators, PDF compression, resume ATS scoring, salary calculation, and more. Practical tutorials for every ToolPilot tool.",
   alternates: { canonical: `${SITE_URL}/blog` },
   openGraph: {
-    title: "Blog – Free Tool Guides, Tutorials & Tips | ToolPilot",
+    title: "Blog – Free Tool Guides, Tutorials & Tips",
     description: "Free guides on income tax, PDF tools, resume building, and more.",
     url: `${SITE_URL}/blog`,
     siteName: "ToolPilot",

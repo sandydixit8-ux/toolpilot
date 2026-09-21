@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Editorial & Review Policy | ToolPilot",
+  title: "Editorial & Review Policy",
   description: "How ToolPilot creates, reviews, and updates its free online tools and blog content. Our standards for accuracy, privacy, and ongoing maintenance.",
   alternates: { canonical: "/editorial-policy" },
 };

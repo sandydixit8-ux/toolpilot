@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!tool) return {};
   const url = `${getSiteUrl()}/tools/${tool.slug}`;
   return {
-    title: tool.seoTitle || tool.name,
+    title: (tool.seoTitle || tool.name).replace(/ \| ToolPilot$/, ""),
     description: tool.seoDescription,
     keywords: tool.keywords,
     alternates: { canonical: url },

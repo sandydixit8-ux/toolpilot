@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy | ToolPilot",
+  title: "Cookie Policy",
   description: "Learn about how ToolPilot uses cookies to improve your browsing experience and provide essential functionality.",
   alternates: { canonical: "/cookie-policy" },
 };

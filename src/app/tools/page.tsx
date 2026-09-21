@@ -11,7 +11,7 @@ import { SITE_URL } from "@/lib/constants";
 import { FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2, Sparkles, Languages, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "All Tools – Free Online Tools | ToolPilot",
+  title: "All Tools – Free Online Tools",
   description: "Browse all free online tools for work, money, career, and everyday life. PDF tools, image tools, calculators, and more.",
   alternates: { canonical: `${SITE_URL}/tools` },
 };

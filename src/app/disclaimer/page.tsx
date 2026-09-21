@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Disclaimer | ToolPilot",
+  title: "Disclaimer",
   description: "Important disclaimers about ToolPilot's calculators, AI tools, and other online tools. Results are estimates — consult professionals for decisions.",
   alternates: { canonical: "/disclaimer" },
 };
