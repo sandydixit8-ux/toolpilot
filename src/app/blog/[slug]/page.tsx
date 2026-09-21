@@ -15,7 +15,19 @@ import { getSiteUrl } from "@/lib/utils";
 import { FAQSection } from "@/components/tools/faq-section";
 import { ArticleRelatedTools } from "@/components/seo/article-related-tools";
 
-export const dynamic = "force-dynamic";
+export const dynamicParams = false;
+
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: { status: "PUBLISHED" },
+      select: { slug: true },
+    });
+    return posts.map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
 
 type Props = { params: Promise<{ slug: string }> };
 
