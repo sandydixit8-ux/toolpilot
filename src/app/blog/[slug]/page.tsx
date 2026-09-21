@@ -22,7 +22,7 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await prisma.blogPost.findUnique({ where: { slug } });
-  if (!post || post.status !== "PUBLISHED") return {};
+  if (!post || post.status !== "PUBLISHED") notFound();
   return {
     title: post.seoTitle,
     description: post.seoDescription,

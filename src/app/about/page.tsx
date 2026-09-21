@@ -68,20 +68,6 @@ export default function AboutPage() {
         <li>Anyone who needs a fast, free tool without the hassle</li>
       </ul>
 
-      <h2>What People Say</h2>
-      <blockquote>
-        <p>&quot;I use ToolPilot&apos;s PDF merger every week for client reports. It&apos;s fast, free, and doesn&apos;t watermark my files. Best tool I&apos;ve found.&quot;</p>
-        <footer>— A Freelance Consultant</footer>
-      </blockquote>
-      <blockquote>
-        <p>&quot;The GST invoice generator saved me hours of work. I don&apos;t need expensive accounting software for my small shop anymore.&quot;</p>
-        <footer>— A Small Business Owner</footer>
-      </blockquote>
-      <blockquote>
-        <p>&quot;I got my resume past 3 ATS systems after using the ATS checker. Landed my dream job!&quot;</p>
-        <footer>— A Job Seeker</footer>
-      </blockquote>
-
       <h2>Our Team</h2>
       <p>
         ToolPilot is built and maintained by a small, dedicated team passionate about making the web
