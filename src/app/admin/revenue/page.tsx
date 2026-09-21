@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Download, Trash2, TrendingUp, DollarSign, BarChart3, Calendar } from 'lucide-react';
+import { Plus, Download, Trash2, TrendingUp, DollarSign, BarChart3, Calendar, MousePointerClick } from 'lucide-react';
+
+interface AffiliateClicks {
+  total: number;
+  today: number;
+  last7: number;
+  last30: number;
+  topProducts: { product: string; count: number }[];
+  recent: { product: string; source: string | null; createdAt: string }[];
+}
 
 interface RevenueEntry {
   id: string;
@@ -46,8 +55,20 @@ export default function RevenuePage() {
   const [entries, setEntries] = useState<RevenueEntry[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: new Date().toISOString().slice(0, 10), source: 'adsense' as RevenueEntry['source'], amount: '', notes: '' });
+  const [clicks, setClicks] = useState<AffiliateClicks | null>(null);
 
   useEffect(() => { setEntries(getStoredEntries()); }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch('/api/admin/affiliate-clicks', { cache: 'no-store' })
+      .then((res) => res.json().catch(() => null))
+      .then((data) => {
+        if (mounted && data && !data.error) setClicks(data);
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, []);
 
   const addEntry = () => {
     if (!form.amount) return;
@@ -142,6 +163,43 @@ export default function RevenuePage() {
           <p className="text-xs text-gray-500">Total Entries</p>
         </div>
       </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="card text-center">
+          <MousePointerClick className="h-6 w-6 mx-auto text-orange-500 mb-1" />
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{clicks?.today ?? '-'}</p>
+          <p className="text-xs text-gray-500">Affiliate Clicks Today</p>
+        </div>
+        <div className="card text-center">
+          <TrendingUp className="h-6 w-6 mx-auto text-sky-500 mb-1" />
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{clicks?.last7 ?? '-'}</p>
+          <p className="text-xs text-gray-500">Clicks Last 7 Days</p>
+        </div>
+        <div className="card text-center">
+          <BarChart3 className="h-6 w-6 mx-auto text-purple-500 mb-1" />
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{clicks?.total ?? '-'}</p>
+          <p className="text-xs text-gray-500">Total Clicks</p>
+        </div>
+        <div className="card text-center">
+          <Calendar className="h-6 w-6 mx-auto text-blue-500 mb-1" />
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{clicks?.last30 ?? '-'}</p>
+          <p className="text-xs text-gray-500">Clicks Last 30 Days</p>
+        </div>
+      </div>
+
+      {clicks && clicks.topProducts.length > 0 && (
+        <div className="card">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Top Affiliate Products</h3>
+          <div className="space-y-2">
+            {clicks.topProducts.map((p, i) => (
+              <div key={p.product} className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{i + 1}. {p.product}</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">{p.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {bySource.length > 0 && (
         <div className="card">

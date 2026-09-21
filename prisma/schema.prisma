@@ -286,6 +286,18 @@ model NewsletterCampaign {
   createdAt   DateTime @default(now())
 }
 
+model AffiliateClick {
+  id        String   @id @default(cuid())
+  product   String
+  url       String
+  source    String?
+  path      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([product])
+}
+
 model FileProcessingJob {
   id          String    @id @default(cuid())
   status      String    @default("PENDING")

@@ -120,6 +120,7 @@ export default async function BlogPostPage({ params }: Props) {
           rating: a.rating,
           badge: a.badge,
         }))}
+        tracking={{ source: `/blog/${post.slug}`, path: `/blog/${post.slug}` }}
       />
       <InArticleAd slotId={ADS.blogPost.beforeCta} />
       <NewsletterCTA />

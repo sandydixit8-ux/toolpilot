@@ -17,9 +17,36 @@ interface AffiliatePromoProps {
   title?: string;
   items: AffiliateItem[];
   className?: string;
+  tracking?: { source: string; path?: string };
 }
 
-export function AffiliatePromo({ title = "Recommended Tools", items, className }: AffiliatePromoProps) {
+function trackClick(item: AffiliateItem, tracking?: { source: string; path?: string }) {
+  try {
+    const payload = JSON.stringify({
+      product: item.name,
+      url: item.url,
+      source: tracking?.source || "",
+      path: tracking?.path || "",
+    });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(
+        "/api/analytics/click",
+        new Blob([payload], { type: "application/json" })
+      );
+    } else {
+      void fetch("/api/analytics/click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      });
+    }
+  } catch {
+    // tracking is best-effort; never block navigation
+  }
+}
+
+export function AffiliatePromo({ title = "Recommended Tools", items, className, tracking }: AffiliatePromoProps) {
   if (!items.length) return null;
 
   return (
@@ -45,7 +72,12 @@ export function AffiliatePromo({ title = "Recommended Tools", items, className }
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{item.description}</p>
                 </div>
                 <Button size="sm" variant="outline" className="shrink-0 text-xs" asChild>
-                  <a href={item.url} target="_blank" rel="noopener noreferrer nofollow">
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    onClick={() => trackClick(item, tracking)}
+                  >
                     {item.ctaText || "Try"} <ExternalLink className="ml-1 h-3 w-3" />
                   </a>
                 </Button>

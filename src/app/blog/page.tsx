@@ -77,6 +77,7 @@ export default async function BlogPage() {
             rating: a.rating,
             badge: a.badge,
           }))}
+          tracking={{ source: "/blog", path: "/blog" }}
         />
 
         {categories.length > 0 && (

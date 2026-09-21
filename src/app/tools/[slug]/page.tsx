@@ -115,6 +115,7 @@ export default async function SlugPage({ params }: Props) {
             rating: a.rating,
             badge: a.badge,
           }))}
+          tracking={{ source: `/tools/${slug}`, path: `/tools/${slug}` }}
         />
       </div>
     );
@@ -225,6 +226,7 @@ export default async function SlugPage({ params }: Props) {
                 rating: a.rating,
                 badge: a.badge,
               }))}
+              tracking={{ source: `/tools/${tool.slug}`, path: `/tools/${tool.slug}` }}
             />
             <RelatedArticles slug={tool.slug} />
           </div>
