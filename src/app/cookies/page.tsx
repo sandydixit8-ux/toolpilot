@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
   description: "Learn about how ToolPilot uses cookies to improve your browsing experience and provide essential functionality.",
-  alternates: { canonical: "/cookie-policy" },
+  alternates: { canonical: `${SITE_URL}/cookies` },
 };
 
 export default function CookiePolicyPage() {

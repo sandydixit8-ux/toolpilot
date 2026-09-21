@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
       { source: "/tools/pdf-tools", destination: "/tools/pdf", permanent: true },
       { source: "/tools/image-tools", destination: "/tools/image", permanent: true },
       { source: "/tools/calculator-tools", destination: "/tools/calculators", permanent: true },
+      { source: "/privacy-policy", destination: "/privacy", permanent: true },
+      { source: "/cookie-policy", destination: "/cookies", permanent: true },
     ];
   },
 };

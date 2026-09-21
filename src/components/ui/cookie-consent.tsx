@@ -29,7 +29,7 @@ export function CookieConsent() {
           We use cookies to improve your experience and analyze site traffic. By
           clicking &quot;Accept&quot;, you consent to our use of cookies. Read our{" "}
           <a
-            href="/cookie-policy"
+            href="/cookies"
             className="font-medium text-blue-600 hover:underline dark:text-blue-400"
           >
             Cookie Policy

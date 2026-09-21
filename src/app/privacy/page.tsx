@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "ToolPilot's privacy policy. Learn how we handle your data, files, and personal information — including browser-based and server-based processing.",
-  alternates: { canonical: "/privacy-policy" },
+  alternates: { canonical: `${SITE_URL}/privacy` },
 };
 
 export default function PrivacyPolicyPage() {
@@ -51,7 +52,7 @@ export default function PrivacyPolicyPage() {
       <p>
         We use an essential cookie to remember your theme preference (such as dark mode). We do not place tracking
         cookies without your consent. Our cookie banner asks for your choice, and you can change it any time. See
-        our <a href="/cookie-policy">Cookie Policy</a> for details.
+        our <a href="/cookies">Cookie Policy</a> for details.
       </p>
 
       <h2>Analytics</h2>
