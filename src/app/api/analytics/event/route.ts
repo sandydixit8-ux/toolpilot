@@ -76,7 +76,7 @@ const burstTracker = new Map<string, { start: number; count: number }>();
 const BURST_WINDOW_MS = 60_000;
 const BURST_MAX = 12;
 const DAY_CAP = 15;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 function isBurst(ip: string): boolean {
   const now = Date.now();
@@ -92,7 +92,7 @@ function isBurst(ip: string): boolean {
 
 async function isOverDailyCap(ip: string): Promise<boolean> {
   try {
-    const date = new Date(Date.now() - (Date.now() % MS_PER_DAY) - (6 * 60 * 60 * 1000) % MS_PER_DAY).toISOString().slice(0, 10);
+    const date = new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 10);
     const id = `${ip}|${date}`;
     const row = await prisma.usageThrottle.upsert({
       where: { ipDate: id },
