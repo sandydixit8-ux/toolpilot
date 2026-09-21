@@ -10,7 +10,7 @@ export function OrganizationSchema() {
     logo: `${getSiteUrl()}/icon-192.png`,
     sameAs: [
       "https://www.facebook.com/toolpilotpro",
-      "https://www.instagram.com/toolpilotpro",
+      "https://www.instagram.com/toolpilotpro.in",
     ],
   };
 
