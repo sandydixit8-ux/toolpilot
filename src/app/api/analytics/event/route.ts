@@ -75,6 +75,8 @@ function getClientIp(request: Request): string {
 const burstTracker = new Map<string, { start: number; count: number }>();
 const BURST_WINDOW_MS = 60_000;
 const BURST_MAX = 12;
+const DAY_CAP = 15;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function isBurst(ip: string): boolean {
   const now = Date.now();
@@ -86,6 +88,22 @@ function isBurst(ip: string): boolean {
   track.count += 1;
   if (burstTracker.size > 50_000) burstTracker.clear();
   return track.count > BURST_MAX;
+}
+
+async function isOverDailyCap(ip: string): Promise<boolean> {
+  try {
+    const date = new Date(Date.now() - (Date.now() % MS_PER_DAY) - (6 * 60 * 60 * 1000) % MS_PER_DAY).toISOString().slice(0, 10);
+    const id = `${ip}|${date}`;
+    const row = await prisma.usageThrottle.upsert({
+      where: { ipDate: id },
+      create: { ipDate: id, ip, date, count: 1 },
+      update: { count: { increment: 1 } },
+    });
+    return row.count > DAY_CAP;
+  } catch (error) {
+    console.error("[Analytics Event] throttle check failed", error);
+    return false;
+  }
 }
 
 export async function POST(request: Request) {
@@ -116,6 +134,10 @@ export async function POST(request: Request) {
     ).toUpperCase();
 
     if (isBurst(ip)) {
+      return NextResponse.json({ success: true, data: { recorded: false } });
+    }
+
+    if (await isOverDailyCap(ip)) {
       return NextResponse.json({ success: true, data: { recorded: false } });
     }
 
