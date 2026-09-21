@@ -3,6 +3,58 @@ export interface ProsCons {
   cons: string[];
 }
 
+import { getToolBySlug } from "./tools";
+import type { ToolConfig } from "@/types/tool";
+
+function generatedProsCons(tool: ToolConfig): ProsCons {
+  const browser = tool.processingType === "browser";
+  const steps = tool.instructions
+    .slice(0, 3)
+    .map((s) => s.toLowerCase().replace(/[.\s]+$/, ""))
+    .join(", ");
+
+  const pros: string[] = [
+    `Free to use with no signup, watermark, or hidden charges`,
+  ];
+
+  if (browser) {
+    pros.push(`Processes ${pronoun(tool)} entirely in your browser, so nothing is ever uploaded to a server`);
+  } else {
+    pros.push(`Files are processed securely and deleted automatically right after conversion`);
+  }
+
+  if (steps) {
+    pros.push(`Simple ${tool.instructions.length}-step workflow: ${steps}`);
+  } else {
+    pros.push(`Instant results with a clean, distraction-free interface`);
+  }
+
+  const cons: string[] = [];
+  if (browser) {
+    cons.push(`Requires a modern browser with JavaScript enabled`);
+    cons.push(`Very large files may take noticeably longer to process`);
+  } else {
+    cons.push(`Requires an internet connection while the file is uploaded and processed`);
+    cons.push(`Very large files may take longer to upload and finish`);
+  }
+
+  if (tool.categorySlug === "calculators") {
+    cons.push(`Results are estimates for planning purposes, not professional financial or legal advice`);
+  } else if (tool.categorySlug === "ai") {
+    cons.push(`AI output can be imperfect — a quick human review is recommended for important text`);
+  } else if (tool.categorySlug === "translation") {
+    cons.push(`Machine output should be verified by a human for official or legal documents`);
+  } else if (tool.processingType !== "browser") {
+    cons.push(`Best as a browser-based helper rather than an automated, high-volume pipeline`);
+  }
+
+  return { pros, cons };
+}
+
+function pronoun(tool: ToolConfig): string {
+  return tool.categorySlug === "image" ? "images" : tool.categorySlug === "pdf" ? "documents" : "your input";
+}
+
 export const PROS_CONS: Record<string, ProsCons> = {
   "pdf-compressor": {
     pros: ["Free with no watermark or signup", "Runs in your browser — files never leave your device", "Multiple compression presets for email and portal uploads"],
@@ -103,5 +155,8 @@ export const PROS_CONS: Record<string, ProsCons> = {
 };
 
 export function getProsCons(slug: string): ProsCons | undefined {
-  return PROS_CONS[slug];
+  if (PROS_CONS[slug]) return PROS_CONS[slug];
+  const tool = getToolBySlug(slug);
+  if (!tool) return undefined;
+  return generatedProsCons(tool);
 }

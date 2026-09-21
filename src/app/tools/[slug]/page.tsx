@@ -19,6 +19,7 @@ import { getAffiliatesForCategory } from "@/lib/affiliates";
 import { CATEGORY_SEO } from "@/config/category-seo";
 import { getProsCons } from "@/config/pros-cons";
 import { getSiteUrl } from "@/lib/utils";
+import { SITE_LAST_REVIEWED } from "@/lib/constants";
 import { CheckCircle, Lock, ArrowRight, XCircle } from "lucide-react";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -247,6 +248,10 @@ export default async function SlugPage({ params }: Props) {
                   <div className="flex justify-between">
                     <dt className="text-gray-500 dark:text-gray-400">Price</dt>
                     <dd className="font-medium text-green-600">Free</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500 dark:text-gray-400">Reviewed</dt>
+                    <dd className="font-medium text-gray-900 dark:text-gray-100">{SITE_LAST_REVIEWED}</dd>
                   </div>
                 </dl>
               </CardContent>

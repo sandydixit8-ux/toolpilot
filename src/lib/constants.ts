@@ -7,6 +7,8 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpil
 export const ADS_ENABLED = process.env.NEXT_PUBLIC_ADS_ENABLED === "true";
 export const ADSENSE_PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID || "";
 
+export const SITE_LAST_REVIEWED = "September 21, 2026";
+
 export const CATEGORIES = [
   { name: "PDF Tools", slug: "pdf", icon: "FileText", description: "Convert, merge, split, and compress PDF files" },
   { name: "Image Tools", slug: "image", icon: "Image", description: "Compress, resize, and convert images" },

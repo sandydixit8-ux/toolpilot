@@ -18,6 +18,7 @@ const legalLinks = [
   { label: "Terms of Service", href: "/terms" },
   { label: "Cookie Policy", href: "/cookie-policy" },
   { label: "Disclaimer", href: "/disclaimer" },
+  { label: "Editorial Policy", href: "/editorial-policy" },
 ];
 
 const socialLinks = [
