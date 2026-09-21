@@ -53,9 +53,16 @@ export default async function BlogPostPage({ params }: Props) {
 
   if (!post || post.status !== "PUBLISHED") notFound();
 
-  const renderedContent = renderBlogContent(post.content);
-  const toc = getBlogToc(post.content);
-  const relatedPosts = await getRelatedPosts(post.slug, post.title);
+  let renderedContent: string;
+  let toc: { id: string; text: string; level: number }[];
+  let relatedPosts: { slug: string; title: string; excerpt: string | null }[];
+  try {
+    renderedContent = renderBlogContent(post.content);
+    toc = getBlogToc(post.content);
+    relatedPosts = await getRelatedPosts(post.slug, post.title);
+  } catch {
+    notFound();
+  }
 
   return (
     <>
