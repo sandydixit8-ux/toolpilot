@@ -9,7 +9,7 @@ import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { getGeneralAffiliates } from "@/lib/affiliates";
 import { ADS } from "@/config/ads";
-import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2, Languages } from "lucide-react";
+import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2, Languages, Video } from "lucide-react";
 
 export const metadata: Metadata = {
   alternates: { canonical: SITE_URL },
@@ -26,6 +26,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
   developer: <Code2 className="h-6 w-6" />,
   ai: <Sparkles className="h-6 w-6" />,
   translation: <Languages className="h-6 w-6" />,
+  video: <Video className="h-6 w-6" />,
 };
 
 export const revalidate = 900;

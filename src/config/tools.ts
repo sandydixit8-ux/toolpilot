@@ -7,6 +7,7 @@ import { careerTools } from "./tools-career";
 import { businessTools } from "./tools-business";
 import { aiTools } from "./tools-ai";
 import { translationTools } from "./tools-translation";
+import { videoTools } from "./tools-video";
 
 export const allTools: ToolConfig[] = [
   ...pdfTools,
@@ -17,6 +18,7 @@ export const allTools: ToolConfig[] = [
   ...businessTools,
   ...aiTools,
   ...translationTools,
+  ...videoTools,
 ];
 
 export function getToolBySlug(slug: string): ToolConfig | undefined {
@@ -45,4 +47,4 @@ export function searchTools(query: string): ToolConfig[] {
   );
 }
 
-export { pdfTools, imageTools, calculatorTools, developerTools, careerTools, businessTools, aiTools, translationTools };
+export { pdfTools, imageTools, calculatorTools, developerTools, careerTools, businessTools, aiTools, translationTools, videoTools };

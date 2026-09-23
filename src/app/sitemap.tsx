@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/editorial-policy`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.4 },
   ];
 
-  const categoryPages = ["pdf", "image", "calculators", "career", "business", "developer", "ai", "translation"].map((cat) => ({
+  const categoryPages = ["pdf", "image", "calculators", "career", "business", "developer", "ai", "translation", "video"].map((cat) => ({
     url: `${baseUrl}/tools/${cat}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,

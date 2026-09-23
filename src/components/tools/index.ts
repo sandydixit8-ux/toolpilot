@@ -98,6 +98,9 @@ const toolComponents: Record<string, () => Promise<{ default: ComponentType }>> 
   "image-to-text": lazyNamed(() => import("@/components/tools/image/image-to-text"), "ImageToTextTool"),
   "text-translator": lazyNamed(() => import("@/components/tools/translation/text-translator"), "TextTranslatorTool"),
   "transliteration": lazyNamed(() => import("@/components/tools/translation/transliteration"), "TransliterationTool"),
+  "video-compressor": lazyNamed(() => import("@/components/tools/video/video-compressor"), "VideoCompressorTool"),
+  "mp4-to-mp3": lazyNamed(() => import("@/components/tools/video/mp4-to-mp3"), "Mp4ToMp3Tool"),
+  "video-to-gif": lazyNamed(() => import("@/components/tools/video/video-to-gif"), "VideoToGifTool"),
 };
 
 const lazyCache: Record<string, ComponentType> = {};

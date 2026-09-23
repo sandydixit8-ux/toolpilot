@@ -117,4 +117,18 @@ export const CATEGORY_SEO: Record<string, CategorySEOContent> = {
       { question: "What is transliteration and how is it different from translation?", answer: "Translation changes the language; transliteration changes the script. It spells the same language (like Hindi) in a different script (Devanagari instead of Roman), which is exactly what you need when you want to write Hindi but only have an English keyboard." },
     ],
   },
+  video: {
+    introTitle: "Free Video Tools That Run in Your Browser",
+    intro: [
+      "Video files are the largest things most people send over WhatsApp, email, and social media — a one-minute phone recording easily runs into hundreds of megabytes. Our video tools solve the everyday problems without installing heavy software: the video compressor shrinks MP4 files with the professional H.264 encoder, the MP4 to MP3 converter pulls the audio out of any clip for listening offline, and the video to GIF tool turns a favorite moment into a shareable animated GIF.",
+      "Everything runs on your device using the FFmpeg engine loaded inside the browser, so your videos are never uploaded to a server. That makes these tools safe for personal recordings, client footage, and work material alike. The first conversion loads the engine once (about 30 MB) and every conversion after that starts immediately. Whether you need a smaller video for a slow connection, an MP3 for a long commute, or a reaction GIF for a group chat, these tools do it in seconds and stay free.",
+    ],
+    faqs: [
+      { question: "Is my video uploaded to your servers?", answer: "No. All video processing happens locally in your browser using the FFmpeg engine. Your file never leaves your device." },
+      { question: "How do I make an MP4 file smaller?", answer: "Open the video compressor, pick the Balanced preset, and optionally downscale to 720p or 480p. Most phone recordings shrink substantially while staying clear." },
+      { question: "How do I extract audio from a video?", answer: "Upload the file to the MP4 to MP3 tool, choose a bitrate such as 192 kbps, and download the resulting MP3. Video, audio, and screencast formats are all supported as input." },
+      { question: "Can I convert a video to a GIF on mobile?", answer: "Yes. The tools work fully in mobile browsers — upload from Files or Photos, convert, and save the result. GIFs stay small when you clip to a few seconds at a lower frame rate." },
+      { question: "Why does the first conversion take longer?", answer: "The first run downloads the FFmpeg engine into your browser (about 30 MB) and caches it. Every later conversion in the same session starts instantly." },
+    ],
+  },
 };

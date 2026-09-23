@@ -8,7 +8,7 @@ import { getToolsByCategory, searchTools } from "@/config/tools";
 import { categories } from "@/config/categories";
 import { allTools } from "@/config/tools";
 import { SITE_URL } from "@/lib/constants";
-import { FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2, Sparkles, Languages, ArrowRight } from "lucide-react";
+import { FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2, Sparkles, Languages, Video, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "All Tools – Free Online Tools",
@@ -25,6 +25,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
   developer: <Code2 className="h-8 w-8" />,
   ai: <Sparkles className="h-8 w-8" />,
   translation: <Languages className="h-8 w-8" />,
+  video: <Video className="h-8 w-8" />,
 };
 
 type Props = { searchParams: Promise<{ q?: string }> };

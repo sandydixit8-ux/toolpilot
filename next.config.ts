@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  transpilePackages: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
