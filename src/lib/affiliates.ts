@@ -6,6 +6,7 @@ export interface AffiliateProduct {
   rating?: number;
   badge?: string;
   categorySlugs?: string[];
+  homepage?: boolean;
 }
 
 export const AFFILIATE_PRODUCTS: AffiliateProduct[] = [
@@ -132,6 +133,16 @@ export const AFFILIATE_PRODUCTS: AffiliateProduct[] = [
     rating: 5,
     badge: "India",
     categorySlugs: ["calculators", "business"],
+  },
+  {
+    name: "Angel One",
+    description: "Open a free Demat & trading account. All trades at ₹20, quick SIP in Direct Mutual Funds, and ₹1 lakh MTF at 0% interest.",
+    url: "https://angel-one.onelink.me/Wjgr/3z68l0hv",
+    ctaText: "Open Free Account",
+    rating: 5,
+    badge: "India",
+    categorySlugs: ["calculators", "business"],
+    homepage: true,
   },
   {
     name: "ClearTax",
@@ -268,13 +279,15 @@ export const AFFILIATE_PRODUCTS: AffiliateProduct[] = [
 ];
 
 export function getAffiliatesForCategory(categorySlug: string): AffiliateProduct[] {
-  return AFFILIATE_PRODUCTS.filter(
-    (p) => !p.categorySlugs || p.categorySlugs.includes(categorySlug)
-  ).slice(0, 4);
+  const matched = AFFILIATE_PRODUCTS.filter((p) => p.categorySlugs?.includes(categorySlug));
+  const general = AFFILIATE_PRODUCTS.filter((p) => !p.categorySlugs);
+  return [...matched, ...general].slice(0, 4);
 }
 
 export function getGeneralAffiliates(): AffiliateProduct[] {
-  return AFFILIATE_PRODUCTS.filter((p) => !p.categorySlugs).slice(0, 4);
+  const featured = AFFILIATE_PRODUCTS.filter((p) => p.homepage);
+  const general = AFFILIATE_PRODUCTS.filter((p) => !p.categorySlugs);
+  return [...featured, ...general].slice(0, 4);
 }
 
 export function getAffiliateBySlug(slug: string): AffiliateProduct | undefined {
