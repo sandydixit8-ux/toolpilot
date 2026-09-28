@@ -8,3 +8,4 @@ prisma/dev.db-journal
 *.txt
 !public/ads.txt
 .DS_Store
+e2e-*.mjs
