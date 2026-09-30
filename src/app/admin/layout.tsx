@@ -6,11 +6,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session) {
-    redirect("/");
+    redirect("/auth/login");
   }
   const role = (session.user as Record<string, string> | undefined)?.role;
   if (role !== "SUPER_ADMIN") {
-    redirect("/");
+    redirect("/auth/login");
   }
   return <>{children}</>;
 }
