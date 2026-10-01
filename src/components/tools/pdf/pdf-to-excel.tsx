@@ -69,8 +69,9 @@ export function PdfToExcelTool() {
 
     try {
       setProgress('Reading PDF...');
-      const pdfjsLib = await import('pdfjs-dist');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+      // Legacy build ships its own polyfills (see pdf-to-jpg.tsx note).
+      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.min.mjs');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker-legacy.min.mjs';
 
       const arrayBuffer = await files[0].arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -83,7 +84,7 @@ export function PdfToExcelTool() {
         const content = await page.getTextContent();
 
         const items: TextItem[] = content.items
-          .map((it) => {
+          .map((it: unknown) => {
             const item = it as { str?: string; transform?: number[]; width?: number };
             const str = item.str || '';
             if (!str.trim()) return null;
@@ -95,7 +96,7 @@ export function PdfToExcelTool() {
               width: item.width || 0,
             } as TextItem;
           })
-          .filter((it): it is TextItem => it !== null);
+          .filter((it: TextItem | null): it is TextItem => it !== null);
 
         const rows = groupTextItemsIntoRows(items);
         rows.forEach((row) => allRows.push(row));

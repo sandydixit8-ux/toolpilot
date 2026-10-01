@@ -45,8 +45,9 @@ export function PdfPageCounterTool() {
     setError('');
 
     try {
-      const pdfjsLib = await import('pdfjs-dist');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+      // Legacy build ships its own polyfills (see pdf-to-jpg.tsx note).
+      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.min.mjs');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker-legacy.min.mjs';
 
       const arrayBuffer = await files[0].arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

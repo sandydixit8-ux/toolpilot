@@ -155,8 +155,9 @@ export function parseTextResume(text: string): ParsedResume {
 }
 
 export async function parsePDFResume(arrayBuffer: ArrayBuffer): Promise<ParsedResume> {
-  const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  // Legacy build ships its own polyfills (see pdf-to-jpg.tsx note).
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.min.mjs");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker-legacy.min.mjs";
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pages: { text: string; tables: number; images: number }[] = [];
   let fullText = "";
@@ -164,7 +165,7 @@ export async function parsePDFResume(arrayBuffer: ArrayBuffer): Promise<ParsedRe
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const pageText = content.items.map((item) => ("str" in item ? item.str : "")).join(" ");
+    const pageText = content.items.map((item: { str?: string }) => ("str" in item ? item.str : "")).join(" ");
     fullText += pageText + "\n";
 
     const ops = await page.getOperatorList();

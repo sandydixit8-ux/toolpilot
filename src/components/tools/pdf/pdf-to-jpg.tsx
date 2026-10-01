@@ -38,8 +38,12 @@ export function PdfToJpgTool() {
     setProgress('Reading PDF...');
 
     try {
-      const pdfjsLib = await import('pdfjs-dist');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+      // Use the legacy build: it ships its own core-js polyfills, so it works in
+      // older browsers that lack native Uint8Array.prototype.toHex (pdf.js 6.x
+      // calls it for fingerprinting; without it every render throws "toHex is
+      // not a function"). Paired with public/pdf.worker-legacy.min.mjs.
+      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.min.mjs');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker-legacy.min.mjs';
 
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();
