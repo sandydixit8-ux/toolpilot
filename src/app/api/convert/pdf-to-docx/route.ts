@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateFile, sanitizeFilename } from '@/lib/converters/security';
+import { checkDocxContent } from '@/lib/converters/docx-check';
 
 export const maxDuration = 60;
 
@@ -48,6 +49,21 @@ export async function POST(request: NextRequest) {
     }
 
     const docxBuffer = Buffer.from(await response.arrayBuffer());
+
+    // Guard against scanned/image-only PDFs: the converter only carries the
+    // text layer, so an image-only PDF produces a blank document. Return a
+    // clear error instead of handing the user an empty file with a success.
+    const contentCheck = await checkDocxContent(docxBuffer);
+    if (contentCheck.empty) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'This PDF appears to be scanned or image-based (no text layer found), so there is nothing to convert to editable text. Try the PDF to JPG tool to extract pages as images, or use an OCR tool first.',
+        },
+        { status: 422 }
+      );
+    }
 
     const headers = new Headers({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

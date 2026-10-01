@@ -52,7 +52,9 @@ export function PdfToWordTool() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        throw new Error(data?.error || 'Conversion failed');
+        const err = new Error(data?.error || 'Conversion failed') as Error & { status?: number };
+        err.status = response.status;
+        throw err;
       }
 
       setProgress('Preparing download...');
@@ -62,8 +64,13 @@ export function PdfToWordTool() {
       setDone(true);
     } catch (err) {
       console.error('Conversion error:', err);
-      const msg = err instanceof Error ? err.message : 'Failed to convert PDF.';
-      setError(msg);
+      const status = (err as { status?: number })?.status;
+      const base = err instanceof Error ? err.message : 'Failed to convert PDF.';
+      const hint =
+        status === 422
+          ? ' Tip: use "PDF to JPG" to extract pages as images, or a free OCR tool to add a text layer, then convert again.'
+          : '';
+      setError(base + hint);
       setProgress('');
     } finally {
       setConverting(false);
