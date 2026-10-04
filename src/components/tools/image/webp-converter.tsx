@@ -84,7 +84,7 @@ export function WebpConverter() {
         onFiles={handleFiles}
         files={files}
         onRemove={handleRemove}
-        accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.bmp'] }}
+        accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'] }}
       />
 
       {files.length > 0 && (
