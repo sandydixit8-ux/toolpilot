@@ -74,7 +74,7 @@ export function HtmlPreviewTool() {
               key={renderKey}
               ref={frameRef}
               title="HTML Preview"
-              sandbox="allow-modals"
+              sandbox="allow-scripts allow-same-origin"
               className="h-full w-full"
             />
           </div>
