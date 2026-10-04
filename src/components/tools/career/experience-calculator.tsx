@@ -52,15 +52,23 @@ export function ExperienceCalculatorTool() {
       const start = new Date(t.start);
       const end = t.isCurrent ? new Date() : t.end ? new Date(t.end) : null;
       if (!end || isNaN(start.getTime()) || isNaN(end.getTime())) return null;
-      return calcDuration(start, end);
+      return {
+        duration: calcDuration(start, end),
+        // Calendar-accurate day count (accounts for leap years and real
+        // month lengths) — previously approximated as years*365 + months*30.
+        actualDays: Math.round((end.getTime() - start.getTime()) / 86400000),
+      };
     })
-    .filter(Boolean) as { years: number; months: number; days: number }[];
+    .filter(Boolean) as { duration: { years: number; months: number; days: number }; actualDays: number }[];
 
-  const totalDays = totalTenures.reduce((sum, t) => sum + t.years * 365 + t.months * 30 + t.days, 0);
-  const totalYears = Math.floor(totalDays / 365);
-  const remainingDays = totalDays % 365;
-  const totalMonths = Math.floor(remainingDays / 30);
-  const finalDays = remainingDays % 30;
+  // Sum the calendar-accurate y/m/d durations, then normalize the excess
+  // months into years (e.g. two tenures of 8m each → 1y 4m).
+  const summedMonths = totalTenures.reduce((sum, t) => sum + t.duration.years * 12 + t.duration.months, 0);
+  const summedDays = totalTenures.reduce((sum, t) => sum + t.duration.days, 0);
+  const totalYears = Math.floor(summedMonths / 12);
+  const totalMonths = summedMonths % 12;
+  const finalDays = summedDays;
+  const totalDays = totalTenures.reduce((sum, t) => sum + t.actualDays, 0);
 
   return (
     <div className="card">
@@ -103,7 +111,7 @@ export function ExperienceCalculatorTool() {
               {totalYears}y {totalMonths}m {finalDays}d
             </p>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              ({(totalYears * 12 + totalMonths)} months total • {totalDays} days)
+              ({summedMonths} months total • {totalDays.toLocaleString()} days)
             </p>
           </div>
         )}
