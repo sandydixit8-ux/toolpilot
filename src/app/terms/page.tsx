@@ -10,7 +10,7 @@ export default function TermsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8 prose dark:prose-invert">
       <h1>Terms of Service</h1>
-      <p><em>Last updated: January 2025</em></p>
+      <p><em>Last updated: September 21, 2026</em></p>
       <h2>Acceptance of Terms</h2>
       <p>
         By accessing and using ToolPilot, you accept and agree to be bound by these Terms of Service.
