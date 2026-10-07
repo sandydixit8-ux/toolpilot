@@ -5,12 +5,12 @@ export interface RelatedArticle {
 
 const BLOG_LINKS: Record<string, RelatedArticle[]> = {
   "income-tax-calculator": [
-    { slug: "income-tax-calculator-fy-2025-26-old-vs-new-regime", title: "Income Tax FY 2025-26: Old vs New Regime" },
+    { slug: "income-tax-calculator-guide", title: "Income Tax Calculator India: New vs Old Regime (FY 2025-26)" },
     { slug: "old-vs-new-tax-regime-2025-26-which-saves-more", title: "Old vs New Regime 2025-26: Which Saves More?" },
     { slug: "income-tax-on-12-lakh-salary-zero-tax-new-regime", title: "Income Tax on ₹12 Lakh: Zero Tax Under New Regime" },
   ],
   "salary-calculator": [
-    { slug: "income-tax-calculator-fy-2025-26-old-vs-new-regime", title: "Income Tax FY 2025-26: Old vs New Regime" },
+    { slug: "old-vs-new-tax-regime-2025-26-which-saves-more", title: "Old vs New Tax Regime 2025-26: Which One Saves You More Money?" },
     { slug: "salary-calculator-take-home-pay-india", title: "Salary Calculator: Take-Home Pay in India" },
     { slug: "how-to-calculate-take-home-salary-from-ctc-india", title: "How to Calculate Take-Home from CTC" },
     { slug: "check-monthly-budget-salary-calculator", title: "Check Monthly Budget with Salary Calculator" },
@@ -30,32 +30,32 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
     { slug: "convert-pdf-to-word-edit-without-losing-formatting", title: "Convert PDF to Word" },
   ],
   "emi-calculator": [
-    { slug: "how-to-calculate-home-loan-emi", title: "How to Calculate Your Home Loan EMI" },
+    { slug: "how-emi-calculator-works", title: "EMI Calculator: How Home and Car Loan EMIs Are Actually Calculated" },
     { slug: "emi-calculator-guide", title: "EMI Calculator: How to Calculate Loan EMI" },
   ],
   "gst-calculator": [
-    { slug: "gst-calculator-india-cgst-sgst-igst", title: "GST in India: CGST, SGST & IGST Explained" },
+    { slug: "gst-calculator-guide-india", title: "Understanding GST: How to Calculate CGST, SGST & IGST" },
     { slug: "how-gst-works-india-guide", title: "GST Calculator: How GST Works in India" },
   ],
   "resume-ats-checker": [
-    { slug: "how-to-pass-ats-screening-resume-tips", title: "How to Pass ATS Screening: 7 Resume Tips" },
+    { slug: "how-to-make-ats-friendly-resume", title: "How to Make an ATS-Friendly Resume (Pass the 6-Second Filter)" },
     { slug: "resume-ats-checker-guide", title: "Resume ATS Checker: How to Pass ATS Screening" },
     { slug: "resume-ats-score-what-is-good-how-to-improve", title: "Resume ATS Score: What Is Good & How to Improve" },
     { slug: "how-to-check-resume-ats-screening-free-tool", title: "How to Check If Your Resume Passes ATS" },
   ],
   "resume-builder": [
-    { slug: "how-to-pass-ats-screening-resume-tips", title: "How to Pass ATS Screening: 7 Resume Tips" },
+    { slug: "build-ats-friendly-resume", title: "How to Build an ATS-Friendly Resume That Gets Interviews" },
     { slug: "resume-builder-create-professional-resume", title: "Resume Builder: Create a Professional Resume" },
     { slug: "how-to-create-professional-resume-10-minutes", title: "How to Create a Resume in 10 Minutes" },
   ],
   "notice-period-calculator": [
-    { slug: "how-to-calculate-notice-period-and-experience", title: "Notice Period & Experience: How to Calculate" },
+    { slug: "how-to-calculate-take-home-salary-from-ctc-india", title: "How to Calculate Take-Home Salary from CTC in India" },
   ],
   "experience-calculator": [
-    { slug: "how-to-calculate-notice-period-and-experience", title: "Notice Period & Experience: How to Calculate" },
+    { slug: "salary-calculator-take-home-pay-india", title: "Online Salary Calculator India: Estimate Your CTC to Take-Home Pay" },
   ],
   "image-compressor": [
-    { slug: "compress-resize-images-for-whatsapp", title: "Compress & Resize Images for WhatsApp" },
+    { slug: "how-to-compress-image-without-losing-quality", title: "How to Compress Image Without Losing Quality" },
     { slug: "image-compressor-reduce-file-size", title: "Image Compressor: Reduce File Size" },
     { slug: "compress-images-web-no-quality-loss", title: "Compress Images for Web: No Quality Loss" },
     { slug: "online-image-compressor-whatsapp-send-photos", title: "Online Image Compressor for WhatsApp" },
@@ -63,7 +63,7 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
     { slug: "compress-images-website-cut-page-load-time", title: "Compress Images for Website" },
   ],
   "image-resizer": [
-    { slug: "compress-resize-images-for-whatsapp", title: "Compress & Resize Images for WhatsApp" },
+    { slug: "online-image-compressor-whatsapp-send-photos", title: "Online Image Compressor for WhatsApp: Send Photos Without 'File Too Large'" },
     { slug: "how-to-resize-images-without-losing-quality", title: "How to Resize Images Without Losing Quality" },
     { slug: "image-resizer-resize-images-different-platforms", title: "Image Resizer for Different Platforms" },
     { slug: "resize-compress-images-email-attachments", title: "Resize & Compress Images for Email" },
