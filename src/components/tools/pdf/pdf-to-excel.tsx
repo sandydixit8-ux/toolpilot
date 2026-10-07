@@ -78,9 +78,8 @@ export function PdfToExcelTool() {
 
       const allRows: (string | number)[][] = [];
 
-      for (let i = 1; i <= pdf.numPages; i++) {
-        setProgress(`Extracting page ${i} of ${pdf.numPages}...`);
-        const page = await pdf.getPage(i);
+      const extractPage = async (pageNum: number): Promise<(string | number)[][]> => {
+        const page = await pdf.getPage(pageNum);
         const content = await page.getTextContent();
 
         const items: TextItem[] = content.items
@@ -99,8 +98,18 @@ export function PdfToExcelTool() {
           .filter((it: TextItem | null): it is TextItem => it !== null);
 
         const rows = groupTextItemsIntoRows(items);
-        rows.forEach((row) => allRows.push(row));
-        allRows.push([]); // blank separator row between pages
+        rows.push([]); // blank separator row between pages
+        return rows;
+      };
+
+      const CONCURRENCY = 4;
+      for (let start = 1; start <= pdf.numPages; start += CONCURRENCY) {
+        const end = Math.min(start + CONCURRENCY - 1, pdf.numPages);
+        setProgress(`Extracting pages ${start}-${end} of ${pdf.numPages}...`);
+        const batch = await Promise.all(
+          Array.from({ length: end - start + 1 }, (_, i) => extractPage(start + i))
+        );
+        batch.forEach((rows) => allRows.push(...rows));
       }
 
       const blob = await rowsToXlsxBlob(allRows);

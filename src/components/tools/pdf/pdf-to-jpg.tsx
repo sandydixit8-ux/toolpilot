@@ -16,25 +16,38 @@ export function PdfToJpgTool() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
   const [pageImages, setPageImages] = useState<{ url: string; page: number }[]>([]);
+  const revokeImages = useCallback((images: { url: string; page: number }[]) => {
+    images.forEach((img) => URL.revokeObjectURL(img.url));
+  }, []);
+
   const handleFiles = useCallback((newFiles: File[]) => {
+    setPageImages((prev) => {
+      revokeImages(prev);
+      return [];
+    });
     setFiles(newFiles.slice(0, 1));
     setDone(false);
     setError('');
-    setPageImages([]);
-  }, []);
+  }, [revokeImages]);
 
   const handleRemove = useCallback(() => {
+    setPageImages((prev) => {
+      revokeImages(prev);
+      return [];
+    });
     setFiles([]);
     setDone(false);
     setError('');
-    setPageImages([]);
-  }, []);
+  }, [revokeImages]);
 
   const handleConvert = async () => {
     if (files.length === 0) return;
     setConverting(true);
     setError('');
-    setPageImages([]);
+    setPageImages((prev) => {
+      revokeImages(prev);
+      return [];
+    });
     setProgress('Reading PDF...');
 
     try {
@@ -51,22 +64,52 @@ export function PdfToJpgTool() {
       const pageCount = pdf.numPages;
       const images: { url: string; page: number }[] = [];
 
-      for (let i = 1; i <= pageCount; i++) {
-        setProgress(`Rendering page ${i} of ${pageCount}...`);
-        const page = await pdf.getPage(i);
+      const canvasToJpegBlob = async (canvas: HTMLCanvasElement) => {
+        const toBlobPromise = () =>
+          new Promise<Blob | null>((resolve) =>
+            canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92)
+          );
+        const convertToBlob = (canvas as unknown as {
+          convertToBlob?: (opts: { type: string; quality?: number }) => Promise<Blob>;
+        }).convertToBlob;
+        if (typeof convertToBlob === 'function') {
+          try {
+            const blob = await convertToBlob.call(canvas, { type: 'image/jpeg', quality: 0.92 });
+            if (blob) return blob;
+          } catch {
+            return toBlobPromise();
+          }
+        }
+        return toBlobPromise();
+      };
+
+      const renderPage = async (pageNum: number) => {
+        const page = await pdf.getPage(pageNum);
         const viewport = page.getViewport({ scale: 2.0 });
 
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
 
-        if (ctx) {
-          await page.render({ canvasContext: ctx, viewport, canvas } as never).promise;
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-          images.push({ url: dataUrl, page: i });
-        }
+        await page.render({ canvasContext: ctx, viewport, canvas } as never).promise;
+        const blob = await canvasToJpegBlob(canvas);
+        return blob ? { url: URL.createObjectURL(blob), page: pageNum } : null;
+      };
+
+      const CONCURRENCY = 3;
+      const results: ({ url: string; page: number } | null)[] = [];
+      for (let start = 1; start <= pageCount; start += CONCURRENCY) {
+        const batch: number[] = [];
+        for (let p = start; p < Math.min(start + CONCURRENCY, pageCount + 1); p++) batch.push(p);
+        setProgress(`Rendering pages ${start}-${batch[batch.length - 1]} of ${pageCount}...`);
+        results.push(...(await Promise.all(batch.map(renderPage))));
       }
+
+      results.forEach((res) => {
+        if (res) images.push(res);
+      });
 
       setPageImages(images);
       setProgress('');
@@ -100,11 +143,14 @@ export function PdfToJpgTool() {
   };
 
   const handleReset = () => {
+    setPageImages((prev) => {
+      revokeImages(prev);
+      return [];
+    });
     setFiles([]);
     setDone(false);
     setError('');
     setProgress('');
-    setPageImages([]);
   };
 
   return (
