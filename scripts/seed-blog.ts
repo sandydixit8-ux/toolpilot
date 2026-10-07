@@ -230,51 +230,6 @@ Your experience level determines the roles you can apply for, the salary band co
 
 Start with a fact-check of your own resume today, using the two tools above, before your next application.`,
   },
-  {
-    title: "Compress and Resize Images for WhatsApp in Seconds",
-    slug: "compress-resize-images-for-whatsapp",
-    categoryName: "Productivity",
-    categorySlug: "productivity",
-    excerpt:
-      "Sending heavy images, especially videos and photos from phone cameras, is painful. Here is how to compress and resize pictures quickly without installing an app.",
-    seoTitle: "How to Compress and Resize Images for WhatsApp",
-    seoDescription:
-      "Send photos on WhatsApp without quality loss. Learn how to compress and resize images in your browser with free tools, including passport-size cropping tips.",
-    content: `A single photo from a modern phone camera can be 5 MB or more. Forward a few of those on WhatsApp and the app slows down, the recipient runs out of storage, and the file sometimes refuses to send.
-
-## Why file size matters
-
-- **Storage** – photos eat up phone and cloud storage quickly.
-- **Sharing** – large files are slower to upload and download.
-- **Websites** – heavy images slow down page loading and affect SEO.
-
-## The right tool for the job
-
-Two quick fixes solve most image problems:
-
-1. **Compress** to reduce file size while keeping visible quality.
-2. **Resize** to change width and height, for example to a WhatsApp-friendly 1280px width.
-
-> Our [Image Compressor](/tools/image-compressor) shrinks JPG, PNG, and WebP images in your browser with a live before-and-after preview. Use the [Image Resizer](/tools/image-resizer) when you need exact dimensions.
-
-## Compress or resize first?
-
-- If you only need a smaller file, **compress**.
-- If the image will go on a website or needs specific dimensions, **resize**.
-- For profile pictures and passport photos, **crop** to a square or the exact required ratio.
-
-## Keeping quality while shrinking
-
-The biggest mistake people make is dropping quality too low. A good balance for WhatsApp photos is quality around **70–80%** — small file, still sharp on a phone screen. You should never notice the difference when you look at the photo normally.
-
-## For passport photos and documents
-
-Government forms and visa applications often need specific pixel sizes. Cropping to the exact ratio first, then resizing, keeps the photo readable inside the form.
-
-Fix your workflow today: compress once, share everywhere, and stop fighting with "file too large" errors.
-
-Try the [Image Quality Optimizer](/tools/image-quality-optimizer) when you need to balance size and clarity.`,
-  },
 ];
 
 async function main() {
