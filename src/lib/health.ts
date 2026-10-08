@@ -82,6 +82,7 @@ export async function runHealthChecks() {
     }
   }
 
+  const keepaliveUrl = `${SITE_URL}/api/keepalive/converter`;
   const coreUrls = [
     `${SITE_URL}/`,
     `${SITE_URL}/tools`,
@@ -90,61 +91,70 @@ export async function runHealthChecks() {
     `${SITE_URL}/terms`,
     `${SITE_URL}/ads.txt`,
     `${SITE_URL}/robots.txt`,
-    `${SITE_URL}/api/keepalive/converter`,
+    keepaliveUrl,
   ];
-  const coreResults = await mapPool(coreUrls, 6, async (url) => {
-    const r = await timedFetch(url);
+  const renderPromise = (async () => {
+    const render = await timedFetch(`${RENDER_URL}/`, "GET", 30000);
+    const status: HealthStatus =
+      render.status !== null && render.status < 500 ? (render.ms > SLOW_MS ? "DEGRADED" : "UP") : "DOWN";
     return {
-      check: url,
-      category: "CORE" as const,
-      status: classify(r.status, r.ms),
-      responseMs: r.ms,
-      statusCode: r.status,
-      meta: r.error,
+      check: `${RENDER_URL} (converter service)`,
+      category: "SERVICE" as const,
+      status,
+      responseMs: render.ms,
+      statusCode: render.status,
+      meta: render.error,
     };
-  });
-  results.push(...coreResults);
-
-  const pageResults = await mapPool(locs, 8, async (url) => {
-    const r = await timedFetch(url);
+  })();
+  const dbPromise = (async () => {
+    const dbStart = Date.now();
+    let dbStatus: HealthStatus = "UP";
+    let dbMeta: string | undefined;
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (e) {
+      dbStatus = "DOWN";
+      dbMeta = e instanceof Error ? e.message : String(e);
+    }
     return {
-      check: url,
-      category: "SITEMAP" as const,
-      status: classify(r.status, r.ms),
-      responseMs: r.ms,
-      statusCode: r.status,
-      meta: r.error,
+      check: "Neon database",
+      category: "SERVICE" as const,
+      status: dbStatus,
+      responseMs: Date.now() - dbStart,
+      statusCode: null,
+      meta: dbMeta,
     };
-  });
-  results.push(...pageResults);
+  })();
 
-  const render = await timedFetch(`${RENDER_URL}/`, "GET", 30000);
-  results.push({
-    check: `${RENDER_URL} (converter service)`,
-    category: "SERVICE",
-    status: render.status !== null && render.status < 500 ? (render.ms > SLOW_MS ? "DEGRADED" : "UP") : "DOWN",
-    responseMs: render.ms,
-    statusCode: render.status,
-    meta: render.error,
-  });
-
-  const dbStart = Date.now();
-  let dbStatus: HealthStatus = "UP";
-  let dbMeta: string | undefined;
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-  } catch (e) {
-    dbStatus = "DOWN";
-    dbMeta = e instanceof Error ? e.message : String(e);
-  }
-  results.push({
-    check: "Neon database",
-    category: "SERVICE",
-    status: dbStatus,
-    responseMs: Date.now() - dbStart,
-    statusCode: null,
-    meta: dbMeta,
-  });
+  const [coreResults, pageResults, renderResult, dbResult] = await Promise.all([
+    mapPool(coreUrls, 6, async (url) => {
+      const r = await timedFetch(url, "GET", url === keepaliveUrl ? 50000 : 15000);
+      const status: HealthStatus =
+        url === keepaliveUrl && r.status === 200 ? "UP" : classify(r.status, r.ms);
+      return {
+        check: url,
+        category: "CORE" as const,
+        status,
+        responseMs: r.ms,
+        statusCode: r.status,
+        meta: r.error,
+      };
+    }),
+    mapPool(locs, 8, async (url) => {
+      const r = await timedFetch(url);
+      return {
+        check: url,
+        category: "SITEMAP" as const,
+        status: classify(r.status, r.ms),
+        responseMs: r.ms,
+        statusCode: r.status,
+        meta: r.error,
+      };
+    }),
+    renderPromise,
+    dbPromise,
+  ]);
+  results.push(...coreResults, ...pageResults, renderResult, dbResult);
 
   await prisma.healthCheckLog.createMany({
     data: results.map((r) => ({
