@@ -1,0 +1,16 @@
+name: Keep converter warm
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping converter keepalive
+        run: |
+          code=$(curl -s -o /tmp/keepalive.out -w "%{http_code}" --max-time 55 https://www.toolpilotpro.in/api/keepalive/converter)
+          echo "HTTP $code: $(cat /tmp/keepalive.out)"
+          [ "$code" = "200" ]
