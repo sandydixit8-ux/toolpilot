@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { UploadBox } from '@/components/tools/upload-box';
+import { PDFJS_WORKER_URL } from '@/lib/pdf-worker';
 import { FileText, Loader2 } from 'lucide-react';
 
 interface PdfInfo {
@@ -47,7 +48,7 @@ export function PdfPageCounterTool() {
     try {
       // Legacy build ships its own polyfills (see pdf-to-jpg.tsx note).
       const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.min.mjs');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker-legacy.min.mjs';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
 
       const arrayBuffer = await files[0].arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

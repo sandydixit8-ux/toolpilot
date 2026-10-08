@@ -1,3 +1,5 @@
+import { PDFJS_WORKER_URL } from "@/lib/pdf-worker";
+
 export interface ParsedResume {
   rawText: string;
   atsViewText: string;
@@ -157,7 +159,7 @@ export function parseTextResume(text: string): ParsedResume {
 export async function parsePDFResume(arrayBuffer: ArrayBuffer): Promise<ParsedResume> {
   // Legacy build ships its own polyfills (see pdf-to-jpg.tsx note).
   const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.min.mjs");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker-legacy.min.mjs";
+  pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pages: { text: string; tables: number; images: number }[] = [];
   let fullText = "";

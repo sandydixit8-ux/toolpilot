@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { UploadBox } from '@/components/tools/upload-box';
 import { FileText, Download, CheckCircle, Loader2, RotateCcw } from 'lucide-react';
 import { rowsToXlsxBlob, downloadXlsx } from '@/lib/xlsx-export';
+import { PDFJS_WORKER_URL } from '@/lib/pdf-worker';
 
 interface TextItem {
   str: string;
@@ -71,7 +72,7 @@ export function PdfToExcelTool() {
       setProgress('Reading PDF...');
       // Legacy build ships its own polyfills (see pdf-to-jpg.tsx note).
       const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.min.mjs');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker-legacy.min.mjs';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
 
       const arrayBuffer = await files[0].arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

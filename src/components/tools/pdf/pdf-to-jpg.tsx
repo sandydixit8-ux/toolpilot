@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { UploadBox } from '@/components/tools/upload-box';
+import { PDFJS_WORKER_URL } from '@/lib/pdf-worker';
 import {
   FileText,
   Download,
@@ -56,7 +57,7 @@ export function PdfToJpgTool() {
       // calls it for fingerprinting; without it every render throws "toHex is
       // not a function"). Paired with public/pdf.worker-legacy.min.mjs.
       const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.min.mjs');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker-legacy.min.mjs';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
 
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();

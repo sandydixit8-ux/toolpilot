@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
       { source: "/cookie-policy", destination: "/cookies", permanent: true },
     ];
   },
+  async headers() {
+    return [
+      {
+        source: "/pdf.worker-legacy.min.mjs",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
