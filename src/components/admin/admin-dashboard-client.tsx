@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Users, Wrench, BarChart3, Newspaper, DollarSign } from "lucide-react";
+import { Mail, Users, Wrench, BarChart3, Newspaper, DollarSign, Activity } from "lucide-react";
 import { useI18n } from "@/components/i18n";
 import type { LucideIcon } from "lucide-react";
 
@@ -89,6 +89,20 @@ export function AdminDashboardClient({
                 <div>
                   <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{t("admin.revenue")}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{t("admin.revenueDesc")}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/health">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <Activity className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{t("admin.health")}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t("admin.healthDesc")}</p>
                 </div>
               </div>
             </CardContent>

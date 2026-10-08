@@ -337,3 +337,20 @@ model UsageThrottle {
   @@index([ip])
   @@index([date])
 }
+
+model HealthCheckLog {
+  id         Int      @id @default(autoincrement())
+  runId      String
+  check      String
+  category   String
+  status     String
+  responseMs Int
+  statusCode Int?
+  meta       String?
+  createdAt  DateTime @default(now())
+
+  @@index([runId])
+  @@index([createdAt])
+  @@index([check, createdAt])
+  @@index([status, createdAt])
+}
