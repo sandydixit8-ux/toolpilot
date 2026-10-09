@@ -94,7 +94,7 @@ export async function runHealthChecks() {
     keepaliveUrl,
   ];
   const renderPromise = (async () => {
-    const render = await timedFetch(`${RENDER_URL}/`, "GET", 30000);
+    const render = await timedFetch(`${RENDER_URL}/health`, "GET", 30000);
     const status: HealthStatus =
       render.status !== null && render.status < 500 ? (render.ms > SLOW_MS ? "DEGRADED" : "UP") : "DOWN";
     return {
