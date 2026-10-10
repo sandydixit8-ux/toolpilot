@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Copy, Check, Sparkles } from 'lucide-react';
+import { ShareResult } from '@/components/tools/share-result';
 
 type SummaryLength = 'short' | 'medium' | 'long';
 
@@ -105,6 +106,9 @@ export function AiTextSummarizerTool() {
               readOnly
               value={output}
             />
+            <div className="mt-3">
+              <ShareResult message={`Here's a quick summary I made with a free AI tool:`} />
+            </div>
           </div>
         )}
       </div>

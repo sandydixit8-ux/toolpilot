@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { countWords } from '@/tools/developer/index';
+import { ShareResult } from '@/components/tools/share-result';
 
 export function WordCounterTool() {
   const [text, setText] = useState('');
@@ -39,6 +40,10 @@ export function WordCounterTool() {
             </div>
           ))}
         </div>
+
+        {text && (
+          <ShareResult message={`My text has ${stats.words} words, ${stats.chars} characters and takes ~${stats.readingTime} min to read. Count yours free:`} />
+        )}
       </div>
     </div>
   );

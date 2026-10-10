@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 export function SipCalculatorTool() {
   const [monthly, setMonthly] = useState('');
@@ -47,6 +48,9 @@ export function SipCalculatorTool() {
                 <span className="text-sm text-gray-600 dark:text-gray-400">Estimated Returns</span>
                 <span className="font-semibold text-green-600 dark:text-green-400">₹{returns.toFixed(0)}</span>
               </div>
+            </div>
+            <div className="mt-4">
+              <ShareResult message={`My SIP of ₹${P}/month for ${years} years grows to ~₹${maturity.toFixed(0)}. Project your returns free:`} />
             </div>
           </div>
         )}

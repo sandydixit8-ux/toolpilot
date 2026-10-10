@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 export function EmiCalculatorTool() {
   const [principal, setPrincipal] = useState('');
@@ -96,6 +97,9 @@ export function EmiCalculatorTool() {
                   <span className="text-gray-600 dark:text-gray-400">Interest ({((totalInterest / totalPayment) * 100).toFixed(1)}%)</span>
                 </div>
               </div>
+            </div>
+            <div className="mt-4">
+              <ShareResult message={`My home loan EMI is ₹${emi.toFixed(0)}/month over ${N} months (total ₹${totalPayment.toFixed(0)}). Calculate yours free:`} />
             </div>
           </div>
         )}

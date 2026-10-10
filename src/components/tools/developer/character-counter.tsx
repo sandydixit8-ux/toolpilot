@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { countWords } from '@/tools/developer/index';
+import { ShareResult } from '@/components/tools/share-result';
 
 export function CharacterCounterTool() {
   const [text, setText] = useState('');
@@ -71,6 +72,10 @@ export function CharacterCounterTool() {
             })}
           </div>
         </div>
+
+        {text && (
+          <ShareResult message={`My post is ${stats.chars} characters (${stats.words} words). Check where it fits on each platform free:`} />
+        )}
       </div>
     </div>
   );

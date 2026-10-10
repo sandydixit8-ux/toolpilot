@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 export function PercentageCalculatorTool() {
   const [mode, setMode] = useState<'of' | 'change' | 'difference'>('of');
@@ -62,6 +63,9 @@ export function PercentageCalculatorTool() {
               {mode === 'of' ? result.toFixed(2) : `${result.toFixed(2)}%`}
             </p>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{formula}</p>
+            <div className="mt-4">
+              <ShareResult message={`${formula}. Calculate yours free:`} />
+            </div>
           </div>
         )}
       </div>
