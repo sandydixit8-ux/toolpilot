@@ -6,6 +6,7 @@ import { categories } from "@/config/categories";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { FAQSection } from "@/components/tools/faq-section";
 import { RelatedTools } from "@/components/tools/related-tools";
+import { RelatedCategories } from "@/components/tools/related-categories";
 import { WebAppSchema, ItemListSchema } from "@/components/seo/structured-data";
 import { ToolRenderer } from "@/components/tools/tool-renderer";
 import { TrustBadges } from "@/components/tools/trust-badges";
@@ -118,6 +119,7 @@ export default async function SlugPage({ params }: Props) {
           }))}
           tracking={{ source: `/tools/${slug}`, path: `/tools/${slug}` }}
         />
+        <RelatedCategories current={slug} />
       </div>
     );
   }
@@ -256,15 +258,10 @@ export default async function SlugPage({ params }: Props) {
                 </dl>
               </CardContent>
             </Card>
-            {tool.relatedTools.length > 0 && (
-              <div className="hidden lg:block">
-                <RelatedTools tools={tool.relatedTools} />
-              </div>
-            )}
           </aside>
         </div>
         {tool.relatedTools.length > 0 && (
-          <div className="mt-8 lg:hidden">
+          <div className="mt-10">
             <RelatedTools tools={tool.relatedTools} />
           </div>
         )}
