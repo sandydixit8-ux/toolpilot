@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 export function GstCalculatorTool() {
   const [amount, setAmount] = useState('');
@@ -126,6 +127,9 @@ export function GstCalculatorTool() {
                 ₹{totalAmount.toFixed(2)}
               </span>
             </div>
+          </div>
+          <div className="mt-4">
+            <ShareResult message={`GST at ${numRate}% on ₹${originalAmount.toFixed(0)} comes to ₹${gstAmount.toFixed(0)} (total ₹${totalAmount.toFixed(0)}). Calculate GST free:`} />
           </div>
         </div>
 

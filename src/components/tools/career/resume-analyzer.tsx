@@ -6,6 +6,7 @@ import { parseResumeFile, parseTextResume, ParsedResume } from '@/lib/resume-par
 import { analyzeResume, AtsAnalysis } from '@/lib/resume-analyzer';
 import { matchJobDescription, JdMatchResult } from '@/lib/jd-matcher';
 import { generateRewriteSuggestions, RewriteSuggestion } from '@/lib/rewrite-suggestions';
+import { ShareResult } from '@/components/tools/share-result';
 
 type Tab = 'ats' | 'jd-match' | 'rewrites' | 'ats-view';
 
@@ -193,6 +194,9 @@ export function ResumeAnalyzerTool() {
           {analysis.priorityFixes.length > 0 && (
             <p className="text-xs text-gray-500 mt-3">{analysis.priorityFixes.length} priority fix(es) recommended</p>
           )}
+          <div className="mt-4 w-full">
+            <ShareResult message={`My resume scores ${score}/100 (${analysis.grade}) for ATS. Check yours free:`} />
+          </div>
         </div>
       </div>
 

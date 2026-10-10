@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Copy, Check, Sparkles } from 'lucide-react';
+import { ShareResult } from '@/components/tools/share-result';
 
 type ParaphraseStyle = 'formal' | 'casual' | 'creative';
 
@@ -171,11 +172,14 @@ export function AiParaphraserTool() {
                 {copied ? 'Copied!' : 'Copy'}
               </button>
             </div>
-            <textarea
+<textarea
             className="input mt-1 min-h-[160px] resize-y"
               readOnly
               value={output}
             />
+            <div className="mt-3">
+              <ShareResult message="I rephrased this text with a free paraphrasing tool:" />
+            </div>
           </div>
         )}
       </div>

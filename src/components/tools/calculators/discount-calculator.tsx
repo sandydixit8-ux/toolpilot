@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 export function DiscountCalculatorTool() {
   const [price, setPrice] = useState('');
@@ -39,6 +40,9 @@ export function DiscountCalculatorTool() {
                 <span className="text-xl font-bold text-brand-600 dark:text-brand-400">₹{finalPrice.toFixed(2)}</span>
               </div>
               <p className="text-sm text-green-600 dark:text-green-400">You save ₹{discountAmount.toFixed(2)}</p>
+            </div>
+            <div className="mt-4">
+              <ShareResult message={`₹${originalPrice.toFixed(0)} with ${discountPercent}% off = ₹${finalPrice.toFixed(0)} (save ₹${discountAmount.toFixed(0)}). Calculate discounts free:`} />
             </div>
           </div>
         )}

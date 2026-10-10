@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 const OLD_STANDARD_DEDUCTION = 50000;
 const NEW_STANDARD_DEDUCTION = 75000;
@@ -154,6 +155,9 @@ export function IncomeTaxCalculatorTool() {
             <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
               Section 87A rebate makes tax nil for taxable income up to ₹5,00,000 (Old Regime) or ₹12,00,000 (New Regime).
             </p>
+            <div className="mt-4">
+              <ShareResult message={`On income of ${formatINR(annualIncome)}, ${savings === 0 ? 'both tax regimes are equal' : `the ${better === 'new' ? 'New' : 'Old'} Regime saves you ${formatINR(savings)}`} in tax. Compare yours free:`} />
+            </div>
           </div>
         )}
 

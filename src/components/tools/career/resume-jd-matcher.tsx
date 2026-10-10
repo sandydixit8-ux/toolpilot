@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 interface MatchResult {
   matchPercentage: number;
@@ -67,6 +68,9 @@ export function ResumeJdMatcherTool() {
               </p>
               <div className="mx-auto mt-3 h-2 w-3/4 rounded-full bg-gray-200 dark:bg-gray-700">
                 <div className={`h-2 rounded-full ${result.matchPercentage >= 70 ? 'bg-green-500' : result.matchPercentage >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${result.matchPercentage}%` }} />
+              </div>
+              <div className="mt-4">
+                <ShareResult message={`My resume matches this job description ${result.matchPercentage}%. Check your match free:`} />
               </div>
             </div>
 

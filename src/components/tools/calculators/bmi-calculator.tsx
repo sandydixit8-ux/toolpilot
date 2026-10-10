@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 export function BmiCalculatorTool() {
   const [weight, setWeight] = useState('');
@@ -63,6 +64,9 @@ export function BmiCalculatorTool() {
                 <span>Overweight</span>
                 <span>Obese</span>
               </div>
+            </div>
+            <div className="mt-4">
+              <ShareResult message={`My BMI is ${bmi.toFixed(1)} (${category}). Check yours free:`} />
             </div>
           </div>
         )}
