@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ShareResult } from '@/components/tools/share-result';
 
 interface AtsResult {
   score: number;
@@ -119,6 +120,7 @@ export function ResumeAtsCheckerTool() {
 
         {result && (
           <div className="space-y-4">
+            <ShareResult message={`My ATS resume score is ${result.score}% on ToolPilot! Check yours free:`} />
             <div className="rounded-xl bg-gray-50 p-5 text-center dark:bg-gray-800/50">
               <p className="text-sm text-gray-600 dark:text-gray-400">ATS Score</p>
               <p className={`mt-1 text-4xl font-bold ${result.score >= 70 ? 'text-green-600 dark:text-green-400' : result.score >= 40 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
