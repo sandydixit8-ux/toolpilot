@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { allTools } from "@/config/tools";
+import { comparisons } from "@/config/comparisons";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpilotpro.in";
@@ -32,6 +33,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  const comparisonPages = comparisons.map((c) => ({
+    url: `${baseUrl}/tools/${c.a}-vs-${c.b}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
   let blogPages: MetadataRoute.Sitemap = [];
   try {
     const posts = await prisma.blogPost.findMany({
@@ -48,5 +56,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB not available at build time — skip blog posts
   }
 
-  return [...staticPages, ...categoryPages, ...toolPages, ...blogPages];
+  return [...staticPages, ...categoryPages, ...toolPages, ...comparisonPages, ...blogPages];
 }

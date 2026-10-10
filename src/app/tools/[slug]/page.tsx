@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getToolBySlug, allTools, getToolsByCategory } from "@/config/tools";
+import { getComparisonBySlug, comparisons } from "@/config/comparisons";
 import { categories } from "@/config/categories";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { FAQSection } from "@/components/tools/faq-section";
@@ -30,11 +31,23 @@ export const dynamicParams = false;
 export async function generateStaticParams() {
   const categoryParams = categories.map((c) => ({ slug: c.slug }));
   const toolParams = allTools.map((t) => ({ slug: t.slug }));
-  return [...categoryParams, ...toolParams];
+  const comparisonParams = comparisons.map((c) => ({ slug: `${c.a}-vs-${c.b}` }));
+  return [...categoryParams, ...toolParams, ...comparisonParams];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const cmp = getComparisonBySlug(slug);
+  if (cmp) {
+    const url = `${getSiteUrl()}/tools/${slug}`;
+    return {
+      title: `${cmp.a.name} vs ${cmp.b.name}: Which is Better? | ToolPilot`,
+      description: `Compare ${cmp.a.name} and ${cmp.b.name} — two free online tools. See how they differ on features, ease of use and privacy, then pick the right one.`,
+      alternates: { canonical: url },
+      openGraph: { title: `${cmp.a.name} vs ${cmp.b.name}`, description: `Compare ${cmp.a.name} vs ${cmp.b.name} free online tools.`, url, type: "website" },
+      twitter: { card: "summary_large_image", title: `${cmp.a.name} vs ${cmp.b.name}`, description: `Compare ${cmp.a.name} vs ${cmp.b.name} free online tools.` },
+    };
+  }
   const cat = categories.find((c) => c.slug === slug);
   if (cat) {
     return {
@@ -125,7 +138,156 @@ export default async function SlugPage({ params }: Props) {
   }
 
   const tool = getToolBySlug(slug);
-  if (!tool) notFound();
+  if (!tool) {
+    const cmp = getComparisonBySlug(slug);
+    if (!cmp) notFound();
+    const { a, b } = cmp;
+    const catA = categories.find((c) => c.slug === a.categorySlug);
+    const catB = categories.find((c) => c.slug === b.categorySlug);
+    const prosA = getProsCons(a.slug);
+    const prosB = getProsCons(b.slug);
+    const privacyOf = (t: typeof a) =>
+      t.processingType === "browser"
+        ? "Processed locally in your browser — your files never leave your device"
+        : "Processed securely on our servers and deleted automatically after use";
+    const related = [...new Set([...a.relatedTools, ...b.relatedTools].filter((s) => s !== a.slug && s !== b.slug))].slice(0, 6);
+    const faqs = [
+      {
+        question: `Which is better: ${a.name} or ${b.name}?`,
+        answer: `Both are free online tools from ToolPilot, but they solve different problems. Use ${a.name} when you want to ${a.description.charAt(0).toLowerCase() + a.description.slice(1)}. Use ${b.name} when you need to ${b.description.charAt(0).toLowerCase() + b.description.slice(1)}. The right choice depends on your task — both take seconds.`,
+      },
+      {
+        question: `Are ${a.name} and ${b.name} free to use?`,
+        answer: `Yes. Both ${a.name} and ${b.name} are 100% free on ToolPilot with no registration, no sign-up and no file limits. You can use them as many times as you need.`,
+      },
+      {
+        question: `Is it safe to use ${a.name} and ${b.name}?`,
+        answer: `Yes. ${privacyOf(a)}. ${privacyOf(b)}. ToolPilot does not store or share your files.`,
+      },
+    ];
+
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <Breadcrumbs items={[
+          { label: "Tools", href: "/tools" },
+          { label: catA?.name || a.category, href: `/tools/${a.categorySlug}` },
+          { label: `${a.name} vs ${b.name}` },
+        ]} />
+        <BannerAd slotId={ADS.toolCategory.banner} />
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{a.name} vs {b.name} — Which is Better?</h1>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">{a.name} and {b.name} are both free online tools on ToolPilot. This quick, side-by-side comparison helps you pick the right one.</p>
+        <div className="flex flex-wrap gap-3 mb-8">
+          <Link href={`/tools/${a.slug}`} className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors">
+            Open {a.name} <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link href={`/tools/${b.slug}`} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 transition-colors">
+            Open {b.name} <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <section className="mb-10">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Comparison</h2>
+          <Card>
+            <CardContent className="p-0 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-800">
+                    <th className="p-4 text-left font-semibold text-gray-500 dark:text-gray-400 w-1/4">Feature</th>
+                    <th className="p-4 text-left font-semibold text-gray-900 dark:text-gray-100">{a.name}</th>
+                    <th className="p-4 text-left font-semibold text-gray-900 dark:text-gray-100">{b.name}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  <tr>
+                    <td className="p-4 text-gray-500 dark:text-gray-400">What it does</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">{a.description}</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">{b.description}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-gray-500 dark:text-gray-400">Category</td>
+                    <td className="p-4"><Link className="text-blue-600 dark:text-blue-400 hover:underline" href={`/tools/${a.categorySlug}`}>{catA?.name || a.category}</Link></td>
+                    <td className="p-4"><Link className="text-blue-600 dark:text-blue-400 hover:underline" href={`/tools/${b.categorySlug}`}>{catB?.name || b.category}</Link></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-gray-500 dark:text-gray-400">How it processes</td>
+                    <td className="p-4 capitalize text-gray-700 dark:text-gray-300">{a.processingType}</td>
+                    <td className="p-4 capitalize text-gray-700 dark:text-gray-300">{b.processingType}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-gray-500 dark:text-gray-400">Privacy</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">{privacyOf(a)}</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">{privacyOf(b)}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-gray-500 dark:text-gray-400">Cost</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">Free</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">Free</td>
+                  </tr>
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </section>
+        <section className="mb-10">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">How to choose</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Use {a.name} if you want to…</h3>
+                <p className="text-gray-600 dark:text-gray-400">{a.description}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Use {b.name} if you want to…</h3>
+                <p className="text-gray-600 dark:text-gray-400">{b.description}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+        <section className="mb-10">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Pros &amp; Cons</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">{a.name}</h3>
+                {prosA ? (
+                  <ul className="space-y-2">
+                    {prosA.pros.map((p, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-600 dark:text-gray-400"><CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" /> {p}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">{a.description}</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">{b.name}</h3>
+                {prosB ? (
+                  <ul className="space-y-2">
+                    {prosB.pros.map((p, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-600 dark:text-gray-400"><CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" /> {p}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">{b.description}</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+        <InArticleAd slotId={ADS.toolDetail.inArticle} />
+        <FAQSection faqs={faqs} title={`${a.name} vs ${b.name} — FAQs`} />
+        {related.length > 0 && (
+          <div className="mt-10">
+            <RelatedTools tools={related} />
+          </div>
+        )}
+        <RelatedCategories current={a.categorySlug} />
+      </div>
+    );
+  }
 
   const toolCat = categories.find((c) => c.slug === tool.categorySlug);
   const prosCons = getProsCons(tool.slug);
