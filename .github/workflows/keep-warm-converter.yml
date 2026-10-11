@@ -2,7 +2,9 @@ name: Keep converter warm
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    # Offset from keepalive.yml (*/5) so the two pings land on different
+    # minutes and cover cron drift. Exercises the full Vercel->Render path.
+    - cron: "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
   workflow_dispatch: {}
 
 jobs:

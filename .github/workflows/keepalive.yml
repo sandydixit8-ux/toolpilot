@@ -2,8 +2,9 @@ name: Render Keep-Alive
 
 on:
   schedule:
-    # Render free tier sleeps after ~15 min idle; ping every 10 min to stay warm.
-    - cron: '*/10 * * * *'
+    # Render free tier sleeps after ~15 min idle. GitHub cron is best-effort
+    # and can drift, so ping every 5 min (min allowed) for safe margin.
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
