@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Moon, Sun, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const [mounted, setMounted] = useState(false);
+  const interacted = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -16,6 +17,7 @@ export function ThemeToggle() {
 
   useEffect(() => {
     if (!mounted) return;
+    if (!interacted.current && localStorage.getItem("theme") === null) return;
     const root = document.documentElement;
     root.classList.remove("light", "dark");
 
@@ -31,6 +33,7 @@ export function ThemeToggle() {
   if (!mounted) return <Button variant="ghost" size="icon" className="h-9 w-9" />;
 
   const cycle = () => {
+    interacted.current = true;
     const next = theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
     setTheme(next);
   };

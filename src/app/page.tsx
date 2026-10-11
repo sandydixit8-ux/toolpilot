@@ -1,40 +1,31 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { Metadata } from "next";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getFeaturedTools, getPopularTools, allTools } from "@/config/tools";
-import { CATEGORIES, SITE_NAME, SITE_URL } from "@/lib/constants";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { getGeneralAffiliates } from "@/lib/affiliates";
 import { ADS } from "@/config/ads";
-import { ArrowRight, Zap, Shield, Smartphone, Star, TrendingUp, Sparkles, FileText, Image as ImageIcon, Calculator, Briefcase, Building2, Code2, Languages, Video } from "lucide-react";
+import { Hero } from "@/components/home/hero";
+import { TrustBar } from "@/components/home/trust-bar";
+import { CategoryGrid } from "@/components/home/category-grid";
+import { PopularGrid } from "@/components/home/popular-grid";
+import { FeaturedGrid } from "@/components/home/featured-grid";
+import { FinalCta } from "@/components/home/final-cta";
 
 export const metadata: Metadata = {
   alternates: { canonical: SITE_URL },
   title: `${SITE_NAME} – Free Online Tools for Work, Money, Career & Everyday Life`,
-  description: "88+ free online tools — PDF converters and compressors, image resizers, income tax and EMI calculators, resume and ATS checkers, and more. Free, no signup, no install.",
-};
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  pdf: <FileText className="h-6 w-6" />,
-  image: <ImageIcon className="h-6 w-6" />,
-  calculators: <Calculator className="h-6 w-6" />,
-  career: <Briefcase className="h-6 w-6" />,
-  business: <Building2 className="h-6 w-6" />,
-  developer: <Code2 className="h-6 w-6" />,
-  ai: <Sparkles className="h-6 w-6" />,
-  translation: <Languages className="h-6 w-6" />,
-  video: <Video className="h-6 w-6" />,
+  description:
+    "91+ free online tools — PDF converters and compressors, image resizers, income tax and EMI calculators, resume and ATS checkers, and more. Free, no signup, no install.",
 };
 
 export const revalidate = 900;
 
 export default async function HomePage() {
-  const featured = getFeaturedTools();
-  const popular = getPopularTools();
-
   let latestPosts: { slug: string; title: string; excerpt: string | null; category: { name: string } | null }[] = [];
   try {
     latestPosts = await prisma.blogPost.findMany({
@@ -72,201 +63,65 @@ export default async function HomePage() {
           __html: JSON.stringify(faqSchema).replace(/</g, "\\u003c").replace(/>/g, "\\u003e"),
         }}
       />
-      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl lg:text-6xl">
-              Free Online Tools for{" "}
-              <span className="text-blue-600 dark:text-blue-400">Work, Money, Career & Everyday Life</span>
-            </h1>
-<p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Free online tools for PDF, images, money & career — no signup, no install, just fast results in your browser.
-        </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="xl" asChild>
-                <Link href="/tools">Explore All Tools</Link>
-              </Button>
-              <Button variant="outline" size="xl" asChild>
-                <Link href="#popular">Popular Tools</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[
-            { icon: <Zap className="h-5 w-5" />, label: "Lightning Fast", desc: "Instant results" },
-            { icon: <Shield className="h-5 w-5" />, label: "Privacy First", desc: "Data stays local" },
-            { icon: <Smartphone className="h-5 w-5" />, label: "Works Everywhere", desc: "Mobile & desktop" },
-            { icon: <Star className="h-5 w-5" />, label: "Always Free", desc: "No hidden costs" },
-          ].map((item) => (
-            <Card key={item.label}>
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                  {item.icon}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{item.label}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{item.desc}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+      <Hero />
+      <TrustBar />
 
       <BannerAd slotId={ADS.home.topBanner} />
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Browse by Category</h2>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">Find the right tool for your task</p>
-          </div>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/tools">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {CATEGORIES.map((cat) => (
-            <Link key={cat.slug} href={`/tools/${cat.slug}`}>
-              <Card className="h-full hover:shadow-md transition-all hover:border-blue-200 dark:hover:border-blue-800 cursor-pointer group">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors dark:bg-blue-900/30 dark:text-blue-400">
-                      {categoryIcons[cat.slug]}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{cat.name}</h3>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{cat.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <CategoryGrid />
 
-      <section id="top-tools" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Most Popular Free Tools</h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-8">Ready-to-use tools for everyday tasks</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
-            { href: "/tools/income-tax-calculator", text: "Income Tax Calculator", desc: "Compare old vs new regime and find your FY 2025-26 tax" },
-            { href: "/tools/emi-calculator", text: "Home Loan EMI Calculator", desc: "Know your monthly EMI and total interest before you apply" },
-            { href: "/tools/resume-ats-checker", text: "Resume ATS Checker", desc: "Score your resume for ATS before you apply" },
-            { href: "/tools/gst-calculator", text: "GST Calculator", desc: "Add or remove GST with CGST, SGST & IGST split" },
-            { href: "/tools/pdf-compressor", text: "PDF Compressor", desc: "Reduce PDF size without losing quality" },
-            { href: "/tools/jpg-to-pdf", text: "JPG to PDF", desc: "Merge multiple photos into one PDF" },
-            { href: "/tools/image-compressor", text: "Image Compressor", desc: "Shrink images for WhatsApp and email" },
-            { href: "/tools/resume-builder", text: "Resume Builder", desc: "Create an ATS-friendly resume in minutes" },
-          ].map((t) => (
-            <Link key={t.href} href={t.href} className="group flex items-start gap-3 rounded-xl border border-gray-200 dark:border-gray-800 p-4 hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
-              <div>
-                <p className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">{t.text}</p>
-                <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{t.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section id="popular" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
-              Popular Tools
-            </h2>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">Most used tools by our users</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {popular.map((tool) => (
-            <Link key={tool.slug} href={`/tools/${tool.slug}`}>
-              <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-5">
-                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">{tool.category}</p>
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">{tool.name}</h3>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{tool.description}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <PopularGrid />
 
       <InArticleAd slotId={ADS.home.midArticle} />
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8 flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-purple-600" />
-          Featured Tools
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featured.map((tool) => (
-            <Link key={tool.slug} href={`/tools/${tool.slug}`}>
-              <Card className="h-full hover:shadow-lg transition-all cursor-pointer border-2 hover:border-blue-200 dark:hover:border-blue-800">
-                <CardContent className="p-6">
-                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">{tool.category}</p>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{tool.name}</h3>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-3">{tool.longDescription}</p>
-                  <span className="mt-4 inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400">
-                    Try it now <ArrowRight className="ml-1 h-4 w-4" />
-                  </span>
-                </CardContent>
-              </Card>
-            </Link>
+      <FeaturedGrid />
+
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <h2 className="mb-8 text-center text-2xl font-bold text-foreground sm:text-3xl">Frequently Asked Questions</h2>
+        <div className="mx-auto max-w-3xl space-y-3">
+          {faqs.map((faq, i) => (
+            <details
+              key={i}
+              className="group rounded-2xl border border-border bg-card p-5 transition-colors open:border-blue-500/40"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-foreground">
+                {faq.q}
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-180">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+                    <path d="M4.427 5.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 5H4.604a.25.25 0 00-.177.427z" />
+                  </svg>
+                </span>
+              </summary>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
+            </details>
           ))}
         </div>
       </section>
 
-      <section className="bg-gray-50 dark:bg-gray-900">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8 text-center">Frequently Asked Questions</h2>
-          <div className="mx-auto max-w-3xl space-y-4">
-            {faqs.map((faq, i) => (
-              <details key={i} className="group rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5">
-                <summary className="flex cursor-pointer items-center justify-between font-medium text-gray-900 dark:text-gray-100">
-                  {faq.q}
-                  <span className="ml-4 shrink-0 transition-transform group-open:rotate-180">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4.427 5.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 5H4.604a.25.25 0 00-.177.427z" />
-                    </svg>
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{faq.a}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mb-8 flex items-end justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Latest from the Blog</h2>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">Guides and tips for getting more done with free tools</p>
+            <h2 className="text-2xl font-bold text-foreground sm:text-3xl">Latest from the Blog</h2>
+            <p className="mt-1 text-muted-foreground">Guides and tips for getting more done with free tools</p>
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/blog">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            <Link href="/blog" className="gap-1">
+              View all <ArrowRight className="h-4 w-4" />
+            </Link>
           </Button>
         </div>
         {latestPosts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {latestPosts.map((post) => (
               <Link key={post.slug} href={`/blog/${post.slug}`}>
-                <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+                <Card className="card-morph h-full cursor-pointer">
                   <CardContent className="p-5">
                     {post.category?.name && (
-                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">{post.category.name}</p>
+                      <p className="mb-2 text-xs font-medium text-blue-400">{post.category.name}</p>
                     )}
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{post.title}</h3>
+                    <h3 className="line-clamp-2 font-semibold text-foreground">{post.title}</h3>
                     {post.excerpt && (
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{post.excerpt}</p>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
                     )}
                   </CardContent>
                 </Card>
@@ -274,7 +129,7 @@ export default async function HomePage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400">New guides are on the way.</p>
+          <p className="text-muted-foreground">New guides are on the way.</p>
         )}
       </section>
 
@@ -294,13 +149,7 @@ export default async function HomePage() {
 
       <BannerAd slotId={ADS.home.bottomBanner} />
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Ready to get started?</h2>
-        <p className="mt-2 text-gray-500 dark:text-gray-400">Explore {allTools.length} free online tools</p>
-        <Button size="xl" className="mt-6" asChild>
-          <Link href="/tools">Explore All Tools</Link>
-        </Button>
-      </section>
+      <FinalCta />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -11,6 +12,8 @@ import { OrganizationSchema, WebsiteSchema } from "@/components/seo/structured-d
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/constants";
 import { ADS, ADS_ENABLED, ADSENSE_PUBLISHER_ID } from "@/config/ads";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
@@ -87,11 +90,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('theme');
+                  var stored = localStorage.getItem('theme');
                   var root = document.documentElement;
-                  root.classList.add('light');
-                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    root.classList.remove('light');
+                  root.classList.remove('light', 'dark');
+                  if (stored === 'system') {
+                    root.classList.add(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                  } else if (stored === 'light') {
+                    root.classList.add('light');
+                  } else {
                     root.classList.add('dark');
                   }
                 } catch(e) {}
@@ -110,7 +116,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-screen bg-background antialiased">
+      <body className={`${inter.variable} min-h-screen bg-background text-foreground antialiased`}>
         <Providers>
           <I18nProvider>
             <Header />
