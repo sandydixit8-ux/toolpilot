@@ -94,9 +94,13 @@ export async function runHealthChecks() {
     keepaliveUrl,
   ];
   const renderPromise = (async () => {
-    const render = await timedFetch(`${RENDER_URL}/health`, "GET", 30000);
+    // Render free tier sleeps after ~15 min idle and cold-starts in ~10-30s.
+    // The service is still reachable (HTTP < 500), so treat any response as UP:
+    // a latent cold start is expected behaviour, not an outage. Use a longer
+    // timeout so a cold start does not time out and register as DOWN.
+    const render = await timedFetch(`${RENDER_URL}/health`, "GET", 55000);
     const status: HealthStatus =
-      render.status !== null && render.status < 500 ? (render.ms > SLOW_MS ? "DEGRADED" : "UP") : "DOWN";
+      render.status !== null && render.status < 500 ? "UP" : "DOWN";
     return {
       check: `${RENDER_URL} (converter service)`,
       category: "SERVICE" as const,
