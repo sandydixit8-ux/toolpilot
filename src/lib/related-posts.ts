@@ -7,10 +7,10 @@ const STOPWORDS = new Set([
   "tax", "gst", "resume", "calculator", "india", "2026", "2025",
 ]);
 
-export async function getRelatedPosts(currentSlug: string, title: string) {
+export async function getRelatedPosts(currentSlug: string, title: string, categoryId?: string | null) {
   const posts = await prisma.blogPost.findMany({
     where: { status: "PUBLISHED", slug: { not: currentSlug } },
-    select: { slug: true, title: true, excerpt: true },
+    select: { slug: true, title: true, excerpt: true, categoryId: true },
   });
 
   const tokens = title
@@ -33,6 +33,7 @@ export async function getRelatedPosts(currentSlug: string, title: string) {
         if (postTokens.has(token)) score += 2;
         if (hay.includes(token)) score += 1;
       }
+      if (categoryId && post.categoryId === categoryId) score += 5;
       return { post, score };
     })
     .filter((s) => s.score > 0)

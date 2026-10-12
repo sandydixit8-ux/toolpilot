@@ -39,7 +39,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: post.seoTitle.replace(/ \| ToolPilot$/, ""),
     description: post.seoDescription,
     alternates: { canonical: `${getSiteUrl()}/blog/${post.slug}` },
-    openGraph: { title: post.seoTitle, description: post.seoDescription, type: "article" },
+    openGraph: {
+      title: post.seoTitle,
+      description: post.seoDescription,
+      type: "article",
+      publishedTime: post.publishedAt?.toISOString(),
+      modifiedTime: post.updatedAt?.toISOString(),
+      authors: [post.author],
+      images: ["/og.png"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.seoTitle,
+      description: post.seoDescription,
+      images: ["/og.png"],
+    },
     robots: { index: true, follow: true },
   };
 }
@@ -59,7 +73,7 @@ export default async function BlogPostPage({ params }: Props) {
   try {
     renderedContent = renderBlogContent(post.content);
     toc = getBlogToc(post.content);
-    relatedPosts = await getRelatedPosts(post.slug, post.title);
+    relatedPosts = await getRelatedPosts(post.slug, post.title, post.categoryId);
   } catch {
     notFound();
   }

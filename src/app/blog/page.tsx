@@ -20,6 +20,13 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/blog`,
     siteName: "ToolPilot",
     type: "website",
+    images: ["/og.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog – Free Tool Guides, Tutorials & Tips",
+    description: "Free guides on income tax, PDF tools, resume building, and more.",
+    images: ["/og.png"],
   },
 };
 
