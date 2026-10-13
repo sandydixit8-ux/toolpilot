@@ -1,0 +1,46 @@
+name: youtube-shorts
+
+on:
+  schedule:
+    # daily 08:30 IST == 03:00 UTC
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Generate the Short only (no upload)"
+        type: boolean
+        default: false
+
+env:
+  TZ: Asia/Kolkata
+
+jobs:
+  shorts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install font
+        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core
+      - name: Build Short (and upload unless dry-run)
+        run: npx tsx scripts/youtube-shorts/run.ts ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          SHORTS_FONT: /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
+          YT_PRIVACY: public
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-short
+          path: out/youtube-shorts/
+          if-no-files-found: ignore
+          retention-days: 7
