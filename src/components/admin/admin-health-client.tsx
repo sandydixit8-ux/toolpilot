@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Activity, RefreshCw, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
 interface CheckItem {
@@ -69,6 +69,7 @@ export function AdminHealthClient() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoRan = useRef(false);
 
   const load = useCallback(async () => {
     try {
@@ -89,7 +90,7 @@ export function AdminHealthClient() {
     return () => clearInterval(t);
   }, [load]);
 
-  const runNow = async () => {
+  const runNow = useCallback(async () => {
     setRunning(true);
     try {
       const res = await fetch("/api/admin/health/run", { method: "POST" });
@@ -100,7 +101,15 @@ export function AdminHealthClient() {
     } finally {
       setRunning(false);
     }
-  };
+  }, [load]);
+
+  useEffect(() => {
+    if (autoRan.current || !data) return;
+    autoRan.current = true;
+    const startedAt = data.latest ? new Date(data.latest.startedAt).getTime() : 0;
+    const stale = Date.now() - startedAt > 10 * 60 * 1000;
+    if (stale) runNow();
+  }, [data, runNow]);
 
   const latest = data?.latest ?? null;
   const overall = !latest ? "UNKNOWN" : latest.down > 0 ? "DOWN" : latest.degraded > 0 ? "DEGRADED" : "UP";
