@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Wrench, FileText, Mail, Users, TrendingUp,
+  Wrench, FileText, Users, TrendingUp,
   BarChart3, ArrowLeft, RefreshCw, Activity,
   CalendarDays, MousePointerClick, Globe,
 } from "lucide-react";
@@ -32,6 +32,20 @@ interface CountryCount {
   count: number;
 }
 
+interface PageCount {
+  path: string;
+  count: number;
+}
+
+interface Pageviews {
+  today: number;
+  week: number;
+  month: number;
+  total: number;
+  daily: DailyCount[];
+  topPages: PageCount[];
+}
+
 interface Analytics {
   tools: { total: number; published: number; draft: number };
   blog: { total: number; published: number };
@@ -39,6 +53,7 @@ interface Analytics {
   subscribers: { total: number; confirmed: number };
   leads: { total: number };
   overview: { today: number; week: number; month: number; total: number; distinctTools: number };
+  pageviews: Pageviews;
   daily: DailyCount[];
   topTools: ToolStat[];
   events: RecentEvent[];
@@ -102,6 +117,8 @@ export function AdminAnalyticsClient() {
 
   useEffect(() => {
     load();
+    const t = setInterval(load, 60000);
+    return () => clearInterval(t);
   }, [load]);
 
   if (loading && !data) {
@@ -138,7 +155,8 @@ export function AdminAnalyticsClient() {
     );
   }
 
-  const { overview, daily, topTools, events } = data;
+  const { overview, topTools, events, pageviews } = data;
+  const daily = pageviews.daily;
   const maxDay = Math.max(1, ...daily.map((d) => d.count));
   const maxTool = Math.max(1, ...topTools.map((t) => t.count));
 
@@ -154,14 +172,14 @@ export function AdminAnalyticsClient() {
     .sort((a, b) => b.count - a.count);
 
   const stats = [
-    { label: "Visits Today", value: overview.today, icon: Activity, color: "text-green-600 dark:text-green-400" },
-    { label: "Last 7 Days", value: overview.week, icon: CalendarDays, color: "text-blue-600 dark:text-blue-400" },
-    { label: "Last 30 Days", value: overview.month, icon: TrendingUp, color: "text-purple-600 dark:text-purple-400" },
-    { label: "Total Tool Uses", value: overview.total, icon: MousePointerClick, color: "text-orange-600 dark:text-orange-400" },
+    { label: "Visits Today", value: pageviews.today, icon: Activity, color: "text-green-600 dark:text-green-400" },
+    { label: "Visits (7d)", value: pageviews.week, icon: CalendarDays, color: "text-blue-600 dark:text-blue-400" },
+    { label: "Visits (30d)", value: pageviews.month, icon: TrendingUp, color: "text-purple-600 dark:text-purple-400" },
+    { label: "Total Visits", value: pageviews.total, icon: Globe, color: "text-sky-600 dark:text-sky-400" },
+    { label: "Tool Uses Today", value: overview.today, icon: MousePointerClick, color: "text-orange-600 dark:text-orange-400" },
     { label: "Published Tools", value: data.tools.published, icon: Wrench, color: "text-orange-600 dark:text-orange-400" },
     { label: "Blog Posts", value: data.blog.published, icon: FileText, color: "text-purple-600 dark:text-purple-400" },
     { label: "Subscribers", value: data.subscribers.total, icon: Users, color: "text-green-600 dark:text-green-400" },
-    { label: "Contacts (7d)", value: data.contacts.recent, icon: Mail, color: "text-blue-600 dark:text-blue-400" },
   ];
 
   return (
@@ -243,7 +261,7 @@ export function AdminAnalyticsClient() {
                 </>
               )}
             </div>
-            <p className="mt-3 text-xs text-gray-400">Click a day bar to see which tools were used that day.</p>
+            <p className="mt-3 text-xs text-gray-400">Bars show page views. Click a day to see tool usage for that day.</p>
           </CardContent>
         </Card>
 
@@ -287,6 +305,39 @@ export function AdminAnalyticsClient() {
             )}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Globe className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Top Pages (30d)</h2>
+              <span className="ml-auto text-xs text-gray-400">{pageviews.topPages.length} pages</span>
+            </div>
+            {pageviews.topPages.length === 0 ? (
+              <p className="text-sm text-gray-400">No page views yet.</p>
+            ) : (
+              <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                {pageviews.topPages.map((p, i) => {
+                  const maxPage = Math.max(1, ...pageviews.topPages.map((x) => x.count));
+                  return (
+                    <div key={p.path}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="flex items-center min-w-0">
+                          <span className="w-6 shrink-0 text-xs text-gray-400">{i + 1}</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300 truncate" title={p.path}>{p.path}</span>
+                        </span>
+                        <span className="ml-2 shrink-0 text-gray-500 dark:text-gray-400">{p.count}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                        <div className="h-full rounded-full bg-sky-500 transition-all" style={{ width: `${Math.round((p.count / maxPage) * 100)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -294,11 +345,11 @@ export function AdminAnalyticsClient() {
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <MousePointerClick className="h-5 w-5 text-green-600 dark:text-green-400" />
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Recent Visits</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Recent Tool Views</h2>
               <span className="ml-auto text-xs text-gray-400">latest {events.length}</span>
             </div>
             {events.length === 0 ? (
-              <p className="text-sm text-gray-400">No visits recorded yet.</p>
+              <p className="text-sm text-gray-400">No tool views recorded yet.</p>
             ) : (
               <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
                 {events.map((e, i) => (
@@ -326,7 +377,7 @@ export function AdminAnalyticsClient() {
             <div className="flex items-center gap-2 mb-4">
               <CalendarDays className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-                {selectedDay ? `Visits on ${fmtDateKey(selectedDay)}` : "Day Breakdown"}
+                {selectedDay ? `Tool views on ${fmtDateKey(selectedDay)}` : "Day Breakdown"}
               </h2>
               {selectedDay && (
                 <button
@@ -342,7 +393,7 @@ export function AdminAnalyticsClient() {
                 Click any bar in the Daily Visits chart to see the exact tools used that day, or pick a tool below to see its all-time breakdown.
               </p>
             ) : selectedDayTools.length === 0 ? (
-              <p className="text-sm text-gray-400">No visit details available for this day (older than the most recent 200 events).</p>
+              <p className="text-sm text-gray-400">No tool views for this day (older than the most recent 200 events).</p>
             ) : (
               <div className="space-y-3">
                 {selectedDayTools.map((t) => {
@@ -360,7 +411,7 @@ export function AdminAnalyticsClient() {
                   );
                 })}
                 <div className="pt-3 mt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-sm">
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">{selectedDayEvents.length} total visits</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{selectedDayEvents.length} tool views</span>
                   <span className="text-xs text-gray-400">{selectedDayTools.length} tools</span>
                 </div>
               </div>

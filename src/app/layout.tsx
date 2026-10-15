@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { ConverterWarmer } from "@/components/converter-warmer";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { Providers } from "@/components/providers";
 import { I18nProvider } from "@/components/i18n";
 import { TipJar } from "@/components/revenue/tip-jar";
@@ -124,6 +125,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main id="main-content" className="flex-1">{children}</main>
             <Footer />
             <ConverterWarmer />
+            <PageViewTracker />
             <CookieConsent />
             <TipJar />
             {ADS_ENABLED && ADS.anchor && <AnchorAd slotId={ADS.anchor} />}

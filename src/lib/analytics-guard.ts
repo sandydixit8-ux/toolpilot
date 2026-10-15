@@ -43,7 +43,7 @@ const BOT_PATTERNS = [
   /undici/i,
   /postmanruntime/i,
   /insomnia/i,
-  /k6/i,
+  /\bk6/i,
   /\bcurl\/?\d/i,
   /\bwget/i,
   /mozilla\/5\.0\s*$/, // bare UA without version details
@@ -65,6 +65,15 @@ export function getClientIp(request: Request): string {
   return "unknown";
 }
 
+export function getCountry(request: Request): string {
+  return (
+    request.headers.get("x-vercel-ip-country") ||
+    request.headers.get("x-vercel-country") ||
+    request.headers.get("cf-ipcountry") ||
+    "unknown"
+  ).toUpperCase();
+}
+
 const burstTracker = new Map<string, { start: number; count: number }>();
 const BURST_WINDOW_MS = 60_000;
 const BURST_MAX = 12;
@@ -81,11 +90,10 @@ export function isBurst(ip: string): boolean {
   return track.count > BURST_MAX;
 }
 
-export function getClientCountry(request: Request): string {
-  return (
-    request.headers.get("x-vercel-country") ||
-    request.headers.get("x-vercel-ip-country") ||
-    request.headers.get("cf-ipcountry") ||
-    "unknown"
-  ).toUpperCase();
+export const getClientCountry = getCountry;
+
+export const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+export function istDateKey(d: Date = new Date()): string {
+  return new Date(d.getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
 }

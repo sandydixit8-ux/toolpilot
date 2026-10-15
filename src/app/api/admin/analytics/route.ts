@@ -45,6 +45,9 @@ export async function GET() {
       topTools,
       totalUsage,
       countries,
+      pvTotal,
+      pvDailyRows,
+      pvTopPages,
     ] = await Promise.all([
       prisma.tool.count(),
       prisma.tool.count({ where: { status: "PUBLISHED" } }),
@@ -86,6 +89,20 @@ export async function GET() {
         AND metadata::jsonb->>'country' <> 'UNKNOWN'
         GROUP BY 1 ORDER BY 2 DESC LIMIT 10
       `,
+      prisma.pageView.count(),
+      prisma.$queryRaw<{ date: string; count: number }[]>`
+        SELECT to_char("createdAt" AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') AS date,
+               COUNT(*)::int AS count
+        FROM "PageView"
+        WHERE "createdAt" > NOW() - INTERVAL '30 days'
+        GROUP BY 1 ORDER BY 1 ASC
+      `,
+      prisma.$queryRaw<{ path: string; count: number }[]>`
+        SELECT path, COUNT(*)::int AS count
+        FROM "PageView"
+        WHERE "createdAt" > NOW() - INTERVAL '30 days'
+        GROUP BY 1 ORDER BY 2 DESC LIMIT 10
+      `,
     ]);
 
     const dayBuckets = new Map<string, number>();
@@ -94,6 +111,15 @@ export async function GET() {
       dayBuckets.set(k, (dayBuckets.get(k) || 0) + 1);
     }
     const daily = lastNDays(30).map((date) => ({ date, count: dayBuckets.get(date) || 0 }));
+
+    const pvBuckets = new Map<string, number>();
+    for (const r of pvDailyRows) {
+      pvBuckets.set(r.date, Number(r.count));
+    }
+    const pvDaily = lastNDays(30).map((date) => ({ date, count: pvBuckets.get(date) || 0 }));
+    const pvToday = pvBuckets.get(istKey(new Date())) || 0;
+    const pvWeek = pvDaily.slice(-7).reduce((a, d) => a + d.count, 0);
+    const pvMonth = pvDaily.reduce((a, d) => a + d.count, 0);
 
     const totalByDay = daily.map((d) => d.count).reduce((a, b) => a + b, 0);
     const todayKey = istKey(new Date());
@@ -139,6 +165,14 @@ export async function GET() {
           month: totalByDay,
           total: totalUsage,
           distinctTools: topTools.length,
+        },
+        pageviews: {
+          today: pvToday,
+          week: pvWeek,
+          month: pvMonth,
+          total: pvTotal,
+          daily: pvDaily,
+          topPages: pvTopPages.map((p) => ({ path: p.path, count: Number(p.count) })),
         },
         daily,
         topTools: toolsWithCounts,
