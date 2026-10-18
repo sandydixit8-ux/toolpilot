@@ -77,6 +77,10 @@ const nextConfig: NextConfig = {
       { source: "/blog/character-counter-social-media-seo", destination: "/blog/best-word-counter-for-essays", permanent: true },
       { source: "/blog/how-to-calculate-marks-percentage", destination: "/blog/percentage-calculator-complete-guide", permanent: true },
       { source: "/blog/how-to-calculate-percentage-increase", destination: "/blog/percentage-calculator-complete-guide", permanent: true },
+      { source: "/blog/unit-converter-quick-guide", destination: "/blog/unit-converter-metric-imperial-guide", permanent: true },
+      { source: "/blog/how-to-calculate-profit-margin", destination: "/blog/markup-vs-margin-selling-price", permanent: true },
+      { source: "/blog/break-even-analysis-calculate-guide", destination: "/blog/markup-vs-margin-selling-price", permanent: true },
+      { source: "/blog/discount-calculator-never-overpay", destination: "/blog/markup-vs-margin-selling-price", permanent: true },
     ];
   },
   async headers() {
