@@ -12,15 +12,33 @@ env:
 jobs:
   post:
     runs-on: ubuntu-latest
-    if: ${{ secrets.FB_PAGE_ID != '' && secrets.FB_PAGE_ACCESS_TOKEN != '' }}
+    # NOTE: `secrets` is NOT a valid context in a job-level `if:` — using it
+    # makes the whole workflow file invalid, which fails a run on every push.
+    # Credentials are read into a step output below and gated step-by-step.
     steps:
+      - name: Check Facebook credentials
+        id: creds
+        env:
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+        run: |
+          if [ -n "$FB_PAGE_ID" ] && [ -n "$FB_PAGE_ACCESS_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "FB_PAGE_ID / FB_PAGE_ACCESS_TOKEN not configured - skipping Facebook post."
+          fi
       - uses: actions/checkout@v4
+        if: steps.creds.outputs.configured == 'true'
       - uses: actions/setup-node@v4
+        if: steps.creds.outputs.configured == 'true'
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+        if: steps.creds.outputs.configured == 'true'
       - name: Post to Facebook
+        if: steps.creds.outputs.configured == 'true'
         run: npx tsx scripts/fb-poster/post.ts
         env:
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
