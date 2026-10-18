@@ -7,7 +7,7 @@ export const aiTools: ToolConfig[] = [
     category: "AI Tools",
     categorySlug: "ai",
     description: "Make AI-generated text sound natural and human",
-    longDescription: "Transform AI-generated content into natural, human-sounding text that reads as if a person wrote it. Use it to remove robotic phrasing from essays, emails, blog posts, or social media captions so your writing feels more engaging and authentic without changing the original meaning.",
+    longDescription: "AI writing tools are fast, but their output often has a recognizable rhythm: evenly sized sentences, safe vocabulary, and phrases like \"in today's fast-paced world\". The AI Text Humanizer rewrites that kind of text so it reads naturally — it varies sentence length, replaces stiff phrasing with everyday words, and smooths transitions while keeping your original meaning intact. Paste an essay, email, blog draft, or social caption, and get back text you can send without it sounding machine-written. It is free to use with no sign-up, and you can humanize as many passages as you need. Use it as an editing aid to improve clarity and flow, and always follow your school or workplace rules on AI-assisted writing.",
     instructions: [
       "Paste AI-generated text into the input box",
       "Review the suggested changes for wording and tone",
@@ -35,7 +35,7 @@ export const aiTools: ToolConfig[] = [
     category: "AI Tools",
     categorySlug: "ai",
     description: "Summarize long text into key points",
-    longDescription: "Condense long articles, documents, reports, or notes into concise, easy-to-read summaries that capture the most important points. Use it to review research papers, news articles, or meeting notes quickly and save time when you need the key details without reading everything.",
+    longDescription: "Long articles, research papers, meeting notes, and reports take time you often do not have. The AI Text Summarizer condenses any long piece of text into a concise recap that keeps the main arguments, numbers, and conclusions and drops the filler. Paste your text, pick how short you want the summary, and get the key points in seconds — useful before an exam revision session, a client call, or when you need to skim several documents quickly. It handles up to 10,000 words at once, so most chapters and reports fit in a single pass. The tool is free with no account required, and for multi-section documents you can summarize section by section for the sharpest result.",
     instructions: [
       "Paste the text you want to summarize into the input box",
       "Choose the summary length you prefer",
@@ -62,7 +62,7 @@ export const aiTools: ToolConfig[] = [
     category: "AI Tools",
     categorySlug: "ai",
     description: "Rewrite text while preserving meaning",
-    longDescription: "Rewrite content in different words while keeping the original meaning, tone, and message intact. Use it to improve clarity, avoid repetition, or rephrase academic papers, articles, and social media posts for a fresher and more natural read.",
+    longDescription: "When the same wording appears twice in a draft, or a paragraph feels clunky no matter how many times you edit it, rewriting from scratch is slow. The AI Paraphraser rewords your text while preserving the original meaning, so you can break repetition, simplify dense sentences, or adjust the tone for a different audience. Choose from formal, casual, creative, academic, or professional styles, paste your passage, and compare the rewritten version side by side with the original before copying it. It works for essays, articles, reports, product descriptions, and social posts. The tool is free online with no sign-up, and you can paraphrase as much text as you need — review the output yourself before using it in submitted or published work.",
     instructions: [
       "Paste the text you want to paraphrase into the input box",
       "Select the writing style you need, such as formal, casual, or creative",
@@ -116,7 +116,7 @@ export const aiTools: ToolConfig[] = [
     category: "AI Tools",
     categorySlug: "ai",
     description: "Generate a professional resume summary",
-    longDescription: "Create a compelling resume summary or objective statement that highlights your experience, skills, and career goals. Use it to craft a strong opening paragraph for job applications and LinkedIn so recruiters grasp your strengths at a glance without overthinking the wording.",
+    longDescription: "Recruiters spend only a few seconds on each resume, so the opening paragraph has to work hard. The AI Resume Summary Generator writes a professional summary or objective statement from your job title, years of experience, core skills, and one or two achievements, giving you a polished 2-to-4 sentence introduction for the top of your resume. Choose a summary if you already have experience, or an objective if you are a fresher or switching fields. The same text works well as the About section of your LinkedIn profile. It is free to use with no account, and you can regenerate and tweak the wording until it sounds like you. For a full resume, pair it with the Resume Builder.",
     instructions: [
       "Enter your job role and years of experience",
       "Add your key skills and main achievements",

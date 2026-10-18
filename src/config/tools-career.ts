@@ -37,7 +37,7 @@ export const careerTools: ToolConfig[] = [
     category: "Career Tools",
     categorySlug: "career",
     description: "Upload or paste your resume for full ATS analysis, JD matching, and rewrite suggestions",
-    longDescription: "The ultimate resume optimization tool. Upload a PDF, DOCX, or paste text to get: ATS compatibility score with category breakdown, job description matching with semantic gap analysis, and AI-powered rewrite suggestions. All processing happens in your browser.",
+    longDescription: "Most resumes never reach a recruiter because an Applicant Tracking System filters them out first. The Resume Analyzer checks yours the way that software does: upload a PDF or DOCX (or paste the text) and get an ATS compatibility score with a category-by-category breakdown, so you can see whether the problem is structure, keywords, dates, or formatting. Paste the job description of the role you want and it also runs a match, showing which required skills you already cover and which ones are missing from your resume. Finally, it gives rewrite suggestions for weak verbs, cliches, and unquantified achievements. Everything is parsed inside your browser, so your file is not uploaded, and the whole check is free with no sign-up.",
     instructions: ["Upload a PDF/DOCX or paste your resume text", "View ATS score and category breakdown", "Paste a job description to match", "Get rewrite suggestions"],
     processingType: "browser",
     seoTitle: "Resume Analyzer – Free ATS Score, JD Match & Rewrite Suggestions | ToolPilot",
