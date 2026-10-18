@@ -57,6 +57,12 @@ const nextConfig: NextConfig = {
       { source: "/blog/word-to-pdf-mobile-tips", destination: "/blog/how-to-convert-word-to-pdf", permanent: true },
       { source: "/blog/jpg-to-pdf-conversion-guide", destination: "/blog/how-to-convert-jpg-to-pdf-online", permanent: true },
       { source: "/blog/how-to-combine-images-into-one-pdf", destination: "/blog/how-to-convert-jpg-to-pdf-online", permanent: true },
+      { source: "/blog/salary-calculator-take-home-pay-india", destination: "/blog/how-to-calculate-take-home-salary-from-ctc-india", permanent: true },
+      { source: "/blog/salary-to-take-home-hra-tax-saving", destination: "/blog/how-to-calculate-take-home-salary-from-ctc-india", permanent: true },
+      { source: "/blog/check-monthly-budget-salary-calculator", destination: "/blog/how-to-calculate-take-home-salary-from-ctc-india", permanent: true },
+      { source: "/blog/how-to-calculate-income-tax-on-salary", destination: "/blog/income-tax-calculator-guide", permanent: true },
+      { source: "/blog/income-tax-on-12-lakh-salary-zero-tax-new-regime", destination: "/blog/income-tax-calculator-guide", permanent: true },
+      { source: "/blog/old-vs-new-tax-regime-2025-26-which-saves-more", destination: "/blog/income-tax-calculator-guide", permanent: true },
     ];
   },
   async headers() {
