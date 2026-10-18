@@ -84,6 +84,10 @@ const nextConfig: NextConfig = {
       { source: "/blog/how-to-humanize-ai-text", destination: "/blog/ai-paraphrase-rewrite-text-free", permanent: true },
       { source: "/blog/how-to-use-ai-paraphraser-avoid-plagiarism", destination: "/blog/ai-paraphrase-rewrite-text-free", permanent: true },
       { source: "/blog/how-to-summarize-text-for-study-notes", destination: "/blog/how-to-summarize-long-text-ai", permanent: true },
+      { source: "/blog/best-free-online-tools-for-students", destination: "/blog/best-free-productivity-tools-small-business", permanent: true },
+      { source: "/blog/best-free-productivity-tools-freelancers", destination: "/blog/best-free-productivity-tools-small-business", permanent: true },
+      { source: "/blog/how-to-write-cover-letter-with-ai", destination: "/blog/cover-letter-generator-guide", permanent: true },
+      { source: "/blog/how-epf-interest-calculated-india", destination: "/blog/how-to-calculate-gratuity-resignation-india", permanent: true },
     ];
   },
   async headers() {
