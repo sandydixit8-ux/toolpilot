@@ -39,6 +39,16 @@ const nextConfig: NextConfig = {
       { source: "/blog/how-to-calculate-gst-2026", destination: "/blog/gst-calculator-guide-india-2026", permanent: true },
       { source: "/blog/create-gst-invoice-legally-compliant-india", destination: "/blog/how-to-create-gst-invoice-for-small-business", permanent: true },
       { source: "/blog/how-to-create-invoices-online", destination: "/blog/how-to-create-gst-invoice-for-small-business", permanent: true },
+      { source: "/blog/how-to-compress-pdf-for-email", destination: "/blog/how-to-compress-pdf-without-losing-quality", permanent: true },
+      { source: "/blog/compress-pdf-under-5mb-email-free", destination: "/blog/how-to-compress-pdf-without-losing-quality", permanent: true },
+      { source: "/blog/free-pdf-compressor-no-watermark-online", destination: "/blog/how-to-compress-pdf-without-losing-quality", permanent: true },
+      { source: "/blog/reduce-pdf-size-government-portal-upload", destination: "/blog/how-to-compress-pdf-without-losing-quality", permanent: true },
+      { source: "/blog/merge-multiple-pdf-files-into-one", destination: "/blog/how-to-merge-multiple-pdfs", permanent: true },
+      { source: "/blog/merge-pdfs-college-assignments-projects", destination: "/blog/how-to-merge-multiple-pdfs", permanent: true },
+      { source: "/blog/split-pdf-pages-for-document", destination: "/blog/how-to-split-pdf-files", permanent: true },
+      { source: "/blog/how-to-extract-pages-from-pdf", destination: "/blog/how-to-split-pdf-files", permanent: true },
+      { source: "/blog/how-to-count-pdf-pages", destination: "/blog/how-to-split-pdf-files", permanent: true },
+      { source: "/blog/how-to-rotate-pdf-pages-online", destination: "/blog/how-to-rotate-pdf-pages", permanent: true },
     ];
   },
   async headers() {
