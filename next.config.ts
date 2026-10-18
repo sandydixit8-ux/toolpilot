@@ -63,6 +63,11 @@ const nextConfig: NextConfig = {
       { source: "/blog/how-to-calculate-income-tax-on-salary", destination: "/blog/income-tax-calculator-guide", permanent: true },
       { source: "/blog/income-tax-on-12-lakh-salary-zero-tax-new-regime", destination: "/blog/income-tax-calculator-guide", permanent: true },
       { source: "/blog/old-vs-new-tax-regime-2025-26-which-saves-more", destination: "/blog/income-tax-calculator-guide", permanent: true },
+      { source: "/blog/how-emi-calculator-works", destination: "/blog/emi-calculator-guide", permanent: true },
+      { source: "/blog/how-to-calculate-sip-maturity-amount", destination: "/blog/sip-calculator-guide-india", permanent: true },
+      { source: "/blog/sip-vs-lump-sum-investment-strategy-2026", destination: "/blog/sip-calculator-guide-india", permanent: true },
+      { source: "/blog/simple-interest-vs-compound-interest-calculator", destination: "/blog/compound-interest-calculator-grow-wealth", permanent: true },
+      { source: "/blog/roi-calculator-measure-investment-returns", destination: "/blog/compound-interest-calculator-grow-wealth", permanent: true },
     ];
   },
   async headers() {
