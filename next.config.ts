@@ -81,6 +81,9 @@ const nextConfig: NextConfig = {
       { source: "/blog/how-to-calculate-profit-margin", destination: "/blog/markup-vs-margin-selling-price", permanent: true },
       { source: "/blog/break-even-analysis-calculate-guide", destination: "/blog/markup-vs-margin-selling-price", permanent: true },
       { source: "/blog/discount-calculator-never-overpay", destination: "/blog/markup-vs-margin-selling-price", permanent: true },
+      { source: "/blog/how-to-humanize-ai-text", destination: "/blog/ai-paraphrase-rewrite-text-free", permanent: true },
+      { source: "/blog/how-to-use-ai-paraphraser-avoid-plagiarism", destination: "/blog/ai-paraphrase-rewrite-text-free", permanent: true },
+      { source: "/blog/how-to-summarize-text-for-study-notes", destination: "/blog/how-to-summarize-long-text-ai", permanent: true },
     ];
   },
   async headers() {
