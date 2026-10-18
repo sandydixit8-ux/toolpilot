@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
       { source: "/blog/resume-for-freshers-first-job", destination: "/blog/resume-builder-create-professional-resume", permanent: true },
       { source: "/blog/how-to-create-professional-resume-10-minutes", destination: "/blog/resume-builder-create-professional-resume", permanent: true },
       { source: "/blog/ai-resume-summary-generator-guide", destination: "/blog/resume-builder-create-professional-resume", permanent: true },
+      { source: "/blog/gst-calculator-guide-india", destination: "/blog/gst-calculator-guide-india-2026", permanent: true },
+      { source: "/blog/how-gst-works-india-guide", destination: "/blog/gst-calculator-guide-india-2026", permanent: true },
+      { source: "/blog/how-to-calculate-gst-2026", destination: "/blog/gst-calculator-guide-india-2026", permanent: true },
+      { source: "/blog/create-gst-invoice-legally-compliant-india", destination: "/blog/how-to-create-gst-invoice-for-small-business", permanent: true },
+      { source: "/blog/how-to-create-invoices-online", destination: "/blog/how-to-create-gst-invoice-for-small-business", permanent: true },
     ];
   },
   async headers() {
