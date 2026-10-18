@@ -14,6 +14,8 @@ import { getGeneralAffiliates } from "@/lib/affiliates";
 import { getSiteUrl } from "@/lib/utils";
 import { FAQSection } from "@/components/tools/faq-section";
 import { ArticleRelatedTools } from "@/components/seo/article-related-tools";
+import { AuthorBio } from "@/components/seo/author-bio";
+import { AUTHOR } from "@/config/author";
 
 export const dynamicParams = false;
 
@@ -88,8 +90,18 @@ export default async function BlogPostPage({ params }: Props) {
             "@type": "Article",
             headline: post.title,
             description: post.seoDescription,
-            author: { "@type": "Person", name: post.author },
-            publisher: { "@type": "Organization", name: "ToolPilot", url: getSiteUrl() },
+            author: {
+              "@type": "Person",
+              name: AUTHOR.name,
+              url: AUTHOR.url,
+              jobTitle: AUTHOR.role,
+            },
+            publisher: {
+              "@type": "Organization",
+              name: "ToolPilot",
+              url: getSiteUrl(),
+              logo: { "@type": "ImageObject", url: `${getSiteUrl()}/og.png` },
+            },
             datePublished: post.publishedAt?.toISOString(),
             dateModified: post.updatedAt?.toISOString(),
             url: `${getSiteUrl()}/blog/${post.slug}`,
@@ -107,7 +119,11 @@ export default async function BlogPostPage({ params }: Props) {
       )}
       <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">{post.title}</h1>
       <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <span>{post.author}</span>
+        <span>
+          <Link href={AUTHOR.path} className="font-medium text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400">
+            {AUTHOR.name}
+          </Link>
+        </span>
         {post.publishedAt && (
           <>
             <span>·</span>
@@ -157,6 +173,7 @@ export default async function BlogPostPage({ params }: Props) {
       />
       <InArticleAd slotId={ADS.blogPost.beforeCta} />
       <NewsletterCTA />
+      <AuthorBio reviewedAt={post.updatedAt} />
       {relatedPosts.length > 0 && (
         <div className="mt-10 border-t border-gray-200 pt-8 dark:border-gray-800">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Related Articles</h2>
