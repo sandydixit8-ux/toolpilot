@@ -24,6 +24,16 @@ const nextConfig: NextConfig = {
       { source: "/blog/online-image-compressor-whatsapp-send-photos", destination: "/blog/how-to-compress-image-without-losing-quality", permanent: true },
       { source: "/blog/resize-compress-images-email-attachments", destination: "/blog/how-to-compress-image-without-losing-quality", permanent: true },
       { source: "/blog/image-resizer-resize-images-different-platforms", destination: "/blog/how-to-resize-images-without-losing-quality", permanent: true },
+      { source: "/blog/ats-resume-checker-guide", destination: "/blog/ats-resume-guide-2026", permanent: true },
+      { source: "/blog/resume-ats-checker-guide", destination: "/blog/ats-resume-guide-2026", permanent: true },
+      { source: "/blog/how-to-check-resume-ats-screening-free-tool", destination: "/blog/ats-resume-guide-2026", permanent: true },
+      { source: "/blog/resume-ats-score-what-is-good-how-to-improve", destination: "/blog/ats-resume-guide-2026", permanent: true },
+      { source: "/blog/how-to-make-ats-friendly-resume", destination: "/blog/ats-resume-guide-2026", permanent: true },
+      { source: "/blog/build-ats-friendly-resume", destination: "/blog/ats-resume-guide-2026", permanent: true },
+      { source: "/blog/pass-ats-naukri-linkedin-indeed-platform-specific-tips", destination: "/blog/ats-resume-guide-2026", permanent: true },
+      { source: "/blog/resume-for-freshers-first-job", destination: "/blog/resume-builder-create-professional-resume", permanent: true },
+      { source: "/blog/how-to-create-professional-resume-10-minutes", destination: "/blog/resume-builder-create-professional-resume", permanent: true },
+      { source: "/blog/ai-resume-summary-generator-guide", destination: "/blog/resume-builder-create-professional-resume", permanent: true },
     ];
   },
   async headers() {
