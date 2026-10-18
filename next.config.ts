@@ -68,6 +68,15 @@ const nextConfig: NextConfig = {
       { source: "/blog/sip-vs-lump-sum-investment-strategy-2026", destination: "/blog/sip-calculator-guide-india", permanent: true },
       { source: "/blog/simple-interest-vs-compound-interest-calculator", destination: "/blog/compound-interest-calculator-grow-wealth", permanent: true },
       { source: "/blog/roi-calculator-measure-investment-returns", destination: "/blog/compound-interest-calculator-grow-wealth", permanent: true },
+      { source: "/blog/qr-code-generator-create-free", destination: "/blog/qr-code-generator-guide", permanent: true },
+      { source: "/blog/how-to-create-qr-code-business-menu", destination: "/blog/qr-code-generator-guide", permanent: true },
+      { source: "/blog/base64-encoder-decoder-guide", destination: "/blog/what-is-base64-encode-decode-free-tool", permanent: true },
+      { source: "/blog/url-encoder-vs-url-decoder", destination: "/blog/what-is-base64-encode-decode-free-tool", permanent: true },
+      { source: "/blog/how-to-generate-strong-passwords", destination: "/blog/password-generator-create-strong-passwords", permanent: true },
+      { source: "/blog/word-counter-why-word-count-matters", destination: "/blog/best-word-counter-for-essays", permanent: true },
+      { source: "/blog/character-counter-social-media-seo", destination: "/blog/best-word-counter-for-essays", permanent: true },
+      { source: "/blog/how-to-calculate-marks-percentage", destination: "/blog/percentage-calculator-complete-guide", permanent: true },
+      { source: "/blog/how-to-calculate-percentage-increase", destination: "/blog/percentage-calculator-complete-guide", permanent: true },
     ];
   },
   async headers() {
