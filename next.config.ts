@@ -49,6 +49,14 @@ const nextConfig: NextConfig = {
       { source: "/blog/how-to-extract-pages-from-pdf", destination: "/blog/how-to-split-pdf-files", permanent: true },
       { source: "/blog/how-to-count-pdf-pages", destination: "/blog/how-to-split-pdf-files", permanent: true },
       { source: "/blog/how-to-rotate-pdf-pages-online", destination: "/blog/how-to-rotate-pdf-pages", permanent: true },
+      { source: "/blog/pdf-to-word-converter-complete-guide", destination: "/blog/how-to-convert-pdf-to-word", permanent: true },
+      { source: "/blog/convert-pdf-to-word-edit-without-losing-formatting", destination: "/blog/how-to-convert-pdf-to-word", permanent: true },
+      { source: "/blog/pdf-to-editable-word-excel-guide", destination: "/blog/how-to-convert-pdf-to-word", permanent: true },
+      { source: "/blog/convert-pdf-to-excel-free-online", destination: "/blog/how-to-convert-pdf-to-word", permanent: true },
+      { source: "/blog/word-to-pdf-vs-pdf-to-word", destination: "/blog/how-to-convert-word-to-pdf", permanent: true },
+      { source: "/blog/word-to-pdf-mobile-tips", destination: "/blog/how-to-convert-word-to-pdf", permanent: true },
+      { source: "/blog/jpg-to-pdf-conversion-guide", destination: "/blog/how-to-convert-jpg-to-pdf-online", permanent: true },
+      { source: "/blog/how-to-combine-images-into-one-pdf", destination: "/blog/how-to-convert-jpg-to-pdf-online", permanent: true },
     ];
   },
   async headers() {
