@@ -29,6 +29,12 @@ const toolComponents: Record<string, () => Promise<{ default: ComponentType }>> 
   "cgpa-to-percentage": lazyNamed(() => import("@/components/tools/calculators/cgpa-to-percentage"), "CgpaToPercentageTool"),
   "gpa-to-percentage": lazyNamed(() => import("@/components/tools/calculators/gpa-to-percentage"), "GpaToPercentageTool"),
   "attendance-calculator": lazyNamed(() => import("@/components/tools/calculators/attendance-calculator"), "AttendanceCalculatorTool"),
+  "us-income-tax-calculator": lazyNamed(() => import("@/components/tools/calculators/tax-calculators"), "UsIncomeTaxCalculatorTool"),
+  "us-self-employment-tax-calculator": lazyNamed(() => import("@/components/tools/calculators/tax-calculators"), "UsSelfEmploymentTaxCalculatorTool"),
+  "us-paycheck-calculator": lazyNamed(() => import("@/components/tools/calculators/tax-calculators"), "UsPaycheckCalculatorTool"),
+  "uk-income-tax-calculator": lazyNamed(() => import("@/components/tools/calculators/tax-calculators"), "UkIncomeTaxCalculatorTool"),
+  "uk-national-insurance-calculator": lazyNamed(() => import("@/components/tools/calculators/tax-calculators"), "UkNationalInsuranceCalculatorTool"),
+  "uk-vat-calculator": lazyNamed(() => import("@/components/tools/calculators/tax-calculators"), "UkVatCalculatorTool"),
   "ai-text-humanizer": lazyNamed(() => import("@/components/tools/ai/ai-text-humanizer"), "AiTextHumanizerTool"),
   "ai-text-summarizer": lazyNamed(() => import("@/components/tools/ai/ai-text-summarizer"), "AiTextSummarizerTool"),
   "ai-paraphraser": lazyNamed(() => import("@/components/tools/ai/ai-paraphraser"), "AiParaphraserTool"),
@@ -100,6 +106,8 @@ const toolComponents: Record<string, () => Promise<{ default: ComponentType }>> 
   "transliteration": lazyNamed(() => import("@/components/tools/translation/transliteration"), "TransliterationTool"),
   "video-compressor": lazyNamed(() => import("@/components/tools/video/video-compressor"), "VideoCompressorTool"),
   "mp4-to-mp3": lazyNamed(() => import("@/components/tools/video/mp4-to-mp3"), "Mp4ToMp3Tool"),
+  "m4a-to-mp3": lazyNamed(() => import("@/components/tools/video/m4a-to-mp3"), "M4aToMp3Tool"),
+  "wav-to-mp3": lazyNamed(() => import("@/components/tools/video/wav-to-mp3"), "WavToMp3Tool"),
   "video-to-gif": lazyNamed(() => import("@/components/tools/video/video-to-gif"), "VideoToGifTool"),
 };
 
