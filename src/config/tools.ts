@@ -2,6 +2,7 @@ import { ToolConfig } from "@/types/tool";
 import { pdfTools } from "./tools-pdf";
 import { imageTools } from "./tools-image";
 import { calculatorTools } from "./tools-calculators";
+import { taxTools } from "./tools-tax";
 import { developerTools } from "./tools-developer";
 import { careerTools } from "./tools-career";
 import { businessTools } from "./tools-business";
@@ -13,6 +14,7 @@ export const allTools: ToolConfig[] = [
   ...pdfTools,
   ...imageTools,
   ...calculatorTools,
+  ...taxTools,
   ...developerTools,
   ...careerTools,
   ...businessTools,
@@ -47,4 +49,4 @@ export function searchTools(query: string): ToolConfig[] {
   );
 }
 
-export { pdfTools, imageTools, calculatorTools, developerTools, careerTools, businessTools, aiTools, translationTools, videoTools };
+export { pdfTools, imageTools, calculatorTools, taxTools, developerTools, careerTools, businessTools, aiTools, translationTools, videoTools };
