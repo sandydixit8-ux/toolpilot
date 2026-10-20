@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, TrendingUp } from "lucide-react";
+import { gaEvent } from "@/lib/analytics";
 
 interface AffiliateItem {
   name: string;
@@ -21,6 +22,14 @@ interface AffiliatePromoProps {
 }
 
 function trackClick(item: AffiliateItem, tracking?: { source: string; path?: string }) {
+  // GA4: which affiliate links earn and from which page — a revenue signal that
+  // also shows which topics attract commercial-intent traffic.
+  gaEvent("affiliate_click", {
+    product: item.name,
+    link_url: item.url,
+    source: tracking?.source || "",
+    page_path: tracking?.path || "",
+  });
   try {
     const payload = JSON.stringify({
       product: item.name,

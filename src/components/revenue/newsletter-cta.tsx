@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Mail, X, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { gaEvent } from "@/lib/analytics";
 
 export function NewsletterCTA({ className }: { className?: string }) {
   const [dismissed, setDismissed] = useState(false);
@@ -26,6 +27,8 @@ export function NewsletterCTA({ className }: { className?: string }) {
       if (data.success) {
         setStatus("success");
         setEmail("");
+        // GA4 conversion: newsletter signup = a returning-visitor signal.
+        gaEvent("newsletter_signup", { page_path: window.location.pathname });
       } else {
         setStatus("idle");
       }

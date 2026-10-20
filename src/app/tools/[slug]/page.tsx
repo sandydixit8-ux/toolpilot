@@ -8,7 +8,8 @@ import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { FAQSection } from "@/components/tools/faq-section";
 import { RelatedTools } from "@/components/tools/related-tools";
 import { RelatedCategories } from "@/components/tools/related-categories";
-import { WebAppSchema, ItemListSchema } from "@/components/seo/structured-data";
+import { WebAppSchema, ItemListSchema, HowToSchema } from "@/components/seo/structured-data";
+import { QuickAnswer } from "@/components/seo/quick-answer";
 import { ToolRenderer } from "@/components/tools/tool-renderer";
 import { TrustBadges } from "@/components/tools/trust-badges";
 import { RelatedArticles } from "@/components/seo/related-articles";
@@ -294,7 +295,19 @@ export default async function SlugPage({ params }: Props) {
 
   return (
     <>
-      <WebAppSchema name={tool.name} description={tool.description} url={`${getSiteUrl()}/tools/${tool.slug}`} />
+      <WebAppSchema
+        name={tool.name}
+        description={tool.seoDescription || tool.description}
+        url={`${getSiteUrl()}/tools/${tool.slug}`}
+        category={tool.category}
+        areasServed={tool.areaServed}
+      />
+      <HowToSchema
+        name={tool.name}
+        description={tool.seoDescription || tool.description}
+        steps={tool.instructions}
+        url={`${getSiteUrl()}/tools/${tool.slug}`}
+      />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumbs items={[
           { label: "Tools", href: "/tools" },
@@ -307,6 +320,13 @@ export default async function SlugPage({ params }: Props) {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{tool.name}</h1>
               <p className="mt-2 text-gray-500 dark:text-gray-400">{tool.description}</p>
             </div>
+            {tool.quickAnswer && (
+              <QuickAnswer
+                question={`What does the ${tool.name} do?`}
+                answer={tool.quickAnswer}
+                lastReviewed={SITE_LAST_REVIEWED}
+              />
+            )}
             <ToolRenderer slug={tool.slug} />
             <TrustBadges />
             <section>

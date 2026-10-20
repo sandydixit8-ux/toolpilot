@@ -9,5 +9,7 @@ prisma/dev.db-journal
 *.txt
 !public/ads.txt
 !public/7f3a9c2e5b8d416fe0a1c6d94b2e8350.txt
+!src/app/llms.txt/
+!src/app/llms-full.txt/
 .DS_Store
 e2e-*.mjs

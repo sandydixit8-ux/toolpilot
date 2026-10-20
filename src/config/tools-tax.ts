@@ -27,6 +27,9 @@ export const taxTools: ToolConfig[] = [
       "taxable income calculator",
       "effective tax rate calculator",
     ],
+    quickAnswer:
+      "The US Income Tax Calculator estimates your 2025 federal income tax from your gross income and filing status. It applies the official 2025 brackets and standard deduction, then shows your taxable income, total federal tax, effective rate and marginal rate in seconds, entirely in your browser.",
+    areaServed: ["United States"],
     icon: "Calculator",
     popular: true,
     faqs: [
@@ -62,6 +65,9 @@ export const taxTools: ToolConfig[] = [
       "social security medicare tax",
       "1099 tax calculator",
     ],
+    quickAnswer:
+      "The US Self-Employment Tax Calculator works out the Social Security and Medicare tax freelancers and sole proprietors owe for 2025. It taxes 92.35% of your net profit at 15.3%, adds the 0.9% extra Medicare tax above $200,000, and shows the deductible half you can claim on your return.",
+    areaServed: ["United States"],
     icon: "Receipt",
     faqs: [
       { question: "Why is self-employment tax 15.3%?", answer: "Employees split Social Security (12.4%) and Medicare (2.9%) with their employer. Self-employed people pay both halves, so the combined rate is 15.3% on the taxable portion of their profit." },
@@ -97,6 +103,9 @@ export const taxTools: ToolConfig[] = [
       "salary after tax usa",
       "payroll tax calculator",
     ],
+    quickAnswer:
+      "The US Paycheck Calculator shows your take-home pay per period and per year. It subtracts 2025 federal income tax, Social Security, Medicare and any state income tax you enter from your gross salary, so you can check a payslip, compare job offers or budget with confidence.",
+    areaServed: ["United States"],
     icon: "Banknote",
     popular: true,
     faqs: [
@@ -133,6 +142,9 @@ export const taxTools: ToolConfig[] = [
       "higher rate tax calculator",
       "take home pay uk",
     ],
+    quickAnswer:
+      "The UK Income Tax Calculator estimates your 2025/26 income tax after the £12,570 personal allowance, including the taper that reduces it above £100,000. Enter your salary to see taxable income, total tax, effective and marginal rate, and a band-by-band breakdown at the 20%, 40% and 45% rates for England, Wales and Northern Ireland.",
+    areaServed: ["United Kingdom"],
     icon: "Calculator",
     popular: true,
     faqs: [
@@ -169,6 +181,9 @@ export const taxTools: ToolConfig[] = [
       "ni contribution calculator 2025/26",
       "national insurance rates",
     ],
+    quickAnswer:
+      "The UK National Insurance Calculator estimates your 2025/26 employee Class 1 National Insurance. It charges 8% on earnings between £12,570 and £50,270 and 2% above £50,270, then shows your total NI contribution, effective rate and net pay after NI for England, Wales and Northern Ireland.",
+    areaServed: ["United Kingdom"],
     icon: "Percent",
     faqs: [
       { question: "What are the 2025/26 employee National Insurance rates?", answer: "Employees pay 8% on earnings between the primary threshold (£12,570) and the upper earnings limit (£50,270), and 2% on earnings above £50,270." },
@@ -204,6 +219,9 @@ export const taxTools: ToolConfig[] = [
       "vat rate 20",
       "net to gross vat",
     ],
+    quickAnswer:
+      "The UK VAT Calculator adds VAT to a net price or removes it from a gross price in one click. It supports the standard 20% rate, the reduced 5% rate, the 0% zero rate and any custom rate, showing the net, VAT and gross amounts side by side for invoicing, quoting or checking a receipt.",
+    areaServed: ["United Kingdom"],
     icon: "Receipt",
     popular: true,
     faqs: [

@@ -20,6 +20,10 @@ export interface ToolConfig {
   popular?: boolean;
   faqs: { question: string; answer: string }[];
   relatedTools: string[];
+  /** AEO: concise, self-contained answer an AI engine can quote. */
+  quickAnswer?: string;
+  /** SEO/GEO: countries this tool is built for (e.g. ["United States", "United Kingdom"]). */
+  areaServed?: string[];
 }
 
 export interface ToolCategory {

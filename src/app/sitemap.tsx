@@ -26,6 +26,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  const hubPages = [
+    { url: `${baseUrl}/tools/us-tax-calculators`, priority: 0.85 },
+    { url: `${baseUrl}/tools/uk-tax-calculators`, priority: 0.85 },
+  ].map((h) => ({
+    url: h.url,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: h.priority,
+  }));
+
   const toolPages = allTools.map((tool) => ({
     url: `${baseUrl}/tools/${tool.slug}`,
     lastModified: new Date(),
@@ -58,5 +68,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB not available at build time — skip blog posts
   }
 
-  return [...staticPages, ...categoryPages, ...toolPages, ...comparisonPages, ...blogPages];
+  return [...staticPages, ...categoryPages, ...hubPages, ...toolPages, ...comparisonPages, ...blogPages];
 }

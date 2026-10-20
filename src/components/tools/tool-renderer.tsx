@@ -4,6 +4,7 @@ import { Suspense, useEffect } from "react";
 import { getToolComponent } from "@/components/tools";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePathname } from "next/navigation";
+import { gaEvent } from "@/lib/analytics";
 
 function ToolSkeleton() {
   return (
@@ -22,6 +23,8 @@ function ToolSkeleton() {
 function TrackToolUsage({ slug }: { slug: string }) {
   const pathname = usePathname();
   useEffect(() => {
+    // GA4: measure which tools get views so you can invest content there.
+    gaEvent("tool_view", { tool_slug: slug, page_path: pathname });
     fetch("/api/analytics/event", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
