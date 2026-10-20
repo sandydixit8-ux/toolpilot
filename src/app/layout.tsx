@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { ConverterWarmer } from "@/components/converter-warmer";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
+import { Analytics } from "@/components/analytics/analytics";
 import { Providers } from "@/components/providers";
 import { I18nProvider } from "@/components/i18n";
 import { TipJar } from "@/components/revenue/tip-jar";
@@ -65,26 +66,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <>
             <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
             <link rel="preconnect" href="https://www.google-analytics.com" crossOrigin="anonymous" />
-            <Script
-              async
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script
-              id="google-analytics"
-              strategy="afterInteractive"
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${GA_ID}', {
-                    page_title: document.title,
-                    page_location: window.location.href,
-                  });
-                `,
-              }}
-            />
           </>
         )}
         <script
@@ -110,13 +91,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <OrganizationSchema />
         <WebsiteSchema />
         <link rel="preconnect" href="https://utt.impactcdn.com" crossOrigin="anonymous" />
-        <Script
-          id="impact-affiliate"
-          type="text/javascript"
-          dangerouslySetInnerHTML={{
-            __html: `(function(i,m,p,a,c,t){c.ire_o=p;c[p]=c[p]||function(){(c[p].a=c[p].a||[]).push(arguments)};t=a.createElement(m);var z=a.getElementsByTagName(m)[0];t.async=1;t.src=i;z.parentNode.insertBefore(t,z)})('https://utt.impactcdn.com/P-A7667765-027d-4552-80f9-8cd99ed154141.js','script','impactStat',document,window);impactStat('transformLinks');impactStat('trackImpression');`,
-          }}
-        />
       </head>
       <body className={`${inter.variable} min-h-screen bg-background text-foreground antialiased`}>
         <Providers>
@@ -126,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
             <ConverterWarmer />
             <PageViewTracker />
+            <Analytics />
             <CookieConsent />
             <TipJar />
             {ADS_ENABLED && ADS.anchor && <AnchorAd slotId={ADS.anchor} />}

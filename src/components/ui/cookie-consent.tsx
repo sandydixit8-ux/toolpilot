@@ -2,21 +2,26 @@
 
 import { useState, useEffect } from "react";
 
+export const CONSENT_KEY = "toolpilot-cookie-consent";
+export const CONSENT_EVENT = "toolpilot-consent-change";
+
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("toolpilot-cookie-consent");
+    const consent = localStorage.getItem(CONSENT_KEY);
     if (!consent) setVisible(true);
   }, []);
 
   const accept = () => {
-    localStorage.setItem("toolpilot-cookie-consent", "accepted");
+    localStorage.setItem(CONSENT_KEY, "accepted");
+    window.dispatchEvent(new Event(CONSENT_EVENT));
     setVisible(false);
   };
 
   const reject = () => {
-    localStorage.setItem("toolpilot-cookie-consent", "rejected");
+    localStorage.setItem(CONSENT_KEY, "rejected");
+    window.dispatchEvent(new Event(CONSENT_EVENT));
     setVisible(false);
   };
 
