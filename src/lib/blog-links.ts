@@ -336,6 +336,12 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
   "mp4-to-mp3": [
     { slug: "convert-mp4-to-mp3-extract-audio", title: "MP4 to MP3: How to Extract Audio from a Video (Free)" },
   ],
+  "m4a-to-mp3": [
+    { slug: "convert-mp4-to-mp3-extract-audio", title: "MP4 to MP3: How to Extract Audio from a Video (Free)" },
+  ],
+  "wav-to-mp3": [
+    { slug: "convert-mp4-to-mp3-extract-audio", title: "MP4 to MP3: How to Extract Audio from a Video (Free)" },
+  ],
   "video-to-gif": [
     { slug: "how-to-convert-video-to-gif", title: "How to Convert a Video to GIF (Free, No Watermark)" },
   ],
