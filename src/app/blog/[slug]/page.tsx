@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { renderBlogContent, getBlogToc } from "@/lib/blog-renderer";
 import { getRelatedPosts } from "@/lib/related-posts";
@@ -21,10 +21,12 @@ export const dynamicParams = false;
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   try {
-    const posts = await prisma.blogPost.findMany({
-      where: { status: "PUBLISHED" },
-      select: { slug: true },
-    });
+    const posts = await withDbRetry(() =>
+      prisma.blogPost.findMany({
+        where: { status: "PUBLISHED" },
+        select: { slug: true },
+      })
+    );
     return posts.map((p) => ({ slug: p.slug }));
   } catch {
     return [];
@@ -35,7 +37,9 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = await prisma.blogPost.findUnique({ where: { slug } });
+  const post = await withDbRetry(() =>
+    prisma.blogPost.findUnique({ where: { slug } })
+  ).catch(() => null);
   if (!post || post.status !== "PUBLISHED") notFound();
   return {
     title: post.seoTitle.replace(/ \| ToolPilot$/, ""),
@@ -62,23 +66,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = await prisma.blogPost.findUnique({
-    where: { slug },
-    include: { category: true, faqs: { orderBy: { order: "asc" } } },
-  });
+  const post = await withDbRetry(() =>
+    prisma.blogPost.findUnique({
+      where: { slug },
+      include: { category: true, faqs: { orderBy: { order: "asc" } } },
+    })
+  );
 
   if (!post || post.status !== "PUBLISHED") notFound();
 
-  let renderedContent: string;
-  let toc: { id: string; text: string; level: number }[];
-  let relatedPosts: { slug: string; title: string; excerpt: string | null }[];
-  try {
-    renderedContent = renderBlogContent(post.content);
-    toc = getBlogToc(post.content);
-    relatedPosts = await getRelatedPosts(post.slug, post.title, post.categoryId);
-  } catch {
-    notFound();
-  }
+  const renderedContent = renderBlogContent(post.content);
+  const toc = getBlogToc(post.content);
+  // Related posts are a progressive enhancement: never let a transient DB
+  // error here fail the prerender of an otherwise-fine article.
+  const relatedPosts = await withDbRetry(() =>
+    getRelatedPosts(post.slug, post.title, post.categoryId)
+  ).catch(() => []);
 
   return (
     <>

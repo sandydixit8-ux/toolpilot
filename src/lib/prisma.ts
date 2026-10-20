@@ -61,4 +61,23 @@ function createPrisma() {
 
 export const prisma = globalForPrisma.prisma ?? createPrisma();
 
+/**
+ * Retry a Prisma read a few times with backoff. Neon's free tier suspends when
+ * idle, so the first query after a quiet period can fail while the compute
+ * resumes ("Can't reach database server"). At build time that would otherwise
+ * fail static generation of /blog. Use for read paths that must not throw.
+ */
+export async function withDbRetry<T>(fn: () => Promise<T>, attempts = 5, delayMs = 1500): Promise<T> {
+  let lastError: unknown;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (i < attempts) await new Promise((r) => setTimeout(r, delayMs * i));
+    }
+  }
+  throw lastError;
+}
+
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

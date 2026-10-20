@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { allTools } from "@/config/tools";
 import { comparisons } from "@/config/comparisons";
 
@@ -42,10 +42,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let blogPages: MetadataRoute.Sitemap = [];
   try {
-    const posts = await prisma.blogPost.findMany({
-      where: { status: "PUBLISHED" },
-      select: { slug: true, updatedAt: true },
-    });
+    const posts = await withDbRetry(() =>
+      prisma.blogPost.findMany({
+        where: { status: "PUBLISHED" },
+        select: { slug: true, updatedAt: true },
+      })
+    );
     blogPages = posts.map((post) => ({
       url: `${baseUrl}/blog/${post.slug}`,
       lastModified: post.updatedAt,

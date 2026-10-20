@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { BannerAd } from "@/components/ads/ad-banner";
 import { ADS } from "@/config/ads";
@@ -31,11 +31,13 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-  const posts = await prisma.blogPost.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: { publishedAt: "desc" },
-    include: { category: true },
-  });
+  const posts = await withDbRetry(() =>
+    prisma.blogPost.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { publishedAt: "desc" },
+      include: { category: true },
+    })
+  ).catch(() => []);
 
   const blogSchema = {
     "@context": "https://schema.org",
