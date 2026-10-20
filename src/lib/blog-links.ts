@@ -96,6 +96,26 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
   "income-tax-calculator": [
     { slug: "income-tax-calculator-guide", title: "Income Tax Calculator India: New vs Old Regime (FY 2026-27)" },
   ],
+  "us-income-tax-calculator": [
+    { slug: "us-income-tax-calculator-guide-2025", title: "US Income Tax Calculator 2025: Brackets, Rates and How to Estimate Your Tax" },
+  ],
+  "us-self-employment-tax-calculator": [
+    { slug: "self-employment-tax-calculator-guide-2025", title: "Self-Employment Tax 2025: How Much Freelancers Owe and How to Calculate It" },
+    { slug: "us-income-tax-calculator-guide-2025", title: "US Income Tax Calculator 2025: Brackets, Rates and How to Estimate Your Tax" },
+  ],
+  "us-paycheck-calculator": [
+    { slug: "us-income-tax-calculator-guide-2025", title: "US Income Tax Calculator 2025: Brackets, Rates and How to Estimate Your Tax" },
+    { slug: "self-employment-tax-calculator-guide-2025", title: "Self-Employment Tax 2025: How Much Freelancers Owe and How to Calculate It" },
+  ],
+  "uk-income-tax-calculator": [
+    { slug: "uk-income-tax-calculator-guide-2025-26", title: "UK Income Tax 2025/26: Personal Allowance, Bands and Take-Home Pay Explained" },
+  ],
+  "uk-national-insurance-calculator": [
+    { slug: "uk-income-tax-calculator-guide-2025-26", title: "UK Income Tax 2025/26: Personal Allowance, Bands and Take-Home Pay Explained" },
+  ],
+  "uk-vat-calculator": [
+    { slug: "uk-income-tax-calculator-guide-2025-26", title: "UK Income Tax 2025/26: Personal Allowance, Bands and Take-Home Pay Explained" },
+  ],
   "sip-calculator": [
     { slug: "sip-calculator-guide-india", title: "SIP Calculator: How to Calculate SIP Returns & Maturity (India)" },
   ],

@@ -78,7 +78,13 @@ async function main() {
   function hasSupport(toolSlug: string): boolean {
     const tokens = toolSlug.split("-").filter((w) => w.length > 3);
     if (!tokens.length) return true;
-    return postText.some((p) => tokens.every((t) => p.hay.includes(t)));
+    // Match if a post contains the tool's main noun (any single significant
+    // token, usually the action or the object: "compress", "pdf", "image"),
+    // OR all tokens. Requiring ALL tokens missed posts like
+    // how-to-compress-image-without-losing-quality for image-compressor.
+    const core = tokens.filter((w) => !["calculator", "converter", "generator", "online", "free", "tool"].includes(w));
+    const needles = core.length ? core : tokens;
+    return postText.some((p) => needles.some((t) => p.hay.includes(t)));
   }
 
   const usedTools = tools
