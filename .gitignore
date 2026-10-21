@@ -13,3 +13,8 @@ prisma/dev.db-journal
 !src/app/llms-full.txt/
 .DS_Store
 e2e-*.mjs
+.vercel
+.env
+.env.local
+.env*.local
+!.env.example
