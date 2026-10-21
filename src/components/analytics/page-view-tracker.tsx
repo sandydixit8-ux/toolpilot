@@ -15,6 +15,14 @@ export function PageViewTracker() {
       body: JSON.stringify({ path: pathname, referrer: document.referrer || "" }),
       keepalive: true,
     }).catch(() => {});
+
+    // GA4 client-side pageview. gtag('config') only fires once on load, so
+    // soft navigations between tool pages would otherwise never be counted.
+    gaEvent("page_view", {
+      page_path: pathname,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
   }, [pathname]);
 
   // Delegated listeners so every tool's download and every outbound click is
