@@ -20,17 +20,24 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Install font
-        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core
+      - name: Install font and ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core ffmpeg
+      - name: Verify ffmpeg supports drawtext
+        run: |
+          if ! ffmpeg -hide_banner -filters | grep -qE '^\s*T\.\s+drawtext\s'; then
+            echo "::error::system ffmpeg is missing the drawtext filter (libfreetype)"
+            exit 1
+          fi
       - name: Build Short (and upload unless dry-run)
         run: npx tsx scripts/youtube-shorts/run.ts ${{ inputs.dry_run && '--dry-run' || '' }}
         env:
+          SHORTS_FFMPEG: /usr/bin/ffmpeg
           SHORTS_FONT: /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf
           YT_PRIVACY: public
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
@@ -38,7 +45,7 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
       - name: Upload artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: youtube-short
           path: out/youtube-shorts/
