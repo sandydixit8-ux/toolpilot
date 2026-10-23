@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma, withDbRetry } from "@/lib/prisma";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { BreadcrumbListSchema } from "@/components/seo/structured-data";
+import { QuickAnswer } from "@/components/seo/quick-answer";
 import { renderBlogContent, getBlogToc } from "@/lib/blog-renderer";
 import { getRelatedPosts } from "@/lib/related-posts";
 import { Card, CardContent } from "@/components/ui/card";
@@ -111,7 +113,12 @@ export default async function BlogPostPage({ params }: Props) {
             mainEntityOfPage: { "@type": "WebPage", "@id": `${getSiteUrl()}/blog/${post.slug}` },
           }).replace(/</g, "\\u003c").replace(/>/g, "\\u003e"),
         }}
-      />
+        />
+      <BreadcrumbListSchema items={[
+        { name: "Home", url: getSiteUrl() },
+        { name: "Blog", url: `${getSiteUrl()}/blog` },
+        { name: post.title, url: `${getSiteUrl()}/blog/${post.slug}` },
+      ]} />
       <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <Breadcrumbs items={[
         { label: "Blog", href: "/blog" },
@@ -136,6 +143,12 @@ export default async function BlogPostPage({ params }: Props) {
           </>
         )}
       </div>
+      <div className="mt-6">
+        <QuickAnswer
+          question={post.title}
+            answer={post.excerpt ?? ""}
+          />
+      </div>
       {toc.length >= 2 && (
         <details className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
           <summary className="cursor-pointer font-semibold text-gray-900 dark:text-gray-100 text-sm">Table of Contents</summary>
@@ -151,14 +164,14 @@ export default async function BlogPostPage({ params }: Props) {
       <div
         className="prose dark:prose-invert mt-8 max-w-none"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
-      />
+        />
       <ArticleRelatedTools title={post.title} />
       {post.faqs.length > 0 && (
         <div className="mt-10">
           <FAQSection
             faqs={post.faqs.map((f) => ({ question: f.question, answer: f.answer }))}
             title="Frequently Asked Questions"
-          />
+            />
         </div>
       )}
       <InArticleAd slotId={ADS.blogPost.afterContent} />
@@ -173,7 +186,7 @@ export default async function BlogPostPage({ params }: Props) {
           badge: a.badge,
         }))}
         tracking={{ source: `/blog/${post.slug}`, path: `/blog/${post.slug}` }}
-      />
+        />
       <InArticleAd slotId={ADS.blogPost.beforeCta} />
       <NewsletterCTA />
       <AuthorBio reviewedAt={post.updatedAt} />
