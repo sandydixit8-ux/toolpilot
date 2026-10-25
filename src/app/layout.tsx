@@ -40,11 +40,6 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
-  alternates: {
-    types: {
-      "application/rss+xml": `${SITE_URL}/feed.xml`,
-    },
-  },
   verification: {
     google: "Iuf4EIea_e6ZG2VDtkP2tS05up77lUBGPZysNY40p38",
   },
@@ -54,6 +49,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* RSS autodiscovery. Declared here rather than in metadata because
+            every page overrides `alternates` with its own canonical, which
+            would drop the feed link. */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title={`${SITE_NAME} Blog`}
+          href={`${SITE_URL}/feed.xml`}
+        />
         {ADS_ENABLED && ADSENSE_PUBLISHER_ID && (
           <>
             <meta name="google-adsense-account" content={ADSENSE_PUBLISHER_ID} />
