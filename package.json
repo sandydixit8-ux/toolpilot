@@ -31,6 +31,7 @@
     "youtube:token": "node scripts/youtube-shorts/get-refresh-token.mjs",
     "trends": "tsx scripts/google-trends.ts",
     "demand:report": "tsx scripts/demand-report.ts",
+    "traffic:report": "tsx scripts/traffic-report.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -2,18 +2,52 @@ import nodemailer from "nodemailer";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpilotpro.in";
 
-function getTransport() {
-  const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
-  if (!host) return null;
+function getHost(): string {
+  return process.env.SMTP_HOST || process.env.EMAIL_HOST || "";
+}
+
+function getPort(): number {
+  return Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 465);
+}
+
+function getAuth() {
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  if (!user) return undefined;
+  return { user, pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || "" };
+}
+
+/**
+ * Build a transport for one of the two TLS modes.
+ *
+ * `secure: true` means implicit TLS from the first byte (port 465). Ports 587
+ * and 25 instead start in plaintext and upgrade with STARTTLS, so `secure`
+ * must be false there. Getting this pairing wrong is the classic
+ * "wrong version number" TLS error, which is exactly what production was
+ * hitting while every newsletter confirmation silently failed.
+ */
+function buildTransport(secure: boolean) {
   return nodemailer.createTransport({
-    host,
-    port: Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 465),
-    secure: (process.env.SMTP_SECURE ?? "true") === "true" || !process.env.SMTP_PORT,
-    auth:
-      process.env.SMTP_USER || process.env.EMAIL_USER
-        ? { user: process.env.SMTP_USER || process.env.EMAIL_USER, pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || "" }
-        : undefined,
+    host: getHost(),
+    port: getPort(),
+    secure,
+    requireTLS: !secure,
+    auth: getAuth(),
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
+}
+
+/** Port and error message that indicate the TLS mode is the problem, not the credentials. */
+function isTlsModeError(message: string): boolean {
+  return /wrong version number|record layer|SSL routines|unable to verify|ECONNRESET|ETIMEDOUT/i.test(message);
+}
+
+/** Which TLS modes to try, in order, for the configured port. */
+function tlsModes(): boolean[] {
+  const explicit = process.env.SMTP_SECURE;
+  if (explicit !== undefined && explicit !== "") return [explicit === "true"];
+  return getPort() === 465 ? [true, false] : [false, true];
 }
 
 function isConfigured(): boolean {
@@ -29,26 +63,36 @@ interface SendEmailOptions {
 }
 
 export async function sendEmailDetailed({ to, subject, html }: SendEmailOptions): Promise<{ ok: boolean; error?: string }> {
-  const transport = getTransport();
-  if (!transport || !isConfigured()) {
+  if (!isConfigured()) {
     const reason = "SMTP is not configured. Add SMTP_HOST, SMTP_USER and SMTP_PASS as Vercel env vars.";
     console.log(`[EMAIL SKIPPED - no SMTP config] To: ${to} | Subject: ${subject}`);
     return { ok: false, error: reason };
   }
 
-  try {
-    await transport.sendMail({
-      from: process.env.SMTP_FROM || process.env.EMAIL_FROM || `"ToolPilot" <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    });
-    return { ok: true };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("[EMAIL ERROR]", message);
-    return { ok: false, error: message };
+  let lastError = "unknown error";
+  const modes = tlsModes();
+
+  for (let i = 0; i < modes.length; i++) {
+    const secure = modes[i];
+    try {
+      await buildTransport(secure).sendMail({
+        from: process.env.SMTP_FROM || process.env.EMAIL_FROM || `"ToolPilot" <${getAuth()?.user ?? ""}>`,
+        to,
+        subject,
+        html,
+      });
+      return { ok: true };
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+      const retryable = i < modes.length - 1 && isTlsModeError(lastError);
+      console.error(
+        `[EMAIL ERROR] port=${getPort()} secure=${secure}: ${lastError}${retryable ? " (retrying with the other TLS mode)" : ""}`
+      );
+      if (!retryable) break;
+    }
   }
+
+  return { ok: false, error: lastError };
 }
 
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
