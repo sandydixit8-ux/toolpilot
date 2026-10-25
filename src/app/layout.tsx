@@ -40,6 +40,11 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
+  alternates: {
+    types: {
+      "application/rss+xml": `${SITE_URL}/feed.xml`,
+    },
+  },
   verification: {
     google: "Iuf4EIea_e6ZG2VDtkP2tS05up77lUBGPZysNY40p38",
   },
