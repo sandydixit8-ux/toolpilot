@@ -6,7 +6,9 @@ import { FileText, CheckCircle, Download } from 'lucide-react';
 import { ProcessingOverlay } from '@/components/tools/processing-overlay';
 import { Sparkles } from 'lucide-react';
 
-const RENDER_URL = 'https://toolpilot-5b6c.onrender.com';
+const RENDER_URL = (
+  process.env.NEXT_PUBLIC_RENDER_CONVERTER_URL || 'https://toolpilot-5b6c.onrender.com'
+).replace(/\/$/, '');
 
 export function WordToPdfTool() {
   const [files, setFiles] = useState<File[]>([]);
