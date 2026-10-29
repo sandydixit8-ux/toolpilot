@@ -20,10 +20,19 @@ export function middleware(request: NextRequest) {
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-  response.headers.set("X-XSS-Protection", "1; mode=block");
+  // Deprecated header: "1; mode=block" is known to create XSS vectors in old
+  // browsers, and no current browser needs it once CSP is present. "0" is the
+  // OWASP-recommended value.
+  response.headers.set("X-XSS-Protection", "0");
+  // script-src keeps 'unsafe-inline' on purpose: AdSense and the GA4 bootstrap
+  // inject inline tags, and a nonce policy would force every route to render
+  // per-request, giving up the ISR/CDN caching the site depends on.
+  // 'unsafe-eval' is not needed: the only WebAssembly users (ffmpeg.wasm,
+  // tesseract.js) are covered by the narrower 'wasm-unsafe-eval', and pdf.js
+  // disables its optional eval path when CSP forbids it.
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.co.in https://www.googletagmanager.com https://utt.impactcdn.com https://cdn.jsdelivr.net https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' blob: https://unpkg.com https://pagead2.googlesyndication.com https://adservice.google.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://tessdata.projectnaptha.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google https://csi.gstatic.com; frame-src 'self' https://pagead2.googlesyndication.com https://adservice.google.com https://www.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://pagead2.googlesyndication.com https://adservice.google.com https://adservice.google.co.in https://www.googletagmanager.com https://utt.impactcdn.com https://cdn.jsdelivr.net https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' blob: https://unpkg.com https://pagead2.googlesyndication.com https://adservice.google.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://tessdata.projectnaptha.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google https://csi.gstatic.com; frame-src 'self' https://pagead2.googlesyndication.com https://adservice.google.com https://www.google.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com"
   );
   response.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
 

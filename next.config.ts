@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Do not advertise the framework version in responses.
+  poweredByHeader: false,
   transpilePackages: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   images: {
     formats: ["image/avif", "image/webp"],
@@ -97,6 +99,13 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
+      },
+      {
+        // Best-effort de-branding of the stack. Vercel normally overwrites this
+        // at the edge; if it does, the header is platform-controlled and the
+        // finding is not something the app can fix.
+        source: "/:path*",
+        headers: [{ key: "Server", value: "toolpilotpro" }],
       },
     ];
   },
