@@ -100,13 +100,6 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
-      {
-        // Best-effort de-branding of the stack. Vercel normally overwrites this
-        // at the edge; if it does, the header is platform-controlled and the
-        // finding is not something the app can fix.
-        source: "/:path*",
-        headers: [{ key: "Server", value: "toolpilotpro" }],
-      },
     ];
   },
 };
