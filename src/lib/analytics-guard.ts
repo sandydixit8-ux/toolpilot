@@ -25,6 +25,11 @@ const BOT_PATTERNS = [
   /anthropic-ai/i,
   /claude-www/i,
   /dataforseo/i,
+  /mediapartners-google/i,
+  /adsbot-google/i,
+  /google-adwords/i,
+  /google-read-aloud/i,
+  /feedfetcher-google/i,
   /zelenka/i,
   /uptimerobot/i,
   /pingdom/i,
@@ -53,6 +58,10 @@ export function isBot(request: Request): boolean {
   const ua = request.headers.get("user-agent") || "";
   if (!ua.trim()) return true;
   if (BOT_PATTERNS.some((p) => p.test(ua))) return true;
+  // Every real browser UA carries a version number. Crawlers that slip past the
+  // pattern list (the AdSense renderer reports a bare "Mediapartners-Google")
+  // do not, so a missing digit is a reliable cheap signal.
+  if (!/\d/.test(ua)) return true;
   const secChUa = request.headers.get("sec-ch-ua") || "";
   return secChUa.includes("HeadlessChrome");
 }
