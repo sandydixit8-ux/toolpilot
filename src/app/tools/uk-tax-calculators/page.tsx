@@ -156,6 +156,53 @@ export default function UkTaxHubPage() {
           </ul>
         </section>
 
+        <section className="mt-10">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+            UK tax guides that explain the numbers
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+            Each calculator answers a single question. These guides cover the surrounding detail, from
+            reading a payslip line by line to the marginal rate traps above £100,000.
+          </p>
+          <ul className="space-y-3">
+            {[
+              {
+                href: "/blog/uk-payslip-explained-2025-26",
+                title: "UK payslip explained",
+                text: "Every deduction on a payslip, what tax code 1257L means, and how pension and student loan lines are worked out.",
+              },
+              {
+                href: "/blog/uk-national-insurance-rates-2025-26",
+                title: "National Insurance rates 2025/26",
+                text: "Employee 8% and 2%, employer 15% above £5,000, self-employed Class 4, and how qualifying years build a State Pension.",
+              },
+              {
+                href: "/blog/uk-take-home-pay-examples-2025-26",
+                title: "Take-home pay examples",
+                text: "Net pay for £25,000 to £100,000, plus why a pay rise between £50,000 and £60,000 keeps only 58p in the pound.",
+              },
+              {
+                href: "/blog/uk-vat-rates-guide",
+                title: "UK VAT rates explained",
+                text: "The 20%, 5% and 0% rates, zero-rated versus exempt, the £90,000 registration threshold, and how to add or remove VAT.",
+              },
+            ].map((guide) => (
+              <li key={guide.href}>
+                <Link
+                  href={guide.href}
+                  className="group flex items-start gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  <ArrowRight className="h-4 w-4 mt-1 shrink-0 text-blue-500" />
+                  <span>
+                    <span className="font-semibold">{guide.title}</span>{" "}
+                    <span className="text-gray-600 dark:text-gray-400">- {guide.text}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <div className="mt-10">
           <FAQSection faqs={FAQS} title="UK Tax Calculators - FAQs" />
         </div>

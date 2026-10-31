@@ -109,11 +109,16 @@ const BLOG_LINKS: Record<string, RelatedArticle[]> = {
   ],
   "uk-income-tax-calculator": [
     { slug: "uk-income-tax-calculator-guide-2025-26", title: "UK Income Tax 2025/26: Personal Allowance, Bands and Take-Home Pay Explained" },
+    { slug: "uk-take-home-pay-examples-2025-26", title: "UK Take-Home Pay 2025/26: What £25k, £35k, £50k and £70k Actually Pay" },
+    { slug: "uk-payslip-explained-2025-26", title: "UK Payslip Explained: What Every Line on Your Pay Slip Means (2025/26)" },
   ],
   "uk-national-insurance-calculator": [
+    { slug: "uk-national-insurance-rates-2025-26", title: "National Insurance 2025/26: Rates, Thresholds and What You Actually Pay" },
+    { slug: "uk-payslip-explained-2025-26", title: "UK Payslip Explained: What Every Line on Your Pay Slip Means (2025/26)" },
     { slug: "uk-income-tax-calculator-guide-2025-26", title: "UK Income Tax 2025/26: Personal Allowance, Bands and Take-Home Pay Explained" },
   ],
   "uk-vat-calculator": [
+    { slug: "uk-vat-rates-guide", title: "UK VAT Rates Explained: 20%, 5% and 0% with Worked Examples" },
     { slug: "uk-income-tax-calculator-guide-2025-26", title: "UK Income Tax 2025/26: Personal Allowance, Bands and Take-Home Pay Explained" },
   ],
   "sip-calculator": [
