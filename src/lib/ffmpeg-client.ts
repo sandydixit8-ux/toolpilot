@@ -8,7 +8,7 @@ const CORE_BASE = `https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/umd`;
 // The core is ~31 MB, so the first load legitimately takes a while; it should
 // never take this long, and when it does the promise can stay pending forever
 // and leave the user staring at "Loading FFmpeg engine".
-const LOAD_TIMEOUT_MS = 45_000;
+const LOAD_TIMEOUT_MS = 60_000;
 const LOAD_ATTEMPTS = 2;
 const LOAD_FAILED =
   "The video engine could not start. Check your connection and try again.";
@@ -36,11 +36,14 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 
 async function loadOnce(): Promise<FFmpeg> {
   const ffmpeg = new FFmpeg();
+  // Both the CDN downloads and the wasm start-up are inside the timeout: a
+  // stalled download is just as capable of hanging the tool as a stalled load.
   await withTimeout(
-    ffmpeg.load({
-      coreURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
-    }),
+    (async () => {
+      const coreURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript");
+      const wasmURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm");
+      await ffmpeg.load({ coreURL, wasmURL });
+    })(),
     LOAD_TIMEOUT_MS
   );
   return ffmpeg;
