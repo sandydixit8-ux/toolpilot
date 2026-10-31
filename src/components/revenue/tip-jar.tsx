@@ -10,7 +10,7 @@ export function TipJar() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-40 flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-full shadow-lg transition-all hover:scale-105"
+        className="fixed bottom-20 right-4 z-40 flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-amber-950 px-4 py-2.5 rounded-full shadow-lg transition-all hover:scale-105"
         title="Buy us a coffee"
       >
         <Coffee className="h-4 w-4" />
@@ -37,12 +37,12 @@ export function TipJar() {
                 href="https://www.buymeacoffee.com/sandydixitp"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold py-3 px-6 rounded-xl transition-colors"
               >
                 <Coffee className="h-5 w-5" />
                 Buy Me a Coffee
               </a>
-              <p className="flex items-center justify-center gap-1 text-xs text-gray-400">
+              <p className="flex items-center justify-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <Heart className="h-3 w-3 text-red-400" /> Every contribution matters
               </p>
             </div>

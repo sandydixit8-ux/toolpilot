@@ -101,7 +101,7 @@ export default async function ToolsPage({ searchParams }: Props) {
                         </span>
                       ))}
                       {tools.length > 4 && (
-                        <span className="text-xs text-gray-400">+{tools.length - 4} more</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">+{tools.length - 4} more</span>
                       )}
                     </div>
                   </CardContent>

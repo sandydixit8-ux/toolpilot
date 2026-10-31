@@ -95,7 +95,7 @@ export function AffiliatePromo({ title = "Recommended Tools", items, className, 
           </Card>
         ))}
       </div>
-      <p className="text-[10px] text-gray-400 dark:text-gray-600 mt-2 text-center">Affiliate links — we may earn a commission at no cost to you</p>
+      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-2 text-center">Affiliate links — we may earn a commission at no cost to you</p>
     </div>
   );
 }

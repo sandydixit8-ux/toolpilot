@@ -134,7 +134,7 @@ export function UploadBox({
       >
         <input {...getInputProps()} />
         <div className={`rounded-full p-3 ${isDragActive ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}>
-          <Upload className={`h-8 w-8 ${isDragActive ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500'}`} />
+          <Upload className={`h-8 w-8 ${isDragActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`} />
         </div>
         <p className="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">
           {isDragActive ? 'Drop your files here' : 'Drag & drop your files here'}
@@ -144,7 +144,7 @@ export function UploadBox({
         </p>
 
         {showSizeInfo && (
-          <div className="mt-3 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
+          <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1">
               <HardDrive className="h-3 w-3" />
               Max: {formatBytes(maxSize)}

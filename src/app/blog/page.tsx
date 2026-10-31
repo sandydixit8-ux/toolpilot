@@ -104,7 +104,7 @@ export default async function BlogPage() {
 
         {posts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-400 dark:text-gray-500">Blog posts coming soon. Check back later!</p>
+            <p className="text-gray-500 dark:text-gray-400">Blog posts coming soon. Check back later!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -119,7 +119,7 @@ export default async function BlogPage() {
                     {post.excerpt && (
                       <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-3">{post.excerpt}</p>
                     )}
-                    <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
+                    <div className="mt-4 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <span>{post.author}</span>
                       {post.publishedAt && (
                         <>
