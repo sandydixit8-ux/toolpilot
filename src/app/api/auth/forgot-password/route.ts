@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendEmail, passwordResetEmail } from "@/lib/email";
+import { sendEmailDetailed, passwordResetEmail } from "@/lib/email";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
@@ -39,16 +39,20 @@ export async function POST(request: Request) {
     const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpilotpro.in"}/auth/reset-password?token=${token}`;
 
     const emailContent = passwordResetEmail(resetUrl);
-    const emailSent = await sendEmail({
+    const delivery = await sendEmailDetailed({
       to: normalizedEmail,
       subject: emailContent.subject,
       html: emailContent.html,
     });
 
-    if (emailSent) {
+    if (delivery.ok) {
       console.log(`[PASSWORD RESET] Email sent to ${normalizedEmail}`);
     } else {
-      console.log(`\n========== PASSWORD RESET (no SMTP) ==========\nEmail: ${normalizedEmail}\nReset URL: ${resetUrl}\nExpires: ${expiresAt.toISOString()}\n==============================================\n`);
+      // The response stays generic to avoid leaking which addresses exist, so
+      // the failure has to be visible in the logs instead. /api/admin/email-test
+      // verifies the same transport on demand.
+      console.error(`[PASSWORD RESET] Delivery failed for ${normalizedEmail}: ${delivery.error}`);
+      console.log(`\n========== PASSWORD RESET (undelivered) ==========\nEmail: ${normalizedEmail}\nReset URL: ${resetUrl}\nExpires: ${expiresAt.toISOString()}\n==================================================\n`);
     }
 
     return NextResponse.json({

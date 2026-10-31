@@ -10,7 +10,6 @@ export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
-  const [resetLink, setResetLink] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +25,7 @@ export function ForgotPasswordForm() {
 
       if (data.success) {
         setStatus("success");
-        setMessage(data.message || "Reset link generated.");
-        if (data.resetUrl) {
-          setResetLink(data.resetUrl);
-        }
+        setMessage(data.message || "If an account exists with that email, a reset link has been sent.");
       } else {
         setStatus("error");
         setMessage(data.error || "Something went wrong. Try again.");
@@ -56,24 +52,15 @@ export function ForgotPasswordForm() {
               <div className="flex items-start gap-2">
                 <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                 <div>
-                  <p className="font-medium">Reset link generated!</p>
+                  <p className="font-medium">Check your inbox</p>
                   <p className="mt-1">{message}</p>
+                  <p className="mt-2 text-green-700/80 dark:text-green-300/80">
+                    The email usually arrives within a minute. If it does not, check your spam or
+                    promotions folder, then try again with the same address.
+                  </p>
                 </div>
               </div>
             </div>
-            {resetLink && (
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/50">
-                <p className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-2">
-                  Click the link below to reset your password:
-                </p>
-                <a
-                  href={resetLink}
-                  className="block break-all text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100 underline"
-                >
-                  {resetLink}
-                </a>
-              </div>
-            )}
             <Link
               href="/auth/login"
               className="flex items-center justify-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
