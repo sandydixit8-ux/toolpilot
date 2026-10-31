@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Script from "next/script";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CookieConsent } from "@/components/ui/cookie-consent";
@@ -63,12 +62,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <meta name="google-adsense-account" content={ADSENSE_PUBLISHER_ID} />
             <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
             <link rel="preconnect" href="https://adservice.google.com" crossOrigin="anonymous" />
-            <Script
-              async
-              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`}
-              crossOrigin="anonymous"
-              strategy="afterInteractive"
-            />
+            {/* adsbygoogle.js (~145 KB) is injected by AdUnit once a slot nears
+                the viewport and cookie consent is given, so it stays off the
+                critical path for first paint. */}
           </>
         )}
         {GA_ID && (
