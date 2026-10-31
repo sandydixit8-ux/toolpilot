@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 const schema = z.object({
   path: z.string().min(1).max(300),
   referrer: z.string().max(500).optional(),
+  automated: z.boolean().optional(),
 });
 
 const DAY_CAP = 500;
@@ -53,6 +54,13 @@ export async function POST(request: Request) {
     }
 
     if (isBot(request)) {
+      return NextResponse.json({ success: true, data: { recorded: false } });
+    }
+
+    // Browser automation (Playwright, Selenium, scrapers) reports
+    // navigator.webdriver. Such clients carry a normal Chrome UA, so this flag
+    // is what keeps test runs out of the production numbers.
+    if (parsed.data.automated) {
       return NextResponse.json({ success: true, data: { recorded: false } });
     }
 

@@ -12,7 +12,11 @@ export function PageViewTracker() {
     fetch("/api/analytics/pageview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path: pathname, referrer: document.referrer || "" }),
+      body: JSON.stringify({
+        path: pathname,
+        referrer: document.referrer || "",
+        automated: navigator.webdriver === true,
+      }),
       keepalive: true,
     }).catch(() => {});
 
