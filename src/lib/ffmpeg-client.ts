@@ -5,20 +5,78 @@ import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 const CORE_VERSION = "0.12.10";
 const CORE_BASE = `https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/umd`;
+// The core is ~31 MB, so the first load legitimately takes a while; it should
+// never take this long, and when it does the promise can stay pending forever
+// and leave the user staring at "Loading FFmpeg engine".
+const LOAD_TIMEOUT_MS = 45_000;
+const LOAD_ATTEMPTS = 2;
+const LOAD_FAILED =
+  "The video engine could not start. Check your connection and try again.";
 
 let ffmpegInstance: FFmpeg | null = null;
+let pendingLoad: Promise<FFmpeg> | null = null;
 
 export type ProgressCallback = (percent: number) => void;
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(LOAD_FAILED)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
+async function loadOnce(): Promise<FFmpeg> {
+  const ffmpeg = new FFmpeg();
+  await withTimeout(
+    ffmpeg.load({
+      coreURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
+    }),
+    LOAD_TIMEOUT_MS
+  );
+  return ffmpeg;
+}
+
+async function loadFfmpeg(): Promise<FFmpeg> {
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= LOAD_ATTEMPTS; attempt++) {
+    try {
+      return await loadOnce();
+    } catch (error) {
+      lastError = error;
+      // A half-initialised instance cannot be reused, so the next attempt
+      // starts from a clean FFmpeg object.
+    }
+  }
+  throw new Error(
+    lastError instanceof Error && lastError.message ? lastError.message : LOAD_FAILED
+  );
+}
+
 export async function getFfmpeg(): Promise<FFmpeg> {
   if (ffmpegInstance) return ffmpegInstance;
-  const ffmpeg = new FFmpeg();
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-    wasmURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
-  });
-  ffmpegInstance = ffmpeg;
-  return ffmpeg;
+  if (!pendingLoad) {
+    pendingLoad = loadFfmpeg().then(
+      (ffmpeg) => {
+        ffmpegInstance = ffmpeg;
+        return ffmpeg;
+      },
+      (error) => {
+        pendingLoad = null;
+        throw error;
+      }
+    );
+  }
+  return pendingLoad;
 }
 
 export async function transcode(
