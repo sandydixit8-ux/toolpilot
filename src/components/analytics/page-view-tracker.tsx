@@ -9,13 +9,18 @@ export function PageViewTracker() {
 
   useEffect(() => {
     if (!pathname || pathname.startsWith("/admin") || pathname.startsWith("/api")) return;
+    // navigator.webdriver catches standard automation; the ?_qa query flag is
+    // for this repo's Playwright runs, which drive a normal Chrome profile.
+    const automated =
+      navigator.webdriver === true ||
+      new URLSearchParams(window.location.search).has("_qa");
     fetch("/api/analytics/pageview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         path: pathname,
         referrer: document.referrer || "",
-        automated: navigator.webdriver === true,
+        automated,
       }),
       keepalive: true,
     }).catch(() => {});

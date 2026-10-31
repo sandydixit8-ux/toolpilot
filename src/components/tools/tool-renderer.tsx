@@ -31,7 +31,12 @@ function TrackToolUsage({ slug }: { slug: string }) {
       body: JSON.stringify({
         event: "tool_view",
         page: slug,
-        metadata: { path: pathname, automated: navigator.webdriver === true },
+        metadata: {
+          path: pathname,
+          automated:
+            navigator.webdriver === true ||
+            new URLSearchParams(window.location.search).has("_qa"),
+        },
       }),
     }).catch(() => {});
   }, [slug, pathname]);
