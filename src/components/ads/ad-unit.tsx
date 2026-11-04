@@ -119,7 +119,7 @@ export function AdUnit({ slotId, format = "auto", responsive = true, className =
 
   return (
     <div
-      className={`ad-container flex justify-center ${consent ? "my-6" : "my-0"} ${className}`}
+      className={`ad-container flex w-full justify-center ${consent ? "my-6" : "my-0"} ${className}`}
       style={style}
     >
       <ins
@@ -127,9 +127,15 @@ export function AdUnit({ slotId, format = "auto", responsive = true, className =
         className="adsbygoogle"
         style={{
           display: "block",
+          // AdSense sizes a responsive creative from the slot's own box. A
+          // block-level <ins> inside a centred flex container has no content,
+          // so it measured 0x0 and the request went out as format=0x0 with no
+          // usable position, which returns no ad even for a valid slot.
+          // Filling the container gives it a real width to fill.
+          width: "100%",
           // Nothing is requested until consent is given, so keep the reserved
           // space from collapsing to zero and shifting the page later.
-          minHeight: consent ? undefined : 0,
+          minHeight: consent ? 90 : 0,
           ...(responsive ? {} : { width: "728px", height: "90px" }),
         }}
         data-ad-client={publisherId}
