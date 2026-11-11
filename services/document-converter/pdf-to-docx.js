@@ -26,7 +26,15 @@ const {
 
 async function loadPdfish() {
   const m = await import('pdfjs-dist/build/pdf.mjs');
-  try { if (m.GlobalWorkerOptions) m.GlobalWorkerOptions.workerSrc = ''; } catch (e) { /* ignore */ }
+  try {
+    if (m.GlobalWorkerOptions) {
+      try {
+        m.GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/build/pdf.worker.mjs');
+      } catch (e) {
+        m.GlobalWorkerOptions.workerSrc = 'pdfjs-dist/build/pdf.worker.mjs';
+      }
+    }
+  } catch (e) { /* ignore */ }
   return m;
 }
 
