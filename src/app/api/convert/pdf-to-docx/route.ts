@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateFile, sanitizeFilename } from '@/lib/converters/security';
 import { checkDocxContent } from '@/lib/converters/docx-check';
+import { ENGINE_SOURCE_B64 } from '@/lib/converters/pdf-to-docx-source';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-
-// Force Vercel file tracing to include the engine file (nft traces string-literal fs reads).
-try { fs.readFileSync('services/document-converter/pdf-to-docx.js'); } catch { /* ignore */ }
 
 // Polyfill DOMMatrix for pdfjs-dist (Node lacks it).
 if (typeof globalThis.DOMMatrix === 'undefined') {
@@ -27,11 +25,40 @@ if (typeof (Uint8Array.prototype as any).toHex !== 'function') {
 
 export const maxDuration = 60;
 
-function loadEngine() {
-  const enginePath = path.join(process.cwd(), 'services', 'document-converter', 'pdf-to-docx.js');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mod = require(enginePath);
-  return mod as { convertPdfToDocx: (p: string, o?: { mode?: string }) => Promise<{ buffer: Buffer; report: { sourcePages: number; tables: number; tableRowsTotal: number } }> };
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+
+async function loadEngine() {
+  const code = Buffer.from(ENGINE_SOURCE_B64, 'base64').toString('utf8');
+  const moduleObj: { exports: Record<string, unknown> } = { exports: {} };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const req = (id: string) => {
+    if (id === 'docx') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require('docx');
+    }
+    if (id === 'adm-zip') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require('adm-zip');
+    }
+    if (id === '@napi-rs/canvas') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require('@napi-rs/canvas');
+    }
+    if (id === 'fs') return fs;
+    if (id === 'path') return path;
+    if (id === 'os') return os;
+    if (id === 'pdfjs-dist/build/pdf.mjs' || id === 'pdfjs-dist') {
+      const pdfjsPath = 'pdfjs-dist/build/pdf.mjs';
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require(pdfjsPath);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require(id);
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fn = new (AsyncFunction as any)('module', 'exports', 'require', code);
+  await fn(moduleObj, moduleObj.exports, req);
+  return moduleObj.exports as { convertPdfToDocx: (p: string, o?: { mode?: string }) => Promise<{ buffer: Buffer; report: { sourcePages: number; tables: number; tableRowsTotal: number } }> };
 }
 
 export async function POST(request: NextRequest) {
@@ -61,7 +88,7 @@ export async function POST(request: NextRequest) {
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     await fs.promises.writeFile(inputPath, fileBuffer);
 
-    const { convertPdfToDocx } = loadEngine();
+    const { convertPdfToDocx } = await loadEngine();
     const { buffer: docxBuffer, report } = await convertPdfToDocx(inputPath, { mode: 'highfidelity' });
 
     const contentCheck = await checkDocxContent(docxBuffer);
