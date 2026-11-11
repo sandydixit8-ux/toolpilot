@@ -24,6 +24,8 @@ import { getProsCons } from "@/config/pros-cons";
 import { getSiteUrl } from "@/lib/utils";
 import { SITE_LAST_REVIEWED } from "@/lib/constants";
 import { isToolIndexable } from "@/lib/indexing";
+import { TOOL_GUIDES } from "@/config/tool-guides";
+import { renderBlogContent } from "@/lib/blog-renderer";
 import { CheckCircle, Lock, ArrowRight, XCircle } from "lucide-react";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -299,6 +301,8 @@ export default async function SlugPage({ params }: Props) {
   // exactly what "low value content" flags. Ad revenue only comes from the
   // pages we stand behind.
   const showAds = isToolIndexable(tool.slug);
+  const guide = TOOL_GUIDES[tool.slug];
+  const allFaqs = guide?.faqs?.length ? [...tool.faqs, ...guide.faqs] : tool.faqs;
 
   return (
     <>
@@ -351,6 +355,14 @@ export default async function SlugPage({ params }: Props) {
                 ))}
               </ol>
             </section>
+            {guide && (
+              <section>
+                <div
+                  className="prose dark:prose-invert max-w-none prose-headings:scroll-mt-24 prose-table:text-sm"
+                  dangerouslySetInnerHTML={{ __html: renderBlogContent(guide.markdown) }}
+                />
+              </section>
+            )}
             {prosCons && (
               <section>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Pros &amp; Cons</h2>
@@ -406,7 +418,7 @@ export default async function SlugPage({ params }: Props) {
                   : "Files are processed securely and automatically deleted after processing. We do not store or share your data."}
               </p>
             </section>
-            {tool.faqs.length > 0 && <FAQSection faqs={tool.faqs} />}
+            {allFaqs.length > 0 && <FAQSection faqs={allFaqs} />}
             <NewsletterCTA />
             <AffiliatePromo
               title="Recommended for you"
