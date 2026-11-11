@@ -845,7 +845,12 @@ function paragraphElement(para, mode) {
   const first = para.lines[0];
   const level = headingLevelForLine(first);
   const sizeHalf = Math.max(18, Math.round(para.size * PT_TO_HALF_PT));
-  const runs = [new TextRun({ text: para.text, bold: para.isBold || (level != null), italic: first.isItalic, size: sizeHalf, font: first.font })];
+  let text = para.text;
+  const isBullet = isBulletLine(first);
+  if (isBullet) {
+    text = text.replace(/^[\u2022\u2023\u25E6\u2043•\-\*]\s*/, '').trim();
+  }
+  const runs = [new TextRun({ text, bold: para.isBold || (level != null), italic: first.isItalic, size: sizeHalf, font: first.font })];
   const opts = {};
   if (level) {
     opts.heading = level;
@@ -853,6 +858,7 @@ function paragraphElement(para, mode) {
   } else {
     opts.alignment = para.align;
     opts.spacing = { after: Math.round(para.size * 6) };
+    if (isBullet) opts.bullet = { level: 0 };
   }
   return new Paragraph({ children: runs, ...opts });
 }
