@@ -7,6 +7,7 @@ import { ADS } from "@/config/ads";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { getGeneralAffiliates } from "@/lib/affiliates";
 import { SITE_URL } from "@/lib/constants";
+import { isBlogIndexable } from "@/lib/indexing";
 
 export const revalidate = 3600;
 
@@ -31,13 +32,18 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-  const posts = await withDbRetry(() =>
+  const allPosts = await withDbRetry(() =>
     prisma.blogPost.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
       include: { category: true },
     })
   ).catch(() => []);
+
+  // The listing is the sample a reader (or reviewer) browses before deciding
+  // whether the site is worth reading. Only surface articles that clear the
+  // word threshold used for indexing; the rest stay reachable by direct URL.
+  const posts = allPosts.filter((post) => isBlogIndexable(post.content));
 
   const blogSchema = {
     "@context": "https://schema.org",

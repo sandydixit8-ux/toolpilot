@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { isBlogIndexable } from "@/lib/indexing";
 import { BannerAd, InArticleAd } from "@/components/ads/ad-banner";
 import { AffiliatePromo } from "@/components/revenue/affiliate-promo";
 import { getGeneralAffiliates } from "@/lib/affiliates";
@@ -28,12 +29,24 @@ export const revalidate = 900;
 export default async function HomePage() {
   let latestPosts: { slug: string; title: string; excerpt: string | null; category: { name: string } | null }[] = [];
   try {
-    latestPosts = await prisma.blogPost.findMany({
-      where: { status: "PUBLISHED", publishedAt: { not: null } },
-      orderBy: { publishedAt: "desc" },
-      take: 4,
-      select: { slug: true, title: true, excerpt: true, category: { select: { name: true } } },
-    });
+    latestPosts = (
+      await prisma.blogPost.findMany({
+        where: { status: "PUBLISHED", publishedAt: { not: null } },
+        orderBy: { publishedAt: "desc" },
+        take: 12,
+        select: { slug: true, title: true, excerpt: true, content: true, category: { select: { name: true } } },
+      })
+    )
+      // The homepage is the first page a reviewer sees, so only surface
+      // substantial articles here (see src/lib/indexing.ts).
+      .filter((post) => isBlogIndexable(post.content))
+      .slice(0, 4)
+      .map((post) => ({
+        slug: post.slug,
+        title: post.title,
+        excerpt: post.excerpt,
+        category: post.category,
+      }));
   } catch {
     latestPosts = [];
   }

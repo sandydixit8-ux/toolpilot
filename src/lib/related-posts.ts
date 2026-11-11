@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isBlogIndexable } from "@/lib/indexing";
 
 const STOPWORDS = new Set([
   "how", "to", "the", "and", "for", "with", "your", "you", "a", "of", "in", "on", "free",
@@ -10,8 +11,11 @@ const STOPWORDS = new Set([
 export async function getRelatedPosts(currentSlug: string, title: string, categoryId?: string | null) {
   const posts = await prisma.blogPost.findMany({
     where: { status: "PUBLISHED", slug: { not: currentSlug } },
-    select: { slug: true, title: true, excerpt: true, categoryId: true },
+    select: { slug: true, title: true, excerpt: true, categoryId: true, content: true },
   });
+
+  // Recommend only articles we consider substantial; see src/lib/indexing.ts.
+  const indexable = posts.filter((post) => isBlogIndexable(post.content));
 
   const tokens = title
     .toLowerCase()
@@ -19,7 +23,7 @@ export async function getRelatedPosts(currentSlug: string, title: string, catego
     .split(/\s+/)
     .filter((w) => w.length > 3 && !STOPWORDS.has(w));
 
-  const scored = posts
+  const scored = indexable
     .map((post) => {
       const hay = post.title.toLowerCase();
       const postTokens = new Set(

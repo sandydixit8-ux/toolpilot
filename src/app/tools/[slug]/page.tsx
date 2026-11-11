@@ -23,6 +23,7 @@ import { CATEGORY_SEO } from "@/config/category-seo";
 import { getProsCons } from "@/config/pros-cons";
 import { getSiteUrl } from "@/lib/utils";
 import { SITE_LAST_REVIEWED } from "@/lib/constants";
+import { isToolIndexable } from "@/lib/indexing";
 import { CheckCircle, Lock, ArrowRight, XCircle } from "lucide-react";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -45,6 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${cmp.a.name} vs ${cmp.b.name}: Which is Better? | ToolPilot`,
       description: `Compare ${cmp.a.name} and ${cmp.b.name} — two free online tools. See how they differ on features, ease of use and privacy, then pick the right one.`,
       alternates: { canonical: url },
+      robots: { index: false, follow: true },
       openGraph: { title: `${cmp.a.name} vs ${cmp.b.name}`, description: `Compare ${cmp.a.name} vs ${cmp.b.name} free online tools.`, url, type: "website" },
       twitter: { card: "summary_large_image", title: `${cmp.a.name} vs ${cmp.b.name}`, description: `Compare ${cmp.a.name} vs ${cmp.b.name} free online tools.` },
     };
@@ -65,6 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: tool.seoDescription,
     keywords: tool.keywords,
     alternates: { canonical: url },
+    robots: isToolIndexable(tool.slug) ? { index: true, follow: true } : { index: false, follow: true },
     openGraph: { title: tool.name, description: tool.seoDescription, url, type: "website" },
     twitter: { card: "summary_large_image", title: tool.name, description: tool.seoDescription },
   };
@@ -174,7 +177,7 @@ export default async function SlugPage({ params }: Props) {
           { label: catA?.name || a.category, href: `/tools/${a.categorySlug}` },
           { label: `${a.name} vs ${b.name}` },
         ]} />
-        <BannerAd slotId={ADS.toolCategory.banner} />
+        <BannerAd slotId={ADS.toolCategory.banner} enabled={false} />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{a.name} vs {b.name} — Which is Better?</h1>
         <p className="text-gray-500 dark:text-gray-400 mb-6">{a.name} and {b.name} are both free online tools on ToolPilot. This quick, side-by-side comparison helps you pick the right one.</p>
         <div className="flex flex-wrap gap-3 mb-8">
@@ -278,7 +281,7 @@ export default async function SlugPage({ params }: Props) {
             </Card>
           </div>
         </section>
-        <InArticleAd slotId={ADS.toolDetail.inArticle} />
+        <InArticleAd slotId={ADS.toolDetail.inArticle} enabled={false} />
         <FAQSection faqs={faqs} title={`${a.name} vs ${b.name} — FAQs`} />
         {related.length > 0 && (
           <div className="mt-10">
@@ -292,6 +295,10 @@ export default async function SlugPage({ params }: Props) {
 
   const toolCat = categories.find((c) => c.slug === tool.categorySlug);
   const prosCons = getProsCons(tool.slug);
+  // Thin, templated tool pages are noindexed above; showing ads on them is
+  // exactly what "low value content" flags. Ad revenue only comes from the
+  // pages we stand behind.
+  const showAds = isToolIndexable(tool.slug);
 
   return (
     <>
@@ -371,7 +378,7 @@ export default async function SlugPage({ params }: Props) {
                 </div>
               </section>
             )}
-            <InArticleAd slotId={ADS.toolDetail.inArticle} />
+            <InArticleAd slotId={ADS.toolDetail.inArticle} enabled={showAds} />
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Features</h2>
               <ul className="space-y-2">
@@ -416,7 +423,7 @@ export default async function SlugPage({ params }: Props) {
             <RelatedArticles slug={tool.slug} />
           </div>
           <aside className="space-y-6">
-            <SidebarAd slotId={ADS.toolDetail.sidebar} />
+            <SidebarAd slotId={ADS.toolDetail.sidebar} enabled={showAds} />
             <Card>
               <CardContent className="p-5">
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Quick Info</h3>

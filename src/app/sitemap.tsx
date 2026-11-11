@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma, withDbRetry } from "@/lib/prisma";
 import { allTools } from "@/config/tools";
 import { comparisons } from "@/config/comparisons";
+import { isBlogIndexable, isComparisonIndexable, isToolIndexable } from "@/lib/indexing";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.toolpilotpro.in";
@@ -36,34 +37,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: h.priority,
   }));
 
-  const toolPages = allTools.map((tool) => ({
-    url: `${baseUrl}/tools/${tool.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  // Only pages we actually stand behind: see src/lib/indexing.ts. A sitemap
+  // full of thin URLs is what produced the "Low value content" verdict.
+  const toolPages = allTools
+    .filter((tool) => isToolIndexable(tool.slug))
+    .map((tool) => ({
+      url: `${baseUrl}/tools/${tool.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
 
-  const comparisonPages = comparisons.map((c) => ({
-    url: `${baseUrl}/tools/${c.a}-vs-${c.b}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
+  const comparisonPages = isComparisonIndexable()
+    ? comparisons.map((c) => ({
+        url: `${baseUrl}/tools/${c.a}-vs-${c.b}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      }))
+    : [];
 
   let blogPages: MetadataRoute.Sitemap = [];
   try {
     const posts = await withDbRetry(() =>
       prisma.blogPost.findMany({
         where: { status: "PUBLISHED" },
-        select: { slug: true, updatedAt: true },
+        select: { slug: true, updatedAt: true, content: true },
       })
     );
-    blogPages = posts.map((post) => ({
-      url: `${baseUrl}/blog/${post.slug}`,
-      lastModified: post.updatedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.6,
-    }));
+    blogPages = posts
+      .filter((post) => isBlogIndexable(post.content))
+      .map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: post.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      }));
   } catch {
     // DB not available at build time — skip blog posts
   }

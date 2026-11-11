@@ -18,6 +18,7 @@ import { FAQSection } from "@/components/tools/faq-section";
 import { ArticleRelatedTools } from "@/components/seo/article-related-tools";
 import { AuthorBio } from "@/components/seo/author-bio";
 import { AUTHOR } from "@/config/author";
+import { isBlogIndexable } from "@/lib/indexing";
 
 export const dynamicParams = false;
 
@@ -62,7 +63,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.seoDescription,
       images: ["/og.png"],
     },
-    robots: { index: true, follow: true },
+    robots: isBlogIndexable(post.content)
+      ? { index: true, follow: true }
+      : { index: false, follow: true },
   };
 }
 
@@ -79,6 +82,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   const renderedContent = renderBlogContent(post.content);
   const toc = getBlogToc(post.content);
+  const showAds = isBlogIndexable(post.content);
   // Related posts are a progressive enhancement: never let a transient DB
   // error here fail the prerender of an otherwise-fine article.
   const relatedPosts = await withDbRetry(() =>
@@ -174,7 +178,7 @@ export default async function BlogPostPage({ params }: Props) {
             />
         </div>
       )}
-      <InArticleAd slotId={ADS.blogPost.afterContent} />
+      <InArticleAd slotId={ADS.blogPost.afterContent} enabled={showAds} />
       <AffiliatePromo
         title="Tools We Recommend"
         items={getGeneralAffiliates().map((a) => ({
@@ -187,7 +191,7 @@ export default async function BlogPostPage({ params }: Props) {
         }))}
         tracking={{ source: `/blog/${post.slug}`, path: `/blog/${post.slug}` }}
         />
-      <InArticleAd slotId={ADS.blogPost.beforeCta} />
+      <InArticleAd slotId={ADS.blogPost.beforeCta} enabled={showAds} />
       <NewsletterCTA />
       <AuthorBio reviewedAt={post.updatedAt} />
       {relatedPosts.length > 0 && (
