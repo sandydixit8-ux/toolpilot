@@ -1,11 +1,13 @@
+﻿/* eslint-disable @typescript-eslint/no-require-imports */
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  try { globalThis.DOMMatrix = require('@napi-rs/canvas').DOMMatrix; } catch (e) { /* ignore */ }
+}
 /**
- * pdf-to-docx.js v3 — Production-grade PDF → DOCX engine
- *
- * Pipeline: EXTRACT → DEDUP → LAYOUT ANALYZE → ELEMENT DETECT → RECONSTRUCT → RENDER → VALIDATE
+ * Pipeline: EXTRACT â†’ DEDUP â†’ LAYOUT ANALYZE â†’ ELEMENT DETECT â†’ RECONSTRUCT â†’ RENDER â†’ VALIDATE
  *
  * Principles (per Master Prompt):
  *  - Spatial reconstruction, NOT raw extraction order.
- *  - Never "extract all text → dump into paragraphs".
+ *  - Never "extract all text â†’ dump into paragraphs".
  *  - Tables detected from geometry (repeated column x-positions).
  *  - Word spacing reconstructed from run gaps (font-scale aware).
  *  - Page size + orientation read from real PDF page dims.
@@ -14,7 +16,6 @@
  *  - Page count preserved via explicit PageBreaks / flowing tables.
  */
 
-const { getDocument } = require('pdfjs-dist/build/pdf.mjs');
 
 const {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
@@ -28,17 +29,17 @@ async function loadPdfish() {
 }
 
 /* ------------------------------------------------------------------ *
- * Tunables (scale-aware — keyed by em/font size, not pixels)
+ * Tunables (scale-aware â€” keyed by em/font size, not pixels)
  * ------------------------------------------------------------------ */
-const WORD_GAP_FACTOR = 0.11;   // gap > 0.11em between runs ⇒ word boundary
+const WORD_GAP_FACTOR = 0.11;   // gap > 0.11em between runs â‡’ word boundary
 const WORD_GAP_MIN = 0.6;       // pt; floor to ignore float noise
 const LINE_GROUP_FACTOR = 0.22; // baselines within 0.22em share a line
-const PARA_GAP_FACTOR = 1.7;    // vertical gap > 1.7em ⇒ paragraph break
+const PARA_GAP_FACTOR = 1.7;    // vertical gap > 1.7em â‡’ paragraph break
 const PT_TO_TWIP = 20;
 const PT_TO_HALF_PT = 2;
 
 /* ================================================================== *
- * PHASE 1 — EXTRACT
+ * PHASE 1 â€” EXTRACT
  * ================================================================== */
 async function extractStructure(pdfPath) {
   const pdfjs = await loadPdfish();
@@ -77,7 +78,7 @@ async function extractStructure(pdfPath) {
     });
   }
 
-  await doc.destroy();
+  try { if (typeof doc.destroy === 'function') await doc.destroy(); } catch { /* ignore */ }
   return pages;
 }
 
@@ -115,7 +116,7 @@ function medianSize(items) {
 }
 
 /* ================================================================== *
- * PHASE 2 — LAYOUT ANALYZE
+ * PHASE 2 â€” LAYOUT ANALYZE
  * ================================================================== */
 function effectivePageDims(page) {
   const rot = ((page.rotate % 360) + 360) % 360;
@@ -175,11 +176,11 @@ function joinRunsWithSpacing(runs) {
 }
 
 /* ================================================================== *
- * CHARACTER → WORD → LINE RECONSTRUCTION
+ * CHARACTER â†’ WORD â†’ LINE RECONSTRUCTION
  *
  * Root fix: PDF extraction granularity is character/run level, but the
  * document model is WORD level. Every char/span must be COALESCED into
- * words FIRST, using scale-aware, adaptive gap thresholds — never treat
+ * words FIRST, using scale-aware, adaptive gap thresholds â€” never treat
  * individual characters as standalone document/table objects.
  * ================================================================== */
 
@@ -216,7 +217,7 @@ function expandToChars(items) {
 /**
  * Adaptive word-boundary threshold from the page's OWN gap distribution.
  * Small gaps (fragment continuation) cluster near 0; real word spaces sit
- * around one space-width (~0.22–0.33em). The threshold sits between them.
+ * around one space-width (~0.22â€“0.33em). The threshold sits between them.
  */
 function adaptiveWordThreshold(gaps, em) {
   em = Math.max(em, 4);
@@ -267,7 +268,7 @@ function reconstructWords(chars) {
       const emBucket = median(cs.map(c => c.size)) || em;
       for (const c of cs) {
         if (c.isSpace) { w = null; continue; }
-        // font/size compatibility guard per master prompt §2
+        // font/size compatibility guard per master prompt Â§2
         const compatible = !w || (Math.abs(c.size - w.size) <= 2 && Math.abs(c.y - w.y) <= emBucket * 0.45);
         if (w && compatible && c.x - w.x1 <= T) {
           w.text += c.ch;
@@ -285,7 +286,7 @@ function reconstructWords(chars) {
 }
 
 /** Baseline-proximity grouping of RECONSTRUCTED WORDS into visual lines
- *  (same font-size band only — different sizes are separate visual lines). */
+ *  (same font-size band only â€” different sizes are separate visual lines). */
 function groupLines(words) {
   const em = medianSize(words);
   const tol = Math.max(2, em * LINE_GROUP_FACTOR);
@@ -327,7 +328,7 @@ function groupLines(words) {
 
 /** Column boundaries separate cells: a wide middle cell (e.g. "MoU Reference"
  *  ending at ~x180 while the next column starts at x190) must NOT be split by
- *  a midpoint rule — every column's content ends at the NEXT column's left
+ *  a midpoint rule â€” every column's content ends at the NEXT column's left
  *  edge minus a small slack, so a boundary sits just before the next column. */
 function columnBoundaries(columns, pageWidth, em) {
   const slack = Math.max(4, em * 0.2);
@@ -356,8 +357,8 @@ function assignRunsToColumns(runs, boundaries) {
 }
 
 /**
- * A line that visibly spans ≥2 table cells: ≥2 word-gaps wider than a
- * justified-space (~7.6pt at 11pt) but ≤ a real cell gap (≥10pt).
+ * A line that visibly spans â‰¥2 table cells: â‰¥2 word-gaps wider than a
+ * justified-space (~7.6pt at 11pt) but â‰¤ a real cell gap (â‰¥10pt).
  */
 function isRowishLine(line, em) {
   const gapMin = Math.max(8, em * 0.8);
@@ -371,14 +372,14 @@ function isRowishLine(line, em) {
 }
 
 /**
- * Detect the table COLUMN GRID (master prompt §9-10).
- * COLUMN-0 = the leftmost DIGIT-LED leading cluster (≥2 lines whose first
- * token starts with a digit — S.No values like "1","2","12"), falling back
+ * Detect the table COLUMN GRID (master prompt Â§9-10).
+ * COLUMN-0 = the leftmost DIGIT-LED leading cluster (â‰¥2 lines whose first
+ * token starts with a digit â€” S.No values like "1","2","12"), falling back
  * to the leftmost recurring leading edge. This keeps the body MARGIN
- * (non-digit, page-wide paragraphs like "This document records…") out of the
+ * (non-digit, page-wide paragraphs like "This document recordsâ€¦") out of the
  * grid while still giving continuation pages a grid. Column candidates:
- *   - recurring LEFT EDGE (leadingCount ≥ 2 across all lines), OR
- *   - recurring boundary reached after a gap on ≥3 ROW-ISH lines that start
+ *   - recurring LEFT EDGE (leadingCount â‰¥ 2 across all lines), OR
+ *   - recurring boundary reached after a gap on â‰¥3 ROW-ISH lines that start
  *     in the column-0 band (single-word cells like "GSI"/"RACI") and their
  *     leading edges elsewhere.
  * The rowish+band restriction stops justified-text spread inside a cell from
@@ -397,8 +398,8 @@ function detectColumnGrid(lines, pageWidth, em) {
     if (ws.length && isRowishLine(line, em)) registerCluster(allLeadClusters, ws[0].x, ws[0].text, tol, true);
   }
 
-  // column-0: leftmost cluster with ≥2 DIGIT-LED lines (S.No values "1","2",…,
-  // while a body margin like "1. Purpose" counts 1) → any leftmost leading ≥2
+  // column-0: leftmost cluster with â‰¥2 DIGIT-LED lines (S.No values "1","2",â€¦,
+  // while a body margin like "1. Purpose" counts 1) â†’ any leftmost leading â‰¥2
   const leadn = allLeadClusters
     .filter(c => c.count >= 2 && c.x > 8 && c.x <= pageWidth - 20)
     .map(c => {
@@ -479,10 +480,10 @@ function stdev(arr) {
   return Math.sqrt(arr.reduce((s, v) => s + (v - mean) ** 2, 0) / arr.length);
 }
 
-const BULLET_RE = /^[\u2022\u2023\u25E6\u2043•\-\*]\s/;
+const BULLET_RE = /^[\u2022\u2023\u25E6\u2043â€¢\-\*]\s/;
 function isBulletLine(line) { return BULLET_RE.test((line.text || '').trim()); }
 const PAGE_NUM_RE = /^\s*(page\s*)?[-\d]+\s*$/i;
-const SEPARATOR_RE = /^[\-\=\_\.\*\s·∙]+$/;
+const SEPARATOR_RE = /^[\-\=\_\.\*\sÂ·âˆ™]+$/;
 
 function isSeparatorText(t) {
   return SEPARATOR_RE.test(t) && t.trim().length >= 2;
@@ -518,7 +519,7 @@ function detectAlignment(lines, contentBox) {
 }
 
 /* ================================================================== *
- * PHASE 2b — ELEMENT DETECTOR
+ * PHASE 2b â€” ELEMENT DETECTOR
  * ================================================================== */
 function analyzePage(page) {
   const dims = effectivePageDims(page);
@@ -548,7 +549,7 @@ function analyzePage(page) {
   //    (S.No column); col0-absent lines are wrap/continuation content absorbed
   //    by the nearest open row (vertically-centred S.No rows reconstruct whole).
   //    A line whose col0 starts at the true body MARGIN (left of the table's
-  //    col0) is body text, not a cell — it must not seed a row.
+  //    col0) is body text, not a cell â€” it must not seed a row.
   const tableRows = buildTableRows(lines, boundaries, emPage, columns);
   const consumedLines = new Set();
   for (const row of tableRows) for (const l of row.lines) consumedLines.add(l);
@@ -556,7 +557,7 @@ function analyzePage(page) {
     ? [{ rows: tableRows, columns, boundaries }]
     : [];
 
-  // content box (body only — lines consumed by the table are excluded)
+  // content box (body only â€” lines consumed by the table are excluded)
   const bodyLines = lines.filter(l => !consumedLines.has(l));
   let contentBox = null;
   if (bodyLines.length) {
@@ -607,7 +608,7 @@ function analyzePage(page) {
  *  - A line whose cell[0] is non-empty is an ANCHOR (the row's S.No line).
  *    Adjacent anchors within 1.5em belong to one cell (wrapped S.No text).
  *  - col0-absent lines are wrap/continuation content: post-anchor lines attach
- *    while their gap stays ≤1.9em; pre-anchor lines buffer then flush into the
+ *    while their gap stays â‰¤1.9em; pre-anchor lines buffer then flush into the
  *    next anchor (they sit ABOVE the S.No yet belong to the same row, e.g.
  *    vertically-centred S.No in a tall cell). A big gap (>2.2em) clears the
  *    pre-anchor buffer so body text above a table never leaks into it.
@@ -636,8 +637,8 @@ function buildTableRows(lines, boundaries, emPage, columns) {
     return ws.length && ws[0].x >= col0Min;
   };
 
-  // ≥2 of the trailing cells (c1..) start FLUSH at the grid's column left
-  // edges — body text spread across the grid never aligns; real cells do.
+  // â‰¥2 of the trailing cells (c1..) start FLUSH at the grid's column left
+  // edges â€” body text spread across the grid never aligns; real cells do.
   const rowAligned = (line) => {
     const ws = [...line.items].sort((a, b) => a.x - b.x);
     const firsts = new Map();
@@ -670,13 +671,13 @@ function buildTableRows(lines, boundaries, emPage, columns) {
     if (anchor) {
       // wrapped col0 continuation: a small S.No continuation ("S.N"+"o.") or a
       // vertically centred S.No line sits close above its row's anchor. REAL
-      // next-row anchors are rowish (span ≥2 cells) and gap > 1.2em.
+      // next-row anchors are rowish (span â‰¥2 cells) and gap > 1.2em.
       const contGap = isRowishLine(line, emPage) ? emPage * 1.2 : emPage * 1.6;
       if (open && open.hasCol0 && open.y - line.y <= contGap && !pending.length) {
         open.lines.push(line); open.lastY = line.y; // wrapped col0 cell continuation
       } else {
         // pre-anchor content more than 2.2em above the anchor belongs to the
-        // block ABOVE, not to this row → discard the stale buffer.
+        // block ABOVE, not to this row â†’ discard the stale buffer.
         if (pending.length && pending[pending.length - 1].y - line.y > emPage * 1.4) pending = [];
         const rowLines = [...pending, line];
         closeRow();
@@ -736,7 +737,7 @@ function finalizeParagraph(para, contentBox) {
 }
 
 /* ================================================================== *
- * PHASE 3 — DOCUMENT-LEVEL STRUCTURE
+ * PHASE 3 â€” DOCUMENT-LEVEL STRUCTURE
  * ================================================================== */
 function detectDocumentHeaderFooter(models) {
   const topCount = new Map();
@@ -765,7 +766,7 @@ function detectDocumentHeaderFooter(models) {
 }
 
 /* ================================================================== *
- * PHASE 4 — DOCX RENDERER
+ * PHASE 4 â€” DOCX RENDERER
  * ================================================================== */
 function headingLevelForLine(line) {
   if (line.isBold && line.size >= 14) return HeadingLevel.HEADING_1;
@@ -866,7 +867,7 @@ function clusterTables(models) {
 
   for (const m of models) {
     for (const block of m.tableBlocks) {
-      // continued block: same column grid → append rows to the open cluster
+      // continued block: same column grid â†’ append rows to the open cluster
       if (lastOpen && sameColumns(lastOpen.columns, block.columns)) {
         const rows = [...block.rows];
         // the source repeats its header row on each page; Word repeats a
@@ -894,7 +895,7 @@ function sameColumns(a, b) {
 }
 
 /* ================================================================== *
- * PHASE 4b — MAIN BUILDER
+ * PHASE 4b â€” MAIN BUILDER
  * ================================================================== */
 async function buildDocx(models, opts = {}) {
   const mode = opts.mode || 'highfidelity';
@@ -920,7 +921,7 @@ async function buildDocx(models, opts = {}) {
         top = estTop; bottom = estBottom; left = estLeft; right = estRight;
       } else if (estLeft + estRight < 800) {
         left = estLeft; right = estRight;
-        // top/bottom unreliable → pad estimated by content height vs page height
+        // top/bottom unreliable â†’ pad estimated by content height vs page height
         const content = m.contentBox.top - m.contentBox.bottom;
         const space = pageH - content;
         top = clampTw(Math.max(360, (space * 0.45) * PT_TO_TWIP));
@@ -934,7 +935,7 @@ async function buildDocx(models, opts = {}) {
     const m = models[pi];
     const children = [];
 
-    // reading order = paragraphs + table-cluster starts (top→bottom)
+    // reading order = paragraphs + table-cluster starts (topâ†’bottom)
     const items = [];
     for (const p of m.paragraphs) {
       if (isHeaderFooterParagraph(p, hf)) continue; // promoted to Word header/footer, drop from body
@@ -973,7 +974,7 @@ async function buildDocx(models, opts = {}) {
   }
 
   for (const c of clusters) {
-    if (c.spansPages) warnings.push(`Multi-page table (cluster ${c.id}) spans pages — following text may shift to keep one logical table.`);
+    if (c.spansPages) warnings.push(`Multi-page table (cluster ${c.id}) spans pages â€” following text may shift to keep one logical table.`);
   }
 
   // --- assemble sections ---
@@ -1041,7 +1042,7 @@ function makeHeaderFooter(hf, isFooter) {
 }
 
 /* ================================================================== *
- * PHASE 5 — VALIDATE / REPORT
+ * PHASE 5 â€” VALIDATE / REPORT
  * ================================================================== */
 function buildReport(models, clusters, buffer, info) {
   const zip = require('adm-zip')(buffer);

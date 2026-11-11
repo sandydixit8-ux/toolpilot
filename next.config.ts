@@ -2,7 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // Do not advertise the framework version in responses.
+  serverExternalPackages: ['docx', 'pdfjs-dist', 'adm-zip', '@napi-rs/canvas'],
+  outputFileTracingIncludes: {
+    '/api/convert/pdf-to-docx': ['./services/document-converter/pdf-to-docx.js'],
+  },
   poweredByHeader: false,
   transpilePackages: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   images: {
