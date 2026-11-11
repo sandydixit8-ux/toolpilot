@@ -480,7 +480,7 @@ function stdev(arr) {
   return Math.sqrt(arr.reduce((s, v) => s + (v - mean) ** 2, 0) / arr.length);
 }
 
-const BULLET_RE = /^[\u2022\u2023\u25E6\u2043â€¢\-\*]\s/;
+const BULLET_RE = /^[\u2022\u2023\u25E6\u2043\u25CF\u25A0\u25BA\u25CB\u25C6\u25AA\u25AB\u2013\u2014\-\*]\s*/;
 function isBulletLine(line) { return BULLET_RE.test((line.text || '').trim()); }
 const PAGE_NUM_RE = /^\s*(page\s*)?[-\d]+\s*$/i;
 const SEPARATOR_RE = /^[\-\=\_\.\*\sÂ·âˆ™]+$/;
@@ -845,22 +845,43 @@ function paragraphElement(para, mode) {
   const first = para.lines[0];
   const level = headingLevelForLine(first);
   const sizeHalf = Math.max(18, Math.round(para.size * PT_TO_HALF_PT));
-  let text = para.text;
   const isBullet = isBulletLine(first);
+  const bulletChars = /[•●■►○◆▪–—\-\*]/;
+  const positions = [];
   if (isBullet) {
-    text = text.replace(/^[\u2022\u2023\u25E6\u2043•\-\*]\s*/, '').trim();
-  }
-  const runs = [new TextRun({ text, bold: para.isBold || (level != null), italic: first.isItalic, size: sizeHalf, font: first.font })];
-  const opts = {};
-  if (level) {
-    opts.heading = level;
-    opts.spacing = { before: Math.round(para.size * 18), after: Math.round(para.size * 8) };
+    // single bullet line
+    positions.push(0);
   } else {
-    opts.alignment = para.align;
-    opts.spacing = { after: Math.round(para.size * 6) };
-    if (isBullet) opts.bullet = { level: 0 };
+    // detect merged bullets: multiple bullet markers in one paragraph
+    for (let i = 0; i < para.text.length; i++) {
+      if (bulletChars.test(para.text[i]) && (i === 0 || /\s/.test(para.text[i-1])) && (i === para.text.length-1 || /\s/.test(para.text[i+1]))) {
+        positions.push(i);
+      }
+    }
   }
-  return new Paragraph({ children: runs, ...opts });
+  const segments = (positions.length >= 2)
+    ? positions.map((pos, idx) => {
+        const end = idx + 1 < positions.length ? positions[idx+1] : para.text.length;
+        return para.text.slice(pos, end).replace(/^[\s•●■►○◆▪–—\-\*]+/, '').trim();
+      }).filter(Boolean)
+    : [para.text];
+
+  const out = [];
+  for (const seg of segments) {
+    const bullet = isBullet || segments.length > 1;
+    const runs = [new TextRun({ text: seg, bold: para.isBold || (level != null), italic: first.isItalic, size: sizeHalf, font: first.font })];
+    const opts = {};
+    if (level) {
+      opts.heading = level;
+      opts.spacing = { before: Math.round(para.size * 18), after: Math.round(para.size * 8) };
+    } else {
+      opts.alignment = para.align;
+      opts.spacing = { after: Math.round(para.size * 6) };
+      if (bullet) opts.bullet = { level: 0 };
+    }
+    out.push(new Paragraph({ children: runs, ...opts }));
+  }
+  return out;
 }
 
 /* ------------------------------------------------------------------ *
@@ -952,7 +973,7 @@ async function buildDocx(models, opts = {}) {
 
     for (const it of items) {
       if (it.kind === 'para') {
-        children.push(paragraphElement(it.ref, mode));
+        children.push(...paragraphElement(it.ref, mode));
       } else {
         const cluster = clusters.find(c => c.id === it.cid);
         // only the FIRST block of the cluster emits the element (rows include continuations)
