@@ -25,7 +25,9 @@ const {
 } = require('docx');
 
 async function loadPdfish() {
-  return import('pdfjs-dist/build/pdf.mjs');
+  const m = await import('pdfjs-dist/build/pdf.mjs');
+  try { if (m.GlobalWorkerOptions) m.GlobalWorkerOptions.workerSrc = ''; } catch (e) { /* ignore */ }
+  return m;
 }
 
 /* ------------------------------------------------------------------ *
