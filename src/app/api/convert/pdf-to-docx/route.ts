@@ -2,26 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateFile, sanitizeFilename } from '@/lib/converters/security';
 import { checkDocxContent } from '@/lib/converters/docx-check';
 import { ENGINE_SOURCE_B64 } from '@/lib/converters/pdf-to-docx-source';
+import '@/lib/converters/pdfjs-polyfill';
+// Static import so Vercel's file tracer includes pdfjs-dist in the bundle.
+import * as pdfjsDist from 'pdfjs-dist';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-
-// Polyfill DOMMatrix for pdfjs-dist (Node lacks it).
-if (typeof globalThis.DOMMatrix === 'undefined') {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    globalThis.DOMMatrix = require('@napi-rs/canvas').DOMMatrix;
-  } catch { /* ignore */ }
-}
-
-// Polyfill Uint8Array.prototype.toHex if missing (pdfjs 4.8.69 needs it).
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-if (typeof (Uint8Array.prototype as any).toHex !== 'function') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (Uint8Array.prototype as any).toHex = function () {
-    return Array.from(this).map((b) => (b as number).toString(16).padStart(2, '0')).join('');
-  };
-}
 
 export const maxDuration = 60;
 
@@ -48,9 +34,8 @@ async function loadEngine() {
     if (id === 'path') return path;
     if (id === 'os') return os;
     if (id === 'pdfjs-dist/build/pdf.mjs' || id === 'pdfjs-dist') {
-      const pdfjsPath = 'pdfjs-dist/build/pdf.mjs';
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require(pdfjsPath);
+      // Use the pre-imported pdfjs-dist module.
+      return pdfjsDist;
     }
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require(id);
