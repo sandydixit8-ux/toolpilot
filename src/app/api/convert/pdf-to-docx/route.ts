@@ -3,7 +3,6 @@ import { validateFile, sanitizeFilename } from '@/lib/converters/security';
 import { checkDocxContent } from '@/lib/converters/docx-check';
 import { ENGINE_SOURCE_B64 } from '@/lib/converters/pdf-to-docx-source';
 import '@/lib/converters/pdfjs-polyfill';
-// Static import so Vercel's file tracer includes pdfjs-dist in the bundle.
 import * as pdfjsDist from 'pdfjs-dist';
 import fs from 'fs';
 import path from 'path';
@@ -17,7 +16,7 @@ async function loadEngine() {
   const code = Buffer.from(ENGINE_SOURCE_B64, 'base64').toString('utf8');
   const moduleObj: { exports: Record<string, unknown> } = { exports: {} };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const req = (id: string) => {
+  const req: any = (id: string) => {
     if (id === 'docx') {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require('docx');
@@ -34,12 +33,12 @@ async function loadEngine() {
     if (id === 'path') return path;
     if (id === 'os') return os;
     if (id === 'pdfjs-dist/build/pdf.mjs' || id === 'pdfjs-dist') {
-      // Use the pre-imported pdfjs-dist module.
       return pdfjsDist;
     }
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require(id);
   };
+  req.resolve = (id: string) => require.resolve(id);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fn = new (AsyncFunction as any)('module', 'exports', 'require', code);
   await fn(moduleObj, moduleObj.exports, req);
