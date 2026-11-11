@@ -5,6 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+// Force Vercel file tracing to include the engine file (nft traces string-literal fs reads).
+try { fs.readFileSync('services/document-converter/pdf-to-docx.js'); } catch { /* ignore */ }
+
 // Polyfill DOMMatrix for pdfjs-dist (Node lacks it).
 if (typeof globalThis.DOMMatrix === 'undefined') {
   try {
