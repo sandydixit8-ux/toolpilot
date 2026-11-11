@@ -333,7 +333,8 @@ function columnBoundaries(columns, pageWidth, em) {
   const slack = Math.max(4, em * 0.2);
   const pts = [];
   for (let i = 0; i < columns.length - 1; i++) pts.push(columns[i + 1] - slack);
-  pts.push(pageWidth);
+  const lastGap = columns.length >= 2 ? (columns[columns.length - 1] - columns[columns.length - 2]) : 120;
+  pts.push(columns[columns.length - 1] + Math.max(40, lastGap) - slack);
   return pts;
 }
 
@@ -393,7 +394,7 @@ function detectColumnGrid(lines, pageWidth, em) {
   for (const line of lines) {
     if (line._isPageNumber) continue;
     const ws = [...line.items].sort((a, b) => a.x - b.x);
-    if (ws.length) registerCluster(allLeadClusters, ws[0].x, ws[0].text, tol);
+    if (ws.length && isRowishLine(line, em)) registerCluster(allLeadClusters, ws[0].x, ws[0].text, tol, true);
   }
 
   // column-0: leftmost cluster with ≥2 DIGIT-LED lines (S.No values "1","2",…,
@@ -405,9 +406,9 @@ function detectColumnGrid(lines, pageWidth, em) {
       return c;
     });
   const digitLed = leadn
-    .filter(c => c.digitCount >= 2)
+    .filter(c => c.digitCount >= 2 || (c.rowishCount || 0) >= 2)
     .sort((a, b) => a.x - b.x);
-  const col0 = digitLed[0] || leadn.sort((a, b) => a.x - b.x)[0];
+  const col0 = digitLed[0];
   if (!col0) return [];
 
   const voidClusters = [];   // ROW-ISH lines ONLY (anchored to the col0 band)
@@ -436,7 +437,7 @@ function detectColumnGrid(lines, pageWidth, em) {
   const candidates = [...byX.values()]
     .filter(c => {
       if (c.x <= 8 || c.x > pageWidth - 20) return false;
-      if (c.count >= 2) return true;              // recurring LEFT EDGE
+      if (c.count >= 2 && ((c.rowishCount || 0) >= 2 || (c.digitCount || 0) >= 2)) return true;              // recurring LEFT EDGE
       return c.voidCount >= 3;                    // solid anchor-void evidence only
     })
     .sort((a, b) => a.x - b.x);
@@ -458,17 +459,18 @@ function candidateCount(x, cands) {
   return 0;
 }
 
-function registerCluster(clusters, x, first, tol) {
+function registerCluster(clusters, x, first, tol, rowish) {
   for (const c of clusters) {
     if (Math.abs(c.x - x) <= tol) {
       c.x = (c.x * c.count + x) / (c.count + 1);
       c.count += 1;
       c.xs.push(x);
       if (first !== undefined) c.firsts.push(first);
+      if (rowish) c.rowishCount = (c.rowishCount || 0) + 1;
       return;
     }
   }
-  clusters.push({ x, count: 1, xs: [x], firsts: first !== undefined ? [first] : null });
+  clusters.push({ x, count: 1, xs: [x], firsts: first !== undefined ? [first] : null, rowishCount: rowish ? 1 : 0 });
 }
 
 function stdev(arr) {
@@ -477,6 +479,8 @@ function stdev(arr) {
   return Math.sqrt(arr.reduce((s, v) => s + (v - mean) ** 2, 0) / arr.length);
 }
 
+const BULLET_RE = /^[\u2022\u2023\u25E6\u2043•\-\*]\s/;
+function isBulletLine(line) { return BULLET_RE.test((line.text || '').trim()); }
 const PAGE_NUM_RE = /^\s*(page\s*)?[-\d]+\s*$/i;
 const SEPARATOR_RE = /^[\-\=\_\.\*\s·∙]+$/;
 
@@ -573,7 +577,8 @@ function analyzePage(page) {
     const prevLine = cur.lines[cur.lines.length - 1];
     const gap = prevLine.y - line.y;
     const samePara = gap <= Math.max(prevLine.size, line.size) * PARA_GAP_FACTOR &&
-      !isHeadingLike(prevLine) && !isHeadingLike(line);
+      !isHeadingLike(prevLine) && !isHeadingLike(line) &&
+       !isBulletLine(prevLine) && !isBulletLine(line);
     if (samePara) {
       cur.lines.push(line);
     } else {
@@ -672,7 +677,7 @@ function buildTableRows(lines, boundaries, emPage, columns) {
       } else {
         // pre-anchor content more than 2.2em above the anchor belongs to the
         // block ABOVE, not to this row → discard the stale buffer.
-        if (pending.length && pending[pending.length - 1].y - line.y > emPage * 2.2) pending = [];
+        if (pending.length && pending[pending.length - 1].y - line.y > emPage * 1.4) pending = [];
         const rowLines = [...pending, line];
         closeRow();
         open = { lines: rowLines, hasCol0: true, y: line.y, lastY: line.y };
@@ -682,14 +687,19 @@ function buildTableRows(lines, boundaries, emPage, columns) {
       open.lines.push(line); open.lastY = line.y;
     } else {
       pending.push(line);
-      if (pending.length >= 2 && pending[pending.length - 2].y - line.y > emPage * 2.2) {
+      if (pending.length >= 2 && pending[pending.length - 2].y - line.y > emPage * 1.4) {
         pending = [line];
       }
     }
   }
   closeRow();
   // trailing pending lines are post-table body text, NOT a phantom row
-  return result.map(rec => toLogicalRow(rec.lines, boundaries));
+  const rows = result.map(rec => toLogicalRow(rec.lines, boundaries));
+if (rows.length) {
+  rows[0].isHeader = true;
+  for (let i = 1; i < rows.length; i++) rows[i].isHeader = false;
+}
+return rows;
 }
 
 function toLogicalRow(lines, boundaries) {

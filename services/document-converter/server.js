@@ -129,15 +129,28 @@ app.post('/convert/docx-to-pdf', upload.single('file'), async (req, res) => {
     }
 
     const pdfBuffer = await fs.readFile(pdfPath);
-    const pdfString = pdfBuffer.toString('latin1');
-    const pageMatches = pdfString.match(/\/Type\s*\/Page[^s]/g);
-    const pageCount = pageMatches ? pageMatches.length : 1;
-    const textMatches = pdfString.match(/BT[\s\S]*?ET/g);
-    const textLength = textMatches ? textMatches.join('').length : 0;
-    const hasText = textLength > 50;
-    const imageMatches = pdfString.match(/\/Subtype\s*\/Image/g);
-    const imageCount = imageMatches ? imageMatches.length : 0;
-    const isRasterized = pageCount > 0 && imageCount > 0 && !hasText;
+    let pageCount = 1;
+    let hasText = false;
+    try {
+      const { getDocument } = require('pdfjs-dist/build/pdf.mjs');
+      const pdfDoc = await getDocument({ data: new Uint8Array(pdfBuffer) }).promise;
+      pageCount = pdfDoc.numPages || 1;
+      for (let p = 1; p <= pdfDoc.numPages; p++) {
+        const page = await pdfDoc.getPage(p);
+        const content = await page.getTextContent();
+        const text = (content.items || []).map(i => i.str || '').join('');
+        if (text.trim().length > 20) hasText = true;
+      }
+      await pdfDoc.destroy();
+    } catch (e) {
+      const pdfString = pdfBuffer.toString('latin1');
+      const m = pdfString.match(/\/Type\s*\/Page[^s]/g);
+      pageCount = m ? m.length : 1;
+      const t = pdfString.match(/BT[\s\S]*?ET/g);
+      hasText = !!(t && t.join('').length > 50);
+    }
+    const imageCount = 0;
+    const isRasterized = pageCount > 0 && !hasText;
 
     const outputFilename = req.file.originalname.replace(/\.(docx|doc)$/i, '.pdf');
 
