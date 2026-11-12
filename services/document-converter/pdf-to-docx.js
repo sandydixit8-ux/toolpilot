@@ -872,10 +872,10 @@ function paragraphElement(para, mode) {
   const segments = (positions.length >= 2)
     ? positions.map((pos, idx) => {
         const end = idx + 1 < positions.length ? positions[idx+1] : para.text.length;
-        return para.text.slice(pos, end).replace(/^[\s•●■►○◆▪–—\-\*]+/, '').trim();
+        return para.text.slice(pos, end).replace(/^[\s\u2022\u2023\u25E6\u2043\u25CF\u25A0\u25BA\u25CB\u25C6\u25AA\u25AB\u2013\u2014\-\*]+/, '').trim();
       }).filter(Boolean)
     : isBullet
-      ? [para.text.replace(/^[\s•●■►○◆▪–—\-\*]+/, '').trim()]
+      ? [para.text.replace(/^[\s\u2022\u2023\u25E6\u2043\u25CF\u25A0\u25BA\u25CB\u25C6\u25AA\u25AB\u2013\u2014\-\*]+/, '').trim()]
       : [para.text];
 
   const out = [];
