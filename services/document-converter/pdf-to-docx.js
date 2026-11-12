@@ -874,7 +874,9 @@ function paragraphElement(para, mode) {
         const end = idx + 1 < positions.length ? positions[idx+1] : para.text.length;
         return para.text.slice(pos, end).replace(/^[\s•●■►○◆▪–—\-\*]+/, '').trim();
       }).filter(Boolean)
-    : [para.text];
+    : isBullet
+      ? [para.text.replace(/^[\s•●■►○◆▪–—\-\*]+/, '').trim()]
+      : [para.text];
 
   const out = [];
   for (const seg of segments) {
