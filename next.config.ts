@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ['docx', 'pdfjs-dist', 'adm-zip', '@napi-rs/canvas'],
   outputFileTracingIncludes: {
-    '/api/convert/pdf-to-docx': ['./services/document-converter/pdf-to-docx.js'],
+    '/api/convert/pdf-to-docx': ['./services/document-converter/pdf-to-docx.js', './node_modules/pdfjs-dist/**/*'],
   },
   poweredByHeader: false,
   transpilePackages: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      { source: "/tools/pdf/:slug", destination: "/tools/:slug", permanent: true },
       { source: "/tools/pdf-tools", destination: "/tools/pdf", permanent: true },
       { source: "/tools/image-tools", destination: "/tools/image", permanent: true },
       { source: "/tools/calculator-tools", destination: "/tools/calculators", permanent: true },
