@@ -1,12 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateFile, sanitizeFilename } from '@/lib/converters/security';
 import { checkDocxContent } from '@/lib/converters/docx-check';
+import { ENGINE_SOURCE_B64 } from '@/lib/converters/pdf-to-docx-source';
+import '@/lib/converters/pdfjs-polyfill';
+import * as pdfjsDist from 'pdfjs-dist';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 export const maxDuration = 60;
 
-const RENDER_URL = process.env.CONVERTER_SERVICE_URL || 'https://toolpilot-5b6c.onrender.com';
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+
+async function loadEngine() {
+  const code = Buffer.from(ENGINE_SOURCE_B64, 'base64').toString('utf8');
+  const moduleObj: { exports: Record<string, unknown> } = { exports: {} };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const req: any = (id: string) => {
+    if (id === 'docx') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require('docx');
+    }
+    if (id === 'adm-zip') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require('adm-zip');
+    }
+    if (id === '@napi-rs/canvas') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require('@napi-rs/canvas');
+    }
+    if (id === 'fs') return fs;
+    if (id === 'path') return path;
+    if (id === 'os') return os;
+    if (id === 'pdfjs-dist/build/pdf.mjs' || id === 'pdfjs-dist') {
+      return pdfjsDist;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require(id);
+  };
+  req.resolve = (id: string) => require.resolve(id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fn = new (AsyncFunction as any)('module', 'exports', 'require', code);
+  await fn(moduleObj, moduleObj.exports, req);
+  return moduleObj.exports as { convertPdfToDocx: (p: string, o?: { mode?: string }) => Promise<{ buffer: Buffer; report: { sourcePages: number; tables: number; tableRowsTotal: number } }> };
+}
 
 export async function POST(request: NextRequest) {
+  const jobDir = path.join(os.tmpdir(), `toolpilotpro-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -26,29 +66,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    await fs.promises.mkdir(jobDir, { recursive: true });
     const safeFilename = sanitizeFilename(file.name);
+    const inputPath = path.join(jobDir, 'input.pdf');
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    await fs.promises.writeFile(inputPath, fileBuffer);
 
-    const remoteFormData = new FormData();
-    const blob = new Blob([new Uint8Array(fileBuffer)], { type: file.type || 'application/pdf' });
-    remoteFormData.append('file', blob, safeFilename);
-
-    const response = await fetch(`${RENDER_URL}/convert/pdf-to-docx`, {
-      method: 'POST',
-      body: remoteFormData,
-      signal: AbortSignal.timeout(120000),
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => null);
-      const message = errorBody?.error || 'Conversion failed on remote service.';
-      return NextResponse.json(
-        { success: false, error: message },
-        { status: response.status >= 500 ? 500 : response.status }
-      );
-    }
-
-    const docxBuffer = Buffer.from(await response.arrayBuffer());
+    const { convertPdfToDocx } = await loadEngine();
+    const { buffer: docxBuffer, report } = await convertPdfToDocx(inputPath, { mode: 'highfidelity' });
 
     const contentCheck = await checkDocxContent(docxBuffer);
     if (contentCheck.empty) {
@@ -65,22 +90,26 @@ export async function POST(request: NextRequest) {
     const headers = new Headers({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'Content-Disposition': `attachment; filename="${safeFilename.replace(/\.pdf$/i, '.docx')}"`,
+      'X-Pages': String(report.sourcePages),
+      'X-Tables': String(report.tables),
+      'X-Table-Rows': String(report.tableRowsTotal),
+      'X-Layout-Fidelity': 'high',
     });
 
-    return new NextResponse(docxBuffer, { status: 200, headers });
+    return new NextResponse(new Uint8Array(docxBuffer), { status: 200, headers });
   } catch (err: unknown) {
     const error = err as { message?: string };
     console.error('[PDF-to-DOCX]', err);
 
     let message: string;
     if (error.message?.includes('timeout') || error.message?.includes('aborted')) {
-      message = 'Conversion service is waking up. Please try again in 30 seconds.';
-    } else if (error.message?.includes('ECONNREFUSED')) {
-      message = 'Document conversion service is temporarily unavailable.';
+      message = 'Conversion timed out. The document may be too large or complex.';
     } else {
-      message = 'Conversion failed. Please try again.';
+      message = 'Conversion failed. ' + (error.message || 'Please try again.');
     }
 
     return NextResponse.json({ success: false, error: message }, { status: 500 });
+  } finally {
+    try { await fs.promises.rm(jobDir, { recursive: true, force: true }); } catch {}
   }
 }
