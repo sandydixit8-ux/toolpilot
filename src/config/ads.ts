@@ -6,23 +6,23 @@ import { ADS_ENABLED, ADSENSE_PUBLISHER_ID } from "@/lib/constants";
 // until NEXT_PUBLIC_ANCHOR_AD_SLOT is set in the environment.
 export const ADS = {
   home: {
-    topBanner: "0000000001",
-    midArticle: "0000000008",
-    bottomBanner: "0000000009",
+    topBanner: "1500194516",
+    midArticle: "1500194516",
+    bottomBanner: "1500194516",
   },
-  blogList: "0000000010",
+  blogList: "1500194516",
   blogPost: {
-    afterContent: "0000000007",
-    beforeCta: "0000000004",
+    afterContent: "1500194516",
+    beforeCta: "1500194516",
   },
-  toolsList: "0000000011",
+  toolsList: "1500194516",
   toolCategory: {
-    banner: "0000000005",
-    inArticle: "0000000006",
+    banner: "1500194516",
+    inArticle: "1500194516",
   },
   toolDetail: {
-    inArticle: "0000000002",
-    sidebar: "0000000003",
+    inArticle: "1500194516",
+    sidebar: "1500194516",
   },
   anchor: process.env.NEXT_PUBLIC_ANCHOR_AD_SLOT || "",
 } as const;
